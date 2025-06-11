@@ -1,7 +1,10 @@
+// app/layout.js (your existing file)
 import { Geist, Geist_Mono, Montserrat, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import Header from "./components/Header.js";
+import Footer from "./components/Footer";
 
-// Font configurations
+// Font configurations (keep your existing font setup)
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -13,14 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 const montserrat = Montserrat({
-  weight: ['400', '500', '700'], // Added 500 for medium weight
+  weight: ['400', '500', '700'],
   subsets: ['latin'],
   variable: '--font-montserrat',
-  display: 'swap', // Better font loading behavior
+  display: 'swap',
 });
 
 const spaceGrotesk = Space_Grotesk({
-  weight: ['400', '700'], // Added 400 for regular weight
+  weight: ['400', '700'],
   subsets: ['latin'],
   variable: '--font-space-grotesk',
 });
@@ -41,7 +44,9 @@ export default function RootLayout({ children }) {
           antialiased
         `}
       >
-        {children}
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );
