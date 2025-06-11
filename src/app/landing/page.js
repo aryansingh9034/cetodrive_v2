@@ -36,6 +36,24 @@ export default function Home() {
       });
   }, []);
 
+  useEffect(() => {
+  axios
+    .get("http://3.108.23.172:8002/api/vehicle/vehicle/")
+    .then((response) => {
+      // Add mock location data if not present
+      const carsWithLocation = response.data.data.map((car, index) => ({
+        ...car,
+        location: car.location || ["New York", "Los Angeles", "Chicago", "Houston", "Miami"][index % 5]
+      }));
+      setCars(carsWithLocation || []);
+      setLoading(false);
+    })
+    .catch((error) => {
+      console.error("API Error:", error);
+      setLoading(false);
+    });
+}, []);
+
   const handleClick = (id) => {
   console.log(id)  
   router.push(`/cardetails?id=${id}`);
@@ -58,13 +76,37 @@ export default function Home() {
     return `${dayName} ${day} ${month}, ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
   }
 
-  const handleSearch = () => {
-    console.log("Searching for:", { location, pickupDate, returnDate })
+  const [searchResults, setSearchResults] = useState([]);
+
+const handleSearch = () => {
+  if (!location) {
+    alert("Please select a location");
+    return;
   }
+  
+  // Filter cars by location (case insensitive)
+  const filteredCars = cars.filter(car => 
+    car.location?.toLowerCase().includes(location.toLowerCase())
+  );
+  
+  setSearchResults(filteredCars);
+  
+  // Scroll to results if any
+  if (filteredCars.length > 0) {
+    setTimeout(() => {
+      const resultsSection = document.getElementById("search-results");
+      if (resultsSection) {
+        resultsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  }
+};
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
   }
+  
+  
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -76,83 +118,121 @@ export default function Home() {
 
         {/* Hero Content */}
         <div className="relative z-5 w-full flex flex-col h-full justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
-          <h1
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mt-8 md:mt-16 mb-4 text-center"
-            style={{ fontFamily: "var(--font-space-grotesk)" }}
+  <h1
+    className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mt-8 md:mt-16 mb-4 text-center"
+    style={{ fontFamily: "var(--font-space-grotesk)" }}
+  >
+    Drive Your <span className="text-[#ea580c]">Dream Car</span>
+  </h1>
+
+  <p className="text-white text-lg sm:text-xl md:text-2xl max-w-4xl mb-8 md:mb-16 text-center">
+    Experience luxury and comfort with our premium fleet of vehicles.
+  </p>
+
+  {/* Search Form */}
+  <div className="bg-white rounded-xl shadow-md p-4 flex flex-col w-full max-w-[1050px] mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Location Input */}
+      <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
+        <MapPin className="text-gray-400 w-6 h-6 flex-shrink-0" />
+        <div className="w-full">
+          <div className="text-xs font-bold text-gray-800">Location</div>
+          <select
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="w-full outline-none text-gray-700 text-sm bg-transparent"
           >
-            Drive Your <span className="text-[#ea580c]">Dream Car</span>
-          </h1>
+            <option value="">Select a location</option>
+            <option value="New York">New York</option>
+            <option value="Los Angeles">Los Angeles</option>
+            <option value="Chicago">Chicago</option>
+            <option value="Houston">Houston</option>
+            <option value="Miami">Miami</option>
+          </select>
+        </div>
+      </div>
 
-          <p className="text-white text-lg sm:text-xl md:text-2xl max-w-4xl mb-8 md:mb-16 text-center">
-            Experience luxury and comfort with our premium fleet of vehicles.
-          </p>
+      {/* Pickup Date */}
+      <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
+        <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
+        <div className="w-full">
+          <div className="text-xs font-bold text-gray-800">Pickup date</div>
+          <DatePicker
+            selected={pickupDate}
+            onChange={(date) => setPickupDate(date)}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            dateFormat="EEE, MMM d, HH:mm"
+            className="w-full outline-none text-gray-700 cursor-pointer text-sm"
+            customInput={<div className="cursor-pointer">{formatDate(pickupDate)}</div>}
+          />
+        </div>
+      </div>
 
-          {/* Search Form */}
-          <div className="bg-white rounded-xl shadow-md p-4 flex flex-col w-full max-w-[1050px] mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Location Input */}
-              <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
-                <MapPin className="text-gray-400 w-6 h-6 flex-shrink-0" />
-                <div className="w-full">
-                  <div className="text-xs font-bold text-gray-800">Location</div>
-                  <input
-                    type="text"
-                    placeholder="Search your location"
-                    className="w-full outline-none text-gray-700 placeholder:text-gray-300 text-sm"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  />
-                </div>
-              </div>
+      {/* Return Date */}
+      <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
+        <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
+        <div className="w-full">
+          <div className="text-xs font-bold text-gray-800">Return date</div>
+          <DatePicker
+            selected={returnDate}
+            onChange={(date) => setReturnDate(date)}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            dateFormat="EEE, MMM d, HH:mm"
+            className="w-full outline-none text-gray-700 cursor-pointer text-sm"
+            customInput={<div className="cursor-pointer">{formatDate(returnDate)}</div>}
+          />
+        </div>
+      </div>
 
-              {/* Pickup Date */}
-              <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
-                <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
-                <div className="w-full">
-                  <div className="text-xs font-bold text-gray-800">Pickup date</div>
-                  <DatePicker
-                    selected={pickupDate}
-                    onChange={(date) => setPickupDate(date)}
-                    showTimeSelect
-                    timeFormat="HH:mm"
-                    timeIntervals={15}
-                    dateFormat="EEE, MMM d, HH:mm"
-                    className="w-full outline-none text-gray-700 cursor-pointer text-sm"
-                    customInput={<div className="cursor-pointer">{formatDate(pickupDate)}</div>}
-                  />
-                </div>
-              </div>
+      {/* Search Button */}
+      <div className="flex justify-center p-2">
+        <button
+          className="w-full bg-[#ea580c] hover:bg-orange-600 text-white px-6 py-2 rounded-md font-semibold transition-colors duration-200"
+          onClick={handleSearch}
+        >
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
 
-              {/* Return Date */}
-              <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
-                <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
-                <div className="w-full">
-                  <div className="text-xs font-bold text-gray-800">Return date</div>
-                  <DatePicker
-                    selected={returnDate}
-                    onChange={(date) => setReturnDate(date)}
-                    showTimeSelect
-                    timeFormat="HH:mm"
-                    timeIntervals={15}
-                    dateFormat="EEE, MMM d, HH:mm"
-                    className="w-full outline-none text-gray-700 cursor-pointer text-sm"
-                    customInput={<div className="cursor-pointer">{formatDate(returnDate)}</div>}
-                  />
-                </div>
-              </div>
-
-              {/* Search Button */}
-              <div className="flex justify-center p-2">
-                <button
-                  className="w-full bg-[#ea580c] hover:bg-orange-600 text-white px-6 py-2 rounded-md font-semibold transition-colors duration-200"
-                  onClick={handleSearch}
+  {/* Search Results - Display below the search form */}
+  {searchResults.length > 0 && (
+    <div className="mt-8 w-full max-w-7xl mx-auto">
+      <h2 className="text-2xl font-bold text-white mb-4">Available Vehicles</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {searchResults.map((car) => (
+          <div key={car.id} className="bg-white rounded-lg overflow-hidden shadow-lg">
+            <div className="h-48 bg-gray-200 relative">
+              <img
+                src={car.images?.[0]?.image ? `http://143.110.242.217:8031${car.images[0].image}` : "/placeholder.svg"}
+                alt={car.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-4">
+              <h3 className="text-xl font-bold text-gray-800">{car.name}</h3>
+              <p className="text-gray-600">{car.vehicle_type?.name || "Premium Vehicle"}</p>
+              <div className="mt-4 flex justify-between items-center">
+                <span className="text-2xl font-bold text-[#ea580c]">${car.price}/day</span>
+                <button 
+                  onClick={() => router.push(`/vehicle-details?id=${car.id}`)}
+                  className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
                 >
-                  Search
+                  View Details
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
       </div>
 
       {/* Car Brands Section */}
@@ -175,10 +255,10 @@ export default function Home() {
       <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-20 -mt-6 sm:-mt-8 md:-mt-10 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 md:mb-12">
-            <p className="text-gray-500 mt-4 text-xl">How it Works</p>
+            <p className="text-gray-500 mt-4 text-xl sm:text-md">How it Works</p>
             <h2
               style={{ fontFamily: "var(--font-space-grotesk)" }}
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0f172a] mt-2"
+              className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2"
             >
               Simple steps to Get the Car
             </h2>
@@ -340,7 +420,7 @@ export default function Home() {
     <div className="text-center mb-8">
       <h2
         style={{ fontFamily: "var(--font-space-grotesk)" }}
-        className="text-3xl md:text-4xl font-bold text-slate-900 mb-2"
+        className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2"
       >
         Popular Cars
       </h2>
@@ -467,7 +547,7 @@ export default function Home() {
             </p>
             <h2
               style={{ fontFamily: "var(--font-space-grotesk)" }}
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0f172a] mt-2"
+              className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2"
             >
               Why Choose CatoDrive
             </h2>
@@ -637,7 +717,7 @@ export default function Home() {
           <div className="space-y-6 order-1 md:order-2">
             <h2
               style={{ fontFamily: "var(--font-space-grotesk)" }}
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0f172a] text-center md:text-left"
+              className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2"
             >
               Ready to Drive Your Dream Car?
             </h2>
