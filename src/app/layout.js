@@ -29,8 +29,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata = {
-  title: "Car Rentals",
-  description: "Car Rentals",
+  title: "CatoDrive",
+  description: "CatoDrive - Your Ultimate Car Rental Experience",
 };
 
 export default function RootLayout({ children }) {

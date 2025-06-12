@@ -4,12 +4,26 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X, ArrowRight, Car, Zap } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+   const pathname = usePathname();
 
   // Handle scroll effect for header background
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+   //const isCarDetailsClient = pathname.includes('/cardetail');
+   const isBilling = pathname.includes('/billing');
+   const isProfile = pathname.includes('/profile');
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -24,13 +38,12 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-black/80 backdrop-blur-xl border-b border-orange-500/20 shadow-2xl shadow-orange-500/10" >
+           <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-black/80 backdrop-blur-xl border-b border-orange-500/20 shadow-2xl shadow-orange-500/10">
         <div className="flex items-center justify-between w-full px-6 py-4 lg:px-12">
-          {/* Enhanced Logo */}
+          {/* Logo - left side */}
           <Link href="/" className="group flex items-center space-x-3">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
             </div>
             <div>
               <span className="text-white text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
@@ -40,15 +53,60 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Enhanced Menu Button */}
-          <button 
-            className="group relative p-3 rounded-2xl bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25" 
-            onClick={toggleMobileMenu}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <Menu className="relative w-6 h-6 text-orange-500 group-hover:text-orange-400 transition-colors duration-300" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse group-hover:scale-110 transition-transform duration-300"></div>
-          </button>
+          {/* Right side container */}
+          <div className="flex items-center gap-4">
+            {/* Login/Signup buttons (only on car detail page) */}
+            {/* {isCarDetailsClient && (
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/login" 
+                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400  transition-colors duration-300"
+                >
+                  Login
+                </Link>
+                <Link 
+                  href="/signup" 
+                  className="px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )} */}
+            {isBilling && (
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/login" 
+                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400  transition-colors duration-300"
+                >
+                  Login
+                </Link>
+                <Link 
+                  href="/signup" 
+                  className="px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+{isProfile && (
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/vehicleform" 
+                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400  transition-colors duration-300"
+                >
+                  Rent Your Car
+                </Link>
+                
+              </div>
+            )}
+            {/* Hamburger Menu Button */}
+            <button 
+              className="group relative p-3 rounded-2xl bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25" 
+              onClick={toggleMobileMenu}
+            >
+              <Menu className="relative w-6 h-6 text-orange-500" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -64,7 +122,7 @@ export default function Header() {
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900"></div>
           
           {/* Animated Particles */}
-          <div className="absolute inset-0 overflow-hidden">
+          {/* <div className="absolute inset-0 overflow-hidden">
             {[...Array(20)].map((_, i) => (
               <div
                 key={i}
@@ -77,7 +135,7 @@ export default function Header() {
                 }}
               ></div>
             ))}
-          </div>
+          </div> */}
 
           {/* Geometric Patterns */}
           <div className="absolute inset-0 opacity-10">
