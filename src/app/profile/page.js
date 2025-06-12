@@ -68,7 +68,7 @@ export default function LoginPage() {
     }
   };
   return (
-    <div className="w-full min-h-screen  bg-white">
+    <div className="w-full min-h-screen  bg-white py-24">
 
        <div className="relative w-full shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] lg:h-full bg-[white] overflow-hidden">
 

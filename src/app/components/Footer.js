@@ -30,7 +30,7 @@ export default function Footer() {
 
     // Simple password match check
     if (formData.password !== formData.re_password) {
-      alert("Passwords do not match");
+     
       return;
     }
 
@@ -51,7 +51,7 @@ export default function Footer() {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Account created successfully");
+      
         setShowSignupModal(false);
         // Reset form
         setFormData({
@@ -69,7 +69,7 @@ export default function Footer() {
       }
     } catch (error) {
       console.error("Network error:", error);
-      alert("Network error");
+     
     }
   };
 
@@ -96,37 +96,27 @@ export default function Footer() {
           {/* Main content section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-16">
             {/* Left column */}
-            <div>
-              <h1 className="text-2xl font-bold mb-2">CatoDrive</h1>
-              <p className="text-sm mb-6 max-w-md">
-                Exceptional and modern registration non-problem, sunt incidunt qui officia deserunt mollit anim id est.
-              </p>
-
-              <div className="space-y-3">
-                <div className="flex items-center bg-[#111327] rounded-md p-2 max-w-xs">
-                  <div className="bg-transparent p-2 mr-2">
-                    <Phone size={18} className="text-gray-400" />
-                  </div>
-                  <input type="text" placeholder="+XXXXXXXXX" className="bg-transparent outline-none w-full text-sm" />
-                </div>
-
-                <div className="flex items-center bg-[#111327] rounded-md p-2 max-w-xs">
-                  <div className="bg-transparent p-2 mr-2">
-                    <Mail size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    type="email"
-                    placeholder="example@email.com"
-                    className="bg-transparent outline-none w-full text-sm"
-                  />
-                </div>
-              </div>
-            </div>
+           <div>
+  <h1 className="text-2xl font-bold mb-2">CatoDrive</h1>
+  <p className="text-sm mb-4 max-w-md">
+    Skip the cab, grab the keys!
+  </p>
+  
+  {/* Animated car icon */}
+  {/* <div className=" w-12 h-12 mx-auto">
+    
+     <img 
+                src="/sport.jpg"
+                alt="Download on the App Store"
+                className="w-full"
+              />
+  </div> */}
+</div>
 
             {/* Right column */}
             <div>
               <h2 className="text-xl font-bold mb-2">Join CatoDrive</h2>
-              <p className="text-sm mb-6">Receive pricing updates, shopping tips & more!</p>
+              <p className="text-sm mb-6">Wheels when you want em – book now, drive later.</p>
 
               <div className="space-y-3">
                 <div>
@@ -195,22 +185,22 @@ export default function Footer() {
                 <h3 className="font-bold mb-4">Quick Links</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <Link href="/getintouch" className="hover:text-gray-300">
                       Get in Touch
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <Link href="/helpcenter" className="hover:text-gray-300">
                       Help center
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <Link href="/livechat" className="hover:text-gray-300">
                       Live chat
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <Link href="/howitwork" className="hover:text-gray-300">
                       How it works
                     </Link>
                   </li>
@@ -371,19 +361,11 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Copyright */}
-            <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400">
-              <div>© 2024 example.com. All rights reserved.</div>
-              <div className="flex gap-4 mt-4 md:mt-0">
-                <Link href="#" className="hover:text-white">
-                  Terms & Conditions
-                </Link>
-                <span>•</span>
-                <Link href="#" className="hover:text-white">
-                  Privacy Notice
-                </Link>
-              </div>
-            </div>
+            
+            <div className="pt-6 border-t border-gray-800 mx-auto justify-between items-center text-xs text-gray-400">
+              <div>© 2025 catodrive.com. All rights reserved.</div>
+              
+            </div> 
           </footer>
         </div>
       </div>

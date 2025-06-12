@@ -9,7 +9,12 @@ import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { useRouter } from 'next/navigation';
 import background from "../../../public/backgorund.jpg"
+import { Search, ChevronRight } from 'lucide-react';
+import Steps from "@/app/steps/page"
 import axios from "axios"
+import { Car, Award, Users, Shield, RefreshCw, Monitor } from "lucide-react";
+import TestimonialsPage from "../testimonial/page"
+
 export default function Home() {
   const router = useRouter();
   const [pickupDate, setPickupDate] = useState(new Date())
@@ -130,7 +135,7 @@ const handleSearch = () => {
   </p>
 
   {/* Search Form */}
-  <div className="bg-white rounded-xl shadow-md p-4 flex flex-col w-full max-w-[1050px] mx-auto">
+  <div className="bg-white rounded-xl rounded-b-none shadow-md p-4 flex flex-col w-full max-w-[1050px] mx-auto">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {/* Location Input */}
       <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
@@ -200,35 +205,73 @@ const handleSearch = () => {
     </div>
   </div>
 
-  {/* Search Results - Display below the search form */}
+  {/* Search Results - List View */}
   {searchResults.length > 0 && (
-    <div className="mt-8 w-full max-w-7xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-4">Available Vehicles</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {searchResults.map((car) => (
-          <div key={car.id} className="bg-white rounded-lg overflow-hidden shadow-lg">
-            <div className="h-48 bg-gray-200 relative">
-              <img
-                src={car.images?.[0]?.image ? `http://143.110.242.217:8031${car.images[0].image}` : "/placeholder.svg"}
-                alt={car.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="text-xl font-bold text-gray-800">{car.name}</h3>
-              <p className="text-gray-600">{car.vehicle_type?.name || "Premium Vehicle"}</p>
-              <div className="mt-4 flex justify-between items-center">
-                <span className="text-2xl font-bold text-[#ea580c]">${car.price}/day</span>
-                <button 
-                  onClick={() => router.push(`/vehicle-details?id=${car.id}`)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
-                >
-                  View Details
-                </button>
+    <div className=" w-full max-w-[1050px] mx-auto">
+      <div className="bg-white rounded-xl rounded-t-none shadow-md overflow-hidden">
+        <div className="p-2 px-4 border-b bg-gray-50 ">
+          <h2 className="text-md font-semibold text-gray-800">
+            {searchResults.length} vehicles found
+          </h2>
+        </div>
+        
+        <div className="divide-y divide-gray-200">
+          {searchResults.map((car, index) => (
+            <div key={car.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Car Image */}
+                <div className="w-full md:w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={car.images?.[0]?.image ? `http://143.110.242.217:8031${car.images[0].image}` : "/placeholder.svg"}
+                    alt={car.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                {/* Car Details */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="flex-1">
+                      {/* Car Name and Type */}
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        {car.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-2">
+                        {car.vehicle_type?.name || "Premium Vehicle"}
+                      </p>
+                      
+                      {/* Additional car details if available */}
+                      {car.description && (
+                        <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+                          {car.description}
+                        </p>
+                      )}
+                      
+                    
+                    </div>
+                    
+                    {/* Price and Action */}
+                    <div className="flex flex-col items-end gap-2 md:text-right">
+                      <div className="text-right">
+  <div className="text-2xl font-bold text-[#ea580c]">
+    ${car.price} <span className="text-sm text-gray-600">/ day</span>
+  </div>
+</div>
+
+                      
+                      <button 
+                        onClick={() => router.push(`/vehicle-details?id=${car.id}`)}
+                        className="bg-[#ea580c] hover:bg-orange-600 text-white px-6 py-2 rounded-md font-semibold transition-colors duration-200 whitespace-nowrap"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )}
@@ -252,7 +295,13 @@ const handleSearch = () => {
       </section> */}
 
       {/* How it Works Section */}
-      <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-20 -mt-6 sm:-mt-8 md:-mt-10 bg-gray-50">
+      
+
+   
+
+    <Steps />
+
+    <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-20 -mt-6 sm:-mt-8 md:-mt-10 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 md:mb-12">
             <p className="text-gray-500 mt-4 text-xl sm:text-md">How it Works</p>
@@ -538,181 +587,192 @@ const handleSearch = () => {
   </div>
 </section>
 
+
+
       {/* Why Choose Us Section */}
-      <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-6">
-            <p style={{ fontFamily: "var(--font-space-grotesk)" }} className="text-gray-500 uppercase font-medium">
-              ADVANTAGES
-            </p>
-            <h2
-              style={{ fontFamily: "var(--font-space-grotesk)" }}
-              className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2"
-            >
-              Why Choose CatoDrive
-            </h2>
-            <p style={{ fontFamily: "var(--font-space-grotesk)" }} className="text-gray-700 mt-4 max-w-3xl mx-auto">
-              We present many guarantees and advantages when you rent a car with us for your trip. Here are some of the
-              advantages that you will get
-            </p>
+          <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-6">
+          <p style={{ fontFamily: "var(--font-space-grotesk)" }} className="text-gray-500 uppercase font-medium">
+            ADVANTAGES
+          </p>
+          <h2
+            style={{ fontFamily: "var(--font-space-grotesk)" }}
+            className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2"
+          >
+            Why Choose CatoDrive
+          </h2>
+          <p style={{ fontFamily: "var(--font-space-grotesk)" }} className="text-gray-700 mt-4 max-w-3xl mx-auto">
+            We present many guarantees and advantages when you rent a car with us for your trip. Here are some of the
+            advantages that you will get
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-20 mt-8 md:mt-12">
+          {/* Card 1 - Easy Rent */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-shrink-0 flex justify-center sm:justify-start">
+              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Car className="w-8 h-8 text-blue-600" />
+              </div>
+            </div>
+            <div>
+              <h3
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
+              >
+                Easy Rent
+              </h3>
+              <p
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-gray-600 mt-2 text-center sm:text-left"
+              >
+                Rent a car at our rental with an easy and fast process without disturbing your productivity
+              </p>
+            </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-20 mt-8 md:mt-12">
-            {/* Card 1 */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-              <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Image src="/Vector.png" alt="Easy Rent" width={70} height={70} className="bg-gray-50" />
-                </div>
-              </div>
-              <div>
-                <h3
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
-                >
-                  Easy Rent
-                </h3>
-                <p
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-gray-600 mt-2 text-center sm:text-left"
-                >
-                  Rent a car at our rental with an easy and fast process without disturbing your productivity
-                </p>
+          {/* Card 2 - Premium Quality */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-shrink-0 flex justify-center sm:justify-start">
+              <div className="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Award className="w-8 h-8 text-white" />
               </div>
             </div>
+            <div>
+              <h3
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
+              >
+                Premium Quality
+              </h3>
+              <p
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-gray-600 mt-2 text-center sm:text-left"
+              >
+                Our cars are always maintained engine health and cleanliness to provide a more comfortable driving
+                experience
+              </p>
+            </div>
+          </div>
 
-            {/* Card 2 */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-              <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                <div className="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Image src="/Vector1.png" alt="Premium Quality" width={70} height={70} className="bg-white" />
-                </div>
-              </div>
-              <div>
-                <h3
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
-                >
-                  Premium Quality
-                </h3>
-                <p
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-gray-600 mt-2 text-center sm:text-left"
-                >
-                  Our cars are always maintained engine health and cleanliness to provide a more comfortable driving
-                  experience
-                </p>
+          {/* Card 3 - Professional Agent */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-shrink-0 flex justify-center sm:justify-start">
+              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Users className="w-8 h-8 text-blue-600" />
               </div>
             </div>
+            <div>
+              <h3
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
+              >
+                Professional Agent
+              </h3>
+              <p
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-gray-600 mt-2 text-center sm:text-left"
+              >
+                You can ask your travel companion to escort and guide your journey.
+              </p>
+            </div>
+          </div>
 
-            {/* Card 3 */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-              <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Image src="/Solid.png" alt="Professional Agent" width={80} height={80} className="bg-gray-50" />
-                </div>
-              </div>
-              <div>
-                <h3
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
-                >
-                  Professional Agent
-                </h3>
-                <p
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-gray-600 mt-2 text-center sm:text-left"
-                >
-                  You can ask your travel companion to escort and guide your journey.
-                </p>
+          {/* Card 4 - Car Safety */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-shrink-0 flex justify-center sm:justify-start">
+              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Shield className="w-8 h-8 text-blue-600" />
               </div>
             </div>
+            <div>
+              <h3
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
+              >
+                Car Safety
+              </h3>
+              <p
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-gray-600 mt-2 text-center sm:text-left"
+              >
+                We guarantee the safety of the engine on the car always running well with regular checks on the car
+                engine.
+              </p>
+            </div>
+          </div>
 
-            {/* Card 4 */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-              <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Image src="/Solid1.png" alt="Car Safety" width={80} height={80} className="bg-gray-50" />
-                </div>
-              </div>
-              <div>
-                <h3
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
-                >
-                  Car Safety
-                </h3>
-                <p
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-gray-600 mt-2 text-center sm:text-left"
-                >
-                  We guarantee the safety of the engine on the car always running well with regular checks on the car
-                  engine.
-                </p>
+          {/* Card 5 - Refund */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-shrink-0 flex justify-center sm:justify-start">
+              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                <RefreshCw className="w-8 h-8 text-blue-600" />
               </div>
             </div>
+            <div>
+              <h3
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
+              >
+                Refund
+              </h3>
+              <p
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-gray-600 mt-2 text-center sm:text-left"
+              >
+                Our service guarantee provides a money back opportunity if the car does not match the information
+                provided.
+              </p>
+            </div>
+          </div>
 
-            {/* Card 5 */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-              <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Image src="/Solid3.png" alt="Refund" width={80} height={80} className="bg-gray-50" />
-                </div>
-              </div>
-              <div>
-                <h3
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
-                >
-                  Refund
-                </h3>
-                <p
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-gray-600 mt-2 text-center sm:text-left"
-                >
-                  Our service guarantee provides a money back opportunity if the car does not match the information
-                  provided.
-                </p>
+          {/* Card 6 - Live Monitoring */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-shrink-0 flex justify-center sm:justify-start">
+              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Monitor className="w-8 h-8 text-blue-600" />
               </div>
             </div>
-
-            {/* Card 6 */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-              <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Image src="/Solid2.png" alt="Live Monitoring" width={80} height={80} className="bg-gray-50" />
-                </div>
-              </div>
-              <div>
-                <h3
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
-                >
-                  Live Monitoring
-                </h3>
-                <p
-                  style={{ fontFamily: "var(--font-space-grotesk)" }}
-                  className="text-gray-600 mt-2 text-center sm:text-left"
-                >
-                  Our service provides direct customer monitoring to monitor trips in terms of safety and comfort.
-                </p>
-              </div>
+            <div>
+              <h3
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-xl font-bold text-[#0f172a] text-center sm:text-left"
+              >
+                Live Monitoring
+              </h3>
+              <p
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+                className="text-gray-600 mt-2 text-center sm:text-left"
+              >
+                Our service provides direct customer monitoring to monitor trips in terms of safety and comfort.
+              </p>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
       {/* Ready to Drive Section */}
       <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-20 bg-gray-50">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-10 items-center">
-          <div className="grid grid-cols-2 gap-4 order-2 md:order-1">
-            <div className="rounded-2xl overflow-hidden flex items-end h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px]">
-              <Image src="/Link(1).png" alt="Luxury car" width={400} height={150} className="w-full object-contain" />
-            </div>
-            <div className="rounded-2xl overflow-hidden h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px]">
-              <Image src="/h72.png" alt="Luxury car" width={400} height={300} className="w-full h-full object-cover" />
-            </div>
-          </div>
+         <div className="grid grid-cols-2 gap-4 order-2 md:order-1">
+  {/* Left column with two stacked images */}
+  <div className="flex flex-col gap-4">
+    <div className="rounded-2xl overflow-hidden h-[120px] sm:h-[170px] md:h-[200px] lg:h-[220px]">
+      <Image src="/Blog1.png" alt="Car 1" width={400} height={150} className="w-full h-full object-cover" />
+    </div>
+    <div className="rounded-2xl overflow-hidden h-[120px] sm:h-[170px] md:h-[200px] lg:h-[220px]">
+      <Image src="/Blog2.png" alt="Car 2" width={400} height={150} className="w-full h-full object-cover" />
+    </div>
+  </div>
+
+  {/* Right column with one tall image */}
+  <div className="rounded-2xl overflow-hidden h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px]">
+    <Image src="/h72.png" alt="Luxury Car" width={400} height={450} className="w-full h-full object-cover" />
+  </div>
+</div>
+
 
           <div className="space-y-6 order-1 md:order-2">
             <h2
@@ -763,7 +823,7 @@ const handleSearch = () => {
         </div>
       </section>
 
-      {/* Blog Section */}
+      <TestimonialsPage />
      
 
       {/* Rent/Host Section */}

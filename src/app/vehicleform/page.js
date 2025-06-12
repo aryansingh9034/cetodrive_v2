@@ -159,7 +159,7 @@ export default function VehicleForm() {
 
   return (
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 py-24">
        
         <div className="relative w-full shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] lg:h-full bg-[white] overflow-hidden">
 
@@ -295,8 +295,8 @@ export default function VehicleForm() {
                     <option value={1}>SUV</option>
                     <option value={2}>Sedan</option>
                     <option value={3}>Hatchback</option>
-                    <option value={4}>Truck</option>
-                    <option value={5}>Coupe</option>
+                    
+                    <option value={4}>Coupe</option>
                   </select>
                 </div>
 
