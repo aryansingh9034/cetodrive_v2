@@ -85,7 +85,7 @@ export default function Home() {
 
 const handleSearch = () => {
   if (!location) {
-    alert("Please select a location");
+  
     return;
   }
   

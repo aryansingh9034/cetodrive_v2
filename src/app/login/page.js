@@ -60,7 +60,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred during login");
+   
     }
   };
 

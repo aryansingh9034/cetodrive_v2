@@ -45,7 +45,7 @@ export default function LoginPage() {
 
     // Simple password match check
     if (formData.password !== formData.re_password) {
-      alert("Passwords do not match");
+   
       return;
     }
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Account created successfully");
+     
         router.push('/login'); 
         console.log(data);
       } else {
@@ -75,7 +75,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Network error:", error);
-      alert("Network error");
+     
     }
   };
 

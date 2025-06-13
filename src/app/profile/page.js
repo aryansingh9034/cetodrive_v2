@@ -58,7 +58,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         console.log("Login successful:", data);
-        Alert.alert("Loggin Successfully")
+    
       } else {
         console.error("Login failed:", data);
         // Show error message

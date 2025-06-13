@@ -45,7 +45,7 @@ export default function GetInTouchPage() {
       preferredContact: 'email'
     })
     
-    alert('Thank you! Your message has been sent successfully.')
+   
   }
 
   const contactMethods = [

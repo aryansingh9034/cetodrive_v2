@@ -86,7 +86,7 @@ export default function Billing() {
   }
 
   const handlePayment = async () => {
-    window.alert("✅ Payment was successful!")
+  
     setIsFormSubmitted(true)
     setCurrentStep(4)
   }
