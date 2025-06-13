@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
 
   const handleLogin = () => {
     router.push('/login');
@@ -80,7 +81,7 @@ export default function LoginPage() {
         // Show OTP modal after successful registration
         setShowOtpModal(true);
       } else {
-        setError(data.message || "Registration failed. Please try again.");
+        setError(data.message || "Already have an account. Please login.");
         console.error(data);
       }
     } catch (error) {
@@ -92,34 +93,36 @@ export default function LoginPage() {
   };
 
   // Send OTP to email
-  const sendOtp = async () => {
-    setIsLoading(true);
-    setError("");
-    
-    try {
-      const response = await fetch("http://3.108.23.172:8002/api/customer/otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          is_registration: true
-        }),
-      });
+const sendOtp = async () => {
+  setIsLoading(true);
+  setError("");
+  
+  try {
+    const response = await fetch("http://3.108.23.172:8002/api/customer/otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        is_registration: true
+      }),
+    });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        setError(data.message || "Failed to send OTP");
-      }
-    } catch (error) {
-      setError("Network error. Please try again.");
-      console.error("Network error:", error);
-    } finally {
-      setIsLoading(false);
+    const data = await response.json();
+    
+    if (response.ok) {
+      setOtpSent(true); // Set OTP as sent
+    } else {
+      setError(data.message || "Failed to send OTP");
     }
-  };
+  } catch (error) {
+    setError("Network error. Please try again.");
+    console.error("Network error:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Verify OTP
   const verifyOtp = async () => {
@@ -342,7 +345,7 @@ export default function LoginPage() {
                   className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-300 transition-colors font-medium"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Sending..." : "Resend OTP"}
+                  {isLoading ? "Sending..." : (otpSent ? "Resend OTP" : "Send OTP")}
                 </button>
                 <button
                   onClick={verifyOtp}

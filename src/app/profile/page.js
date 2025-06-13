@@ -4,6 +4,7 @@ import React from "react";
 import { Phone, Mail, User, Lock, MapPin, Car, Edit3, Settings, LogOut, Save, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
 
 export default function ModernProfilePage() {
   const router = useRouter();
@@ -92,7 +93,7 @@ export default function ModernProfilePage() {
             <div className="flex items-end gap-6 mb-6">
               <div className="relative">
                 <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-white">
-                  <img src={user.img} className="w-12 h-12 text-gray-400" />
+                  <img src="/profill.png" className="w-12 h-12 text-gray-400" />
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -171,21 +172,7 @@ export default function ModernProfilePage() {
                 Personal Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Full Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedUser.username}
-                      onChange={(e) => handleInputChange('username', e.target.value)}
-                      className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-gray-200 focus:border-blue-200 w-full"
-                    />
-                  ) : (
-                    <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
-                      <p className="text-gray-900 font-medium">{user.username}</p>
-                    </div>
-                  )}
-                </div>
+                
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Username</label>
                   {isEditing ? (
@@ -207,24 +194,7 @@ export default function ModernProfilePage() {
                     <p className="text-gray-900 font-medium">{user.vehcile_types}</p>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Address</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedUser.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      placeholder="Enter your address"
-                      className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-gray-200 focus:border-blue-200 w-full"
-                    />
-                  ) : (
-                    <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
-                      <p className={user.address ? "text-gray-900 font-medium" : "text-gray-500 italic"}>
-                        {user.address || "Not provided"}
-                      </p>
-                    </div>
-                  )}
-                </div>
+               
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Phone Number</label>
                   {isEditing ? (
@@ -268,18 +238,12 @@ export default function ModernProfilePage() {
             <div className="bg-white rounded-2xl shadow-lg shadow-gray-500/10 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <button className="w-full bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+                <Link href="/vehicleform" className="w-full bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
                   <Car className="w-5 h-5" />
                   Rent a Vehicle
-                </button>
-                <button className="w-full bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
-                  <Settings className="w-5 h-5" />
-                  Account Settings
-                </button>
-                <button className="w-full bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-green-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
-                  <MapPin className="w-5 h-5" />
-                  Add Address
-                </button>
+                </Link>
+                
+               
                 <button className="w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
                   <Phone className="w-5 h-5" />
                   Add Phone
