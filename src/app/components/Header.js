@@ -38,7 +38,7 @@ export default function Header() {
 
   return (
     <>
-           <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-black/80 backdrop-blur-xl border-b border-orange-500/20 shadow-2xl shadow-orange-500/10">
+           <header className="fixed top-0 z-10000 left-0 right-0  transition-all duration-500 bg-black/80 backdrop-blur-xl border-b border-orange-500/20 shadow-2xl shadow-orange-500/10">
         <div className="flex items-center justify-between w-full px-6 py-4 lg:px-12">
           {/* Logo - left side */}
           <Link href="/" className="group flex items-center space-x-3">
@@ -111,7 +111,7 @@ export default function Header() {
       </header>
 
       {/* Enhanced Full-Screen Menu Overlay */}
-      <div className={`fixed inset-0 z-50 transition-all duration-700 ${
+      <div className={`fixed inset-0  transition-all duration-700 z-10000 ${
         mobileMenuOpen 
           ? 'opacity-100 pointer-events-auto' 
           : 'opacity-0 pointer-events-none'

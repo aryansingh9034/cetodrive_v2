@@ -10,6 +10,8 @@ export default function Billing() {
   const [amount, setAmount] = useState(null)
   const [vehicle, setVehicle] = useState({})
   const [showPopup, setShowPopup] = useState(false);
+  const [showIdUploadPopup, setShowIdUploadPopup] = useState(false);
+  const [idFiles, setIdFiles] = useState([]);
   
   const handleRentNowClick = () => {
     if (isFormSubmitted && confirmationData.terms) {
@@ -19,6 +21,30 @@ export default function Billing() {
 
   const closePopup = () => {
     setShowPopup(false);
+    // After closing confirmation popup, show ID upload popup
+    setShowIdUploadPopup(true);
+  };
+
+  const handleIdUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setIdFiles(files);
+  };
+
+  const removeIdFile = (index) => {
+    const newFiles = [...idFiles];
+    newFiles.splice(index, 1);
+    setIdFiles(newFiles);
+  };
+
+  const submitIdFiles = () => {
+    // Handle ID file submission here
+    console.log("ID files submitted:", idFiles);
+    setShowIdUploadPopup(false);
+    // You might want to add a success message or redirect here
+  };
+
+  const closeIdUploadPopup = () => {
+    setShowIdUploadPopup(false);
   };
   
   useEffect(() => {
@@ -32,19 +58,22 @@ export default function Billing() {
   const [billingData, setBillingData] = useState({
     name: "",
     phone: "",
+    email: "",
     address: "",
     city: "",
   })
 
   const [rentalData, setRentalData] = useState({
     rentalType: "",
+    pickupCity: "",
     pickupLocation: "",
     pickupDate: "",
     pickupTime: "",
+    dropoffCity: "",
     dropoffLocation: "",
     dropoffDate: "",
     dropoffTime: "",
-    documents: null,
+    flightNumber: "",
   })
 
   const [paymentData, setPaymentData] = useState({
@@ -86,7 +115,6 @@ export default function Billing() {
   }
 
   const handlePayment = async () => {
-  
     setIsFormSubmitted(true)
     setCurrentStep(4)
   }
@@ -131,9 +159,10 @@ export default function Billing() {
   }
 
   // Step validation
-  const isStep1Valid = billingData.name && billingData.phone && billingData.address && billingData.city
+  const isStep1Valid = billingData.name && billingData.phone && billingData.email && billingData.address && billingData.city
   const isStep2Valid = pickupCompleted && (
-    rentalData.dropoffLocation && rentalData.dropoffDate && rentalData.dropoffTime
+    rentalData.dropoffCity && rentalData.dropoffLocation && 
+    rentalData.dropoffDate && rentalData.dropoffTime
   )
   const isStep3Valid = selectedPaymentMethod === "paypal" || (paymentData.cardNumber && paymentData.expiryDate && paymentData.cardHolder && paymentData.cvc)
   const isStep4Valid = confirmationData.terms
@@ -243,6 +272,16 @@ export default function Billing() {
                     />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      value={billingData.email}
+                      onChange={(e) => handleBillingChange("email", e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                     <input
                       type="text"
@@ -275,21 +314,41 @@ export default function Billing() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Locations</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
                       <select
-                        value={rentalData.pickupLocation}
-                        onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
+                        value={rentalData.pickupCity || ""}
+                        onChange={(e) => {
+                          handleRentalChange("pickupCity", e.target.value);
+                          handleRentalChange("pickupLocation", ""); // Reset location when city changes
+                        }}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
                         required
                       >
-                        <option value="">Select your city</option>
-                        <option value="new-york">New York</option>
-                        <option value="los-angeles">Los Angeles</option>
-                        <option value="chicago">Chicago</option>
+                        <option value="">Select city</option>
+                        <option value="dallas">Dallas</option>
                       </select>
                     </div>
+                    
+                    {rentalData.pickupCity && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Location in {rentalData.pickupCity}</label>
+                        <select
+                          value={rentalData.pickupLocation}
+                          onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                          required
+                        >
+                          <option value="">Select location</option>
+                          
+                          <option value="dfw-airport">DFW International Airport</option>
+                          <option value="love-field">Dallas Love Field Airport</option>
+                          
+                        </select>
+                      </div>
+                    )}
+                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
                       <input
                         type="date"
                         value={rentalData.pickupDate}
@@ -299,7 +358,7 @@ export default function Billing() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Time</label>
                       <input
                         type="time"
                         value={rentalData.pickupTime}
@@ -314,7 +373,7 @@ export default function Billing() {
                     <div className="flex justify-end">
                       <button
                         onClick={completePickup}
-                        disabled={!rentalData.pickupLocation || !rentalData.pickupDate || !rentalData.pickupTime}
+                        disabled={!rentalData.pickupCity || !rentalData.pickupLocation || !rentalData.pickupDate || !rentalData.pickupTime}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Confirm Pickup
@@ -325,107 +384,86 @@ export default function Billing() {
 
                 {/* Drop-Off Section - Only shown after pickup is completed */}
                 {pickupCompleted && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Drop-Off Information</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Locations</label>
-                        <select
-                          value={rentalData.dropoffLocation}
-                          onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                          required
-                        >
-                          <option value="">Select your city</option>
-                          <option value="new-york">New York</option>
-                          <option value="los-angeles">Los Angeles</option>
-                          <option value="chicago">Chicago</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                        <input
-                          type="date"
-                          min={rentalData.pickupDate} // Ensure dropoff is after pickup
-                          value={rentalData.dropoffDate}
-                          onChange={(e) => handleRentalChange("dropoffDate", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                        <input
-                          type="time"
-                          value={rentalData.dropoffTime}
-                          onChange={(e) => handleRentalChange("dropoffTime", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                          required
-                        />
+                  <>
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Drop-Off Information</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                          <select
+                            value={rentalData.dropoffCity || ""}
+                            onChange={(e) => {
+                              handleRentalChange("dropoffCity", e.target.value);
+                              handleRentalChange("dropoffLocation", ""); // Reset location when city changes
+                            }}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                            required
+                          >
+                            <option value="">Select city</option>
+                            <option value="dallas">Dallas</option>
+                          </select>
+                        </div>
+                        
+                        {rentalData.dropoffCity && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Location in {rentalData.dropoffCity}</label>
+                            <select
+                              value={rentalData.dropoffLocation}
+                              onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
+                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                              required
+                            >
+                              <option value="">Select location</option>
+                              
+                             <option value="dallas-downtown">Downtown Dallas</option>
+                          <option value="dfw-airport">DFW International Airport</option>
+                          <option value="love-field">Dallas Love Field Airport</option>
+                          <option value="uptown">Uptown Dallas</option>
+                              
+                            </select>
+                          </div>
+                        )}
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Dropoff Date</label>
+                          <input
+                            type="date"
+                            min={rentalData.pickupDate}
+                            value={rentalData.dropoffDate}
+                            onChange={(e) => handleRentalChange("dropoffDate", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Dropoff Time</label>
+                          <input
+                            type="time"
+                            value={rentalData.dropoffTime}
+                            onChange={(e) => handleRentalChange("dropoffTime", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Document Upload Section - Only shown after pickup is completed */}
-                {pickupCompleted && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Upload Documents</h3>
-                    
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                        </svg>
-                        <p className="mt-2 text-sm text-gray-600">
-                          <span className="font-semibold">Click to upload</span> or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500">ID, Drivers License, or other documents (MAX. 10MB each)</p>
+                    {/* Flight Number Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Flight Information (Optional)</h3>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Flight Number</label>
+                        <input
+                          type="text"
+                          placeholder="Enter your flight number (optional)"
+                          value={rentalData.flightNumber || ""}
+                          onChange={(e) => handleRentalChange("flightNumber", e.target.value)}
+                          className="w-full px-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
                       </div>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*,.pdf"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="file-upload"
-                      />
-                      <label
-                        htmlFor="file-upload"
-                        className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700"
-                      >
-                        Select Files
-                      </label>
                     </div>
-                    
-                    {/* Uploaded files preview */}
-                    {uploadedFiles.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        <h4 className="text-sm font-medium text-gray-700">Uploaded Files:</h4>
-                        <ul className="space-y-2">
-                          {uploadedFiles.map((file, index) => (
-                            <li key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                              <div className="flex items-center">
-                                <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                </svg>
-                                <span className="text-sm text-gray-600 truncate max-w-xs">{file.name}</span>
-                              </div>
-                              <button
-                                onClick={() => removeFile(index)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                  </>
                 )}
               </div>
             )}
@@ -470,7 +508,7 @@ export default function Billing() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
                         <input
-                          type="text"
+                          type="number"
                           placeholder="Card number"
                           value={paymentData.cardNumber}
                           onChange={(e) => setPaymentData({...paymentData, cardNumber: e.target.value})}
@@ -480,8 +518,8 @@ export default function Billing() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
                         <input
-                          type="text"
-                          placeholder="DD / MM / YY"
+                          type="date"
+                          placeholder=" MM / YY"
                           value={paymentData.expiryDate}
                           onChange={(e) => setPaymentData({...paymentData, expiryDate: e.target.value})}
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -500,7 +538,7 @@ export default function Billing() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">CVC</label>
                         <input
-                          type="text"
+                          type="number"
                           placeholder="CVC"
                           value={paymentData.cvc}
                           onChange={(e) => setPaymentData({...paymentData, cvc: e.target.value})}
@@ -586,46 +624,127 @@ export default function Billing() {
 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
-        disabled={!isFormSubmitted || !confirmationData.terms}
-        onClick={handleRentNowClick}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Rent Now
-      </button>
+                    disabled={!isFormSubmitted || !confirmationData.terms}
+                    onClick={handleRentNowClick}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Rent Now
+                  </button>
                 </div>
-               {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-8 rounded-xl max-w-md w-full text-center">
-            <div className="mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-gray-800 mb-3">Booking Confirmed!</h2>
-            
-            <p className="text-gray-600 mb-5">
-              Thank you for your booking! We have sent the confirmation details to your email address. 
-              Get ready to enjoy your ride - we hope you have an amazing experience!
-            </p>
-            
-            <p className="text-sm text-gray-500 mb-6">
-              Need help? Contact our support team at support@catodrive.com
-            </p>
-            
-            <button 
-              onClick={() => setShowPopup(false)}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors w-full"
-            >
-              Got it!
-            </button>
-            
-            <div className="mt-4 text-xs text-gray-400">
-              <p>Your booking reference: #{(Math.random() * 1000000).toFixed(0)}</p>
-            </div>
-          </div>
-        </div>
-      )}
+
+                {/* Confirmation Popup */}
+                {showPopup && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-xl max-w-md w-full text-center">
+                      <div className="mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      
+                      <h2 className="text-2xl font-bold text-gray-800 mb-3">Booking Confirmed!</h2>
+                      
+                      <p className="text-gray-600 mb-5">
+                        Thank you for your booking! We have sent the confirmation details to your email address. 
+                        Get ready to enjoy your ride - we hope you have an amazing experience!
+                      </p>
+                      
+                      <p className="text-sm text-gray-500 mb-6">
+                        Need help? Contact our support team at support@catodrive.com
+                      </p>
+                      
+                      <button 
+                        onClick={closePopup}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors w-full"
+                      >
+                        Got it!
+                      </button>
+                      
+                      <div className="mt-4 text-xs text-gray-400">
+                        <p>Your booking reference: #{(Math.random() * 1000000).toFixed(0)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ID Upload Popup */}
+                {showIdUploadPopup && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-xl max-w-md w-full">
+                      <div className="mb-6 text-center">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Upload Your ID</h2>
+                        <p className="text-gray-600">Please upload a clear photo of your drivers license or government-issued ID</p>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <label className="block mb-2 text-sm font-medium text-gray-700">
+                          Upload ID Document
+                        </label>
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                              </svg>
+                              <p className="mb-2 text-sm text-gray-500">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500">PNG, JPG, or PDF (MAX. 5MB)</p>
+                            </div>
+                            <input 
+                              id="dropzone-file" 
+                              type="file" 
+                              className="hidden" 
+                              onChange={handleIdUpload}
+                              accept="image/*,.pdf"
+                              multiple
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      
+                      {/* Display uploaded files */}
+                      {idFiles.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Files:</h3>
+                          <ul className="space-y-2">
+                            {idFiles.map((file, index) => (
+                              <li key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <span className="text-sm text-gray-600 truncate max-w-xs">{file.name}</span>
+                                <button 
+                                  onClick={() => removeIdFile(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-4">
+                        <button
+                          onClick={closeIdUploadPopup}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          Skip for Now
+                        </button>
+                        <button
+                          onClick={submitIdFiles}
+                          disabled={idFiles.length === 0}
+                          className={`flex-1 px-4 py-2 rounded-lg text-white transition-colors ${
+                            idFiles.length > 0 
+                              ? 'bg-blue-600 hover:bg-blue-700' 
+                              : 'bg-blue-400 cursor-not-allowed'
+                          }`}
+                        >
+                          Submit ID
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-center text-sm text-gray-600 mt-6">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

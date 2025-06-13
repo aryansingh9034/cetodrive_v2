@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Users, Zap } from "lucide-react"
 import background from "../../../public/image 62.png"
 
@@ -87,7 +88,7 @@ export default function GetInTouchPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white py-20">
       {/* Hero Section */}
       <div className="relative w-full min-h-[70vh] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
@@ -99,25 +100,30 @@ export default function GetInTouchPage() {
           priority 
         />
         
-        <div className="relative z-10 flex flex-col justify-center items-center h-full px-4 sm:px-6 lg:px-20 py-20">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight">
-              Get In
-              <span className="block text-[#ea580c] mt-2">Touch</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Were here to help you every step of the way. Reach out and lets start a conversation.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-[#ea580c] hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105">
-                Start Conversation
-              </button>
-              <button className="border-2 border-white text-white hover:bg-white hover:text-slate-900 font-semibold px-8 py-4 rounded-full transition-all duration-300">
-                View FAQs
-              </button>
-            </div>
-          </div>
-        </div>
+       <div className="relative z-10 flex flex-col justify-center items-center h-full px-4 sm:px-6 lg:px-20 py-20">
+  <div className="text-center max-w-4xl mx-auto mt-16">
+    <h1
+      className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mt-6 leading-tight"
+      style={{
+        textShadow: `
+          0 0 6px rgba(234,88,12,0.6),
+          0 0 12px rgba(234,88,12,0.4),
+          1px 1px 0 black,
+          -1px -1px 0 black,
+          1px -1px 0 black,
+          -1px 1px 0 black
+        `,
+      }}
+    >
+      Get In <span className="text-[#ea580c]">Touch</span>
+    </h1>
+
+    <p className="text-xl md:text-2xl text-gray-300 mt-6 max-w-2xl mx-auto leading-relaxed">
+      We are here to help you every step of the way. Reach out and let start a conversation.
+    </p>
+  </div>
+</div>
+
       </div>
 
       {/* Contact Methods Section */}
@@ -331,9 +337,9 @@ export default function GetInTouchPage() {
             <button className="bg-[#ea580c] hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105">
               Emergency Support: +1 (555) 911-HELP
             </button>
-            <button className="border-2 border-white text-white hover:bg-white hover:text-slate-900 font-semibold px-8 py-4 rounded-full transition-all duration-300">
+            <Link href="/availablevehicle" className="border-2 border-white text-white hover:bg-white hover:text-slate-900 font-semibold px-8 py-4 rounded-full transition-all duration-300">
               Browse Our Fleet
-            </button>
+            </Link>
           </div>
         </div>
       </div>

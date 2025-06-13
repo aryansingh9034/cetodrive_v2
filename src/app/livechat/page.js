@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { Send, Paperclip, Phone, Video, MoreHorizontal, User, Bot } from "lucide-react"
-import background from "../../../public/image 62.png"
+import background from "../../../public/car2.jpg"
 
 export default function LiveChatPage() {
   const [messages, setMessages] = useState([
@@ -65,9 +65,9 @@ export default function LiveChatPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col py-20">
       {/* Hero Section */}
-      <div className="relative w-full min-h-[400px] md:min-h-[500px] bg-[#0f172a] overflow-hidden">
+      <div className="relative w-full min-h-screen  bg-[#0f172a] overflow-hidden">
         <Image src={background || "/placeholder.svg"} alt="Hero background" fill className="object-cover" priority />
 
         <div className="relative z-5 w-full flex flex-col h-full mt-20 lg:mt-0 justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
@@ -82,118 +82,7 @@ export default function LiveChatPage() {
 
       {/* Chat Interface */}
       <div className="max-w-[88rem] mx-auto px-4 mt-12 mb-12 flex-1">
-        <div className="max-w-4xl mx-auto">
-          {/* Chat Header */}
-          <div className="bg-white border border-gray-200 rounded-t-2xl p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-black">Sarah - Customer Support</h3>
-                <p className="text-sm text-green-500">● Online</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <Phone className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <Video className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <MoreHorizontal className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-          </div>
-
-          {/* Chat Messages */}
-          <div className="bg-gray-50 border-l border-r border-gray-200 h-96 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  message.sender === 'user' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white text-black border border-gray-200'
-                }`}>
-                  {message.sender === 'agent' && (
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                        <User className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="text-xs font-medium text-gray-600">{message.agentName}</span>
-                    </div>
-                  )}
-                  <p className="text-sm">{message.text}</p>
-                  <p className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
-                    {message.timestamp}
-                  </p>
-                </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-white text-black border border-gray-200 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                      <User className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-xs font-medium text-gray-600">Sarah</span>
-                  </div>
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick Replies */}
-          <div className="bg-white border-l border-r border-gray-200 p-4">
-            <p className="text-sm text-gray-600 mb-3">Quick replies:</p>
-            <div className="flex flex-wrap gap-2">
-              {quickReplies.map((reply, index) => (
-                <button
-                  key={index}
-                  onClick={() => setNewMessage(reply)}
-                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
-                >
-                  {reply}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Message Input */}
-          <div className="bg-white border border-gray-200 rounded-b-2xl p-4">
-            <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
-              <button type="button" className="p-2 hover:bg-gray-100 rounded-lg">
-                <Paperclip className="w-5 h-5 text-gray-600" />
-              </button>
-              
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              
-              <button
-                type="submit"
-                disabled={!newMessage.trim()}
-                className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </form>
-          </div>
-        </div>
+       
 
         {/* Chat Info */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">

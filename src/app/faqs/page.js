@@ -3,7 +3,8 @@
 import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
-import background from "../../../public/image 62.png"
+import Link from "next/link"
+import background from "../../../public/car4.jpg"
 
 export default function FAQPage() {
   const [activeIndex, setActiveIndex] = useState(null)
@@ -45,14 +46,42 @@ export default function FAQPage() {
       <div className="relative w-full min-h-[600px] md:min-h-[700px] lg:h-screen bg-[#0f172a] overflow-hidden">
         <Image src={background || "/placeholder.svg"} alt="Hero background" fill className="object-cover" priority />
 
-        <div className="relative z-5 w-full flex flex-col h-full mt-20 lg:mt-0 justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mt-8 md:mt-16 mb-4 text-center">
-            Frequently Asked 
-          </h1>
-          <p className="text-[#ea580c] text-4xl sm:text-4xl font-bold md:text-6xl lg:text-8xl max-w-4xl mb-8 md:mb-16 text-center">
-            Questions
-          </p>
-        </div>
+       <div className="relative z-5 w-full flex flex-col h-full mt-20 lg:mt-0 justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
+  <h1
+    className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mt-8 md:mt-16 mb-4 text-center"
+    style={{
+      textShadow: `
+        0 0 6px rgba(234,88,12,0.6),
+        0 0 12px rgba(234,88,12,0.4),
+        1px 1px 0 black,
+        -1px -1px 0 black,
+        1px -1px 0 black,
+        -1px 1px 0 black
+      `,
+    }}
+  >
+    Frequently Asked
+  </h1>
+
+  <p
+    className="text-[#ea580c] text-4xl sm:text-4xl font-bold md:text-6xl lg:text-8xl max-w-4xl mb-8 md:mb-16 text-center"
+    style={{
+      textShadow: `
+        0 0 8px rgba(234,88,12,0.8),
+        0 0 16px rgba(234,88,12,0.6),
+        0 0 32px rgba(234,88,12,0.5),
+        1px 1px 0 black,
+        -1px -1px 0 black,
+        1px -1px 0 black,
+        -1px 1px 0 black
+      `,
+      WebkitTextStroke: '0.5px black',
+    }}
+  >
+    Questions
+  </p>
+</div>
+
       </div>
 
       {/* FAQ Content */}
@@ -86,9 +115,9 @@ export default function FAQPage() {
             <h3 className="text-2xl md:text-3xl font-bold text-black mb-4">Still have questions?</h3>
             <p className="text-gray-600 mb-6">Our customer service team is available 24/7 to assist you with any inquiries.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors">
+              <Link href="/contactus" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors">
                 Contact Us
-              </button>
+              </Link>
               <button className="border border-blue-600 text-blue-600 font-medium px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors">
                 Call Now
               </button>

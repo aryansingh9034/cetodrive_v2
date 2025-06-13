@@ -2,24 +2,58 @@
 
 import { Phone, Mail, MapPin, Clock } from "lucide-react"
 import Image from "next/image"
-import background from "../../../public/image 62.png"
+import background from "../../../public/car6.avif"
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Hero Section */}
-      <div className="relative w-full min-h-[600px] md:min-h-[700px] lg:h-screen bg-[#0f172a] overflow-hidden">
-        <Image src={background || "/placeholder.svg"} alt="Hero background" fill className="object-cover" priority />
+     <div className="relative w-full min-h-[600px] md:min-h-[700px] lg:h-screen bg-[#0f172a] overflow-hidden">
+  <Image
+    src={background || "/placeholder.svg"}
+    alt="Hero background"
+    fill
+    className="object-cover "
+    priority
+  />
 
-        <div className="relative z-5 w-full flex flex-col h-full mt-20 lg:mt-0 justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mt-8 md:mt-16 mb-4 text-center">
-            About Our 
-          </h1>
-          <p className="text-[#ea580c] text-4xl sm:text-4xl font-bold md:text-6xl lg:text-8xl max-w-4xl mb-8 md:mb-16 text-center">
-            Premium Car Rental
-          </p>
-        </div>
-      </div>
+  <div className="relative z-5 w-full flex flex-col h-full mt-20 lg:mt-0 justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
+    <h1
+      className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mt-8 md:mt-16 mb-4 text-center"
+      style={{
+        textShadow: `
+          0 0 6px rgba(234,88,12,0.6),
+          0 0 12px rgba(234,88,12,0.4),
+          1px 1px 0 black,
+          -1px -1px 0 black,
+          1px -1px 0 black,
+          -1px 1px 0 black
+        `,
+      }}
+    >
+      About Our
+    </h1>
+
+    <p
+      className="text-[#ea580c] text-4xl sm:text-4xl font-bold md:text-6xl lg:text-8xl max-w-4xl mb-8 md:mb-16 text-center"
+      style={{
+        textShadow: `
+          0 0 8px rgba(234,88,12,0.8),
+          0 0 16px rgba(234,88,12,0.6),
+          0 0 32px rgba(234,88,12,0.5),
+          1px 1px 0 black,
+          -1px -1px 0 black,
+          1px -1px 0 black,
+          -1px 1px 0 black
+        `,
+        WebkitTextStroke: '0.5px black',
+      }}
+    >
+      Premium Car Rental
+    </p>
+  </div>
+</div>
+
 
       {/* About Content */}
       <div className="max-w-[88rem] mx-auto px-4 mt-20 mb-24">
