@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Phone, Mail, Apple, PlayCircle, Navigation } from "lucide-react"
 import Image from "next/image"
 import { ArrowRight, Calendar, Check, MapPin, Menu  , X} from "lucide-react"
-import { useState , useEffect } from "react"
+import { useState , useEffect, useRef } from "react"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { useRouter } from 'next/navigation';
@@ -23,8 +23,9 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+const searchResultsRef = useRef(null);
 
-
+const [showResults, setShowResults] = useState(false);
 
 
   useEffect(() => {
@@ -48,7 +49,7 @@ export default function Home() {
       // Add mock location data if not present
       const carsWithLocation = response.data.data.map((car, index) => ({
         ...car,
-        location: car.location || ["New York", "Los Angeles", "Chicago", "Houston", "Miami"][index % 5]
+        location: car.location || ["Dellas"]
       }));
       setCars(carsWithLocation || []);
       setLoading(false);
@@ -84,34 +85,34 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState([]);
 
 const handleSearch = () => {
-  if (!location) {
+  // Since Dellas is the only location, show all cars
+  setSearchResults(cars);
+  setShowResults(true);
   
-    return;
-  }
-  
-  // Filter cars by location (case insensitive)
-  const filteredCars = cars.filter(car => 
-    car.location?.toLowerCase().includes(location.toLowerCase())
-  );
-  
-  setSearchResults(filteredCars);
-  
-  // Scroll to results if any
-  if (filteredCars.length > 0) {
-    setTimeout(() => {
-      const resultsSection = document.getElementById("search-results");
-      if (resultsSection) {
-        resultsSection.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
-  }
+  // Scroll to results
+  setTimeout(() => {
+    const resultsSection = document.getElementById("search-results");
+    if (resultsSection) {
+      resultsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  }, 100);
 };
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
   }
-  
-  
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (searchResultsRef.current && !searchResultsRef.current.contains(event.target)) {
+      setShowResults(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -138,24 +139,20 @@ const handleSearch = () => {
   <div className="bg-white rounded-xl rounded-b-none shadow-md p-4 flex flex-col w-full max-w-[1050px] mx-auto">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {/* Location Input */}
-      <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
-        <MapPin className="text-gray-400 w-6 h-6 flex-shrink-0" />
-        <div className="w-full">
-          <div className="text-xs font-bold text-gray-800">Location</div>
-          <select
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full outline-none text-gray-700 text-sm bg-transparent"
-          >
-            <option value="">Select a location</option>
-            <option value="New York">New York</option>
-            <option value="Los Angeles">Los Angeles</option>
-            <option value="Chicago">Chicago</option>
-            <option value="Houston">Houston</option>
-            <option value="Miami">Miami</option>
-          </select>
-        </div>
-      </div>
+      {/* Location Input */}
+<div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
+  <MapPin className="text-gray-400 w-6 h-6 flex-shrink-0" />
+  <div className="w-full">
+    <div className="text-xs font-bold text-gray-800">Location</div>
+    <select
+      value={location}
+      onChange={(e) => setLocation(e.target.value)}
+      className="w-full outline-none text-gray-700 text-sm bg-transparent"
+    >
+      <option value="Dellas">Dellas</option>
+    </select>
+  </div>
+</div>
 
       {/* Pickup Date */}
       <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
@@ -206,75 +203,73 @@ const handleSearch = () => {
   </div>
 
   {/* Search Results - List View */}
-  {searchResults.length > 0 && (
-    <div className=" w-full max-w-[1050px] mx-auto">
-      <div className="bg-white rounded-xl rounded-t-none shadow-md overflow-hidden">
-        <div className="p-2 px-4 border-b bg-gray-50 ">
-          <h2 className="text-md font-semibold text-gray-800">
-            {searchResults.length} vehicles found
-          </h2>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {searchResults.map((car, index) => (
-            <div key={car.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
-              <div className="flex flex-col md:flex-row gap-4">
-                {/* Car Image */}
-                <div className="w-full md:w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    src={car.images?.[0]?.image ? `http://143.110.242.217:8031${car.images[0].image}` : "/placeholder.svg"}
-                    alt={car.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                
-                {/* Car Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1">
-                      {/* Car Name and Type */}
-                      <h3 className="text-xl font-bold text-gray-900 mb-1">
-                        {car.name}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-2">
-                        {car.vehicle_type?.name || "Premium Vehicle"}
+{searchResults.length > 0 && showResults && (
+  <div ref={searchResultsRef} className="w-full max-w-[1050px] mx-auto">
+    <div className="bg-white rounded-xl rounded-t-none shadow-md overflow-hidden">
+      <div className="p-2 px-4 border-b bg-gray-50">
+        <h2 className="text-md font-semibold text-gray-800">
+          {searchResults.length} vehicles found
+        </h2>
+      </div>
+      
+      {/* Add max-height and overflow-y-auto here */}
+      <div className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
+        {searchResults.map((car, index) => (
+          <div key={car.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Car Image */}
+              <div className="w-full md:w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                <img
+                  src={car.images?.[0]?.image ? `http://143.110.242.217:8031${car.images[0].image}` : "/placeholder.svg"}
+                  alt={car.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {/* Car Details */}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-1">
+                    {/* Car Name and Type */}
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                      {car.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-2">
+                      {car.vehicle_type?.name || "Premium Vehicle"}
+                    </p>
+                    
+                    {/* Additional car details if available */}
+                    {car.description && (
+                      <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+                        {car.description}
                       </p>
-                      
-                      {/* Additional car details if available */}
-                      {car.description && (
-                        <p className="text-gray-700 text-sm mb-3 line-clamp-2">
-                          {car.description}
-                        </p>
-                      )}
-                      
-                    
+                    )}
+                  </div>
+                  
+                  {/* Price and Action */}
+                  <div className="flex flex-col items-end gap-2 md:text-right">
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-[#ea580c]">
+                        ${car.price} <span className="text-sm text-gray-600">/ day</span>
+                      </div>
                     </div>
                     
-                    {/* Price and Action */}
-                    <div className="flex flex-col items-end gap-2 md:text-right">
-                      <div className="text-right">
-  <div className="text-2xl font-bold text-[#ea580c]">
-    ${car.price} <span className="text-sm text-gray-600">/ day</span>
-  </div>
-</div>
-
-                      
-                      <button 
-                        onClick={() => router.push(`/vehicle-details?id=${car.id}`)}
-                        className="bg-[#ea580c] hover:bg-orange-600 text-white px-6 py-2 rounded-md font-semibold transition-colors duration-200 whitespace-nowrap"
-                      >
-                        View Details
-                      </button>
-                    </div>
+                    <button 
+                      onClick={() => router.push(`/cardetails?id=${car.id}`)}
+                      className="bg-[#ea580c] hover:bg-orange-600 text-white px-6 py-2 rounded-md font-semibold transition-colors duration-200 whitespace-nowrap"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
-  )}
+  </div>
+)}
 </div>
       </div>
 

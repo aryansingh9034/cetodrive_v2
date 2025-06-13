@@ -194,11 +194,11 @@ export default function Footer() {
                       Help center
                     </Link>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link href="/livechat" className="hover:text-gray-300">
                       Live chat
                     </Link>
-                  </li>
+                  </li> */}
                   <li>
                     <Link href="/howitwork" className="hover:text-gray-300">
                       How it works
@@ -212,39 +212,39 @@ export default function Footer() {
                 <h3 className="font-bold mb-4">Our Brands</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p  className="hover:text-gray-300">
                       Toyota
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Porsche
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       BMW
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Ford
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Nissan
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Peugeot
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Volkswagen
-                    </Link>
+                    </p>
                   </li>
                 </ul>
               </div>
@@ -254,44 +254,44 @@ export default function Footer() {
                 <h3 className="font-bold mb-4">Vehicles Type</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Sedan
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Hatchback
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       SUV
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       PHEV
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Electric
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Coupe
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Truck
-                    </Link>
+                    </p>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-gray-300">
+                    <p className="hover:text-gray-300">
                       Convertible
-                    </Link>
+                    </p>
                   </li>
                 </ul>
               </div>

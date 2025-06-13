@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ReservationSection = () => {
@@ -91,9 +92,9 @@ const ReservationSection = () => {
             </p>
             
             {/* Search Button */}
-            <button className="w-full bg-white border-2 border-blue-600 text-blue-600 py-4 px-6 rounded-full text-base font-medium hover:bg-blue-50 transition-colors">
-              Search 77,381 cars
-            </button>
+            <Link href="/availablevehicle" className="w-full bg-white border-2 border-blue-600 text-blue-600 py-4 px-6 rounded-full text-base font-medium hover:bg-blue-50 transition-colors">
+              Search Cars
+            </Link>
           </div>
 
           {/* Carousel Section */}

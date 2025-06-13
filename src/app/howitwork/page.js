@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { 
   Search, 
   Calendar, 
@@ -152,23 +153,15 @@ export default function HowItWorksPage() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-24">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="max-w-7xl mx-auto px-4 pt-12 text-center">
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            How It
-            <span className="block text-[#ea580c] mt-2">Works</span>
+            How It <span className=" text-[#ea580c] mt-2">Works</span>
+            
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
             Renting a car has never been easier. Follow these simple steps to get on the road in minutes.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-[#ea580c] hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
-              <Play className="w-5 h-5" />
-              Watch Demo
-            </button>
-            <button className="border-2 border-white text-white hover:bg-white hover:text-slate-900 font-semibold px-8 py-4 rounded-full transition-all duration-300">
-              Start Booking Now
-            </button>
-          </div>
+         
         </div>
       </div>
 
@@ -371,12 +364,10 @@ export default function HowItWorksPage() {
             Join thousands who have discovered the easiest way to rent a car. Start your journey today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-[#ea580c] hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105">
+            <Link href="/availablevehicle" className="bg-[#ea580c] hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105">
               Book Your Car Now
-            </button>
-            <button className="border-2 border-white text-white hover:bg-white hover:text-slate-900 font-semibold px-8 py-4 rounded-full transition-all duration-300">
-              View Our Fleet
-            </button>
+            </Link>
+           
           </div>
         </div>
       </div>

@@ -1,175 +1,398 @@
 "use client";
 
 import React from "react";
-import login from "../../../public/Group 1(4).png";
-import Image from "next/image";
-import Link from "next/link";
-import { Phone, Mail, Apple, PlayCircle , Heart, Star } from "lucide-react"
-import { ArrowRight, Check, Menu, X ,  Fuel, Settings, Users , ChevronDown} from "lucide-react"
-import { useState , useEffect } from "react"
-import "react-datepicker/dist/react-datepicker.css"
-import background from "../../../public/View.png"
-import Img from "../../../public/ImgKe.png"
-import Profile from "../../../public/Profill.png"
+import { Phone, Mail, User, Lock, MapPin, Car, Edit3, Settings, LogOut, Save, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
-export default function LoginPage() {
-        const router = useRouter(); // initialize router
 
-   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-   const [user, setUser] = useState(null);
+export default function ModernProfilePage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedUser, setEditedUser] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('userData');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Simulating user data for demo
+    const mockUser = {
+      username: "John Doe",
+      email: "john.doe@example.com",
+      re_password: "••••••••",
+      vehcile_types: "Premium User",
+      address: "",
+      phone: ""
+    };
+    setUser(mockUser);
+    setEditedUser({...mockUser});
+    
+    // Uncomment this for real implementation:
+     const storedUser = localStorage.getItem('userData');
+     if (storedUser) {
+       const userData = JSON.parse(storedUser);
+       setUser(userData);
+       setEditedUser({...userData});
+     }
   }, []);
 
-  if (!user) return <div>Loading...</div>;
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen)
-  }
-
-    
-
-  const rentcar = () =>{
-       router.push("./vehicleform")
-  }
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const payload = {
-      email,
-      password,
-    };
-
-    try {
-      const response = await fetch("http://3.108.23.172:8002/api/customer/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Login successful:", data);
-    
-      } else {
-        console.error("Login failed:", data);
-        // Show error message
-      }
-    } catch (error) {
-      console.error("Error:", error);
+  const handleEditClick = () => {
+    setIsEditing(!isEditing);
+    if (isEditing) {
+      // Save the changes
+      setUser(editedUser);
+      // In a real app, you would also save to localStorage/API here
+      // localStorage.setItem('userData', JSON.stringify(editedUser));
     }
   };
+
+  const handleCancelClick = () => {
+    setIsEditing(false);
+    setEditedUser({...user});
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedUser(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full min-h-screen  bg-white py-24">
-
-       <div className="relative w-full shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] lg:h-full bg-[white] overflow-hidden">
-
-
-
-      </div>
-
-    <div className="min-h-screen bg-white p-8 font-sans">
-      {/* Profile Section */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Image
-            src={Profile}
-            alt="User"
-            width={50}
-            height={50}
-            className="rounded-full"
-          />
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800">{user.username}</h2>
-            <p className="text-lg text-gray-500">{user.email}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Profile
+          </h1>
+          <div className="flex items-center gap-3">
+            <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200">
+              <Settings className="w-5 h-5" />
+            </button>
+            <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-all duration-200">
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
-        {/* <button className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded">
-          Edit
-        </button> */}
       </div>
 
-      {/* Form */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div>
-          <label className="block text-lg text-gray-600 mb-1">Full Name</label>
-          <input
-            className="w-full border-amber-50 rounded px-4 py-2 text-black bg-gray-100"
-            value={user.username}
-            readOnly
-          />
-        </div>
-        <div>
-          <label className="block text-lg text-gray-600 mb-1">User Name</label>
-          <input
-            className="w-full border-amber-50 rounded px-4 py-2 text-black bg-gray-100"
-            value={user.username}
-            readOnly
-          />
-        </div>
-        <div>
-          <label className="block text-lg text-gray-600 mb-1">Address</label>
-          <input
-            className="w-full border-amber-50 rounded px-4 py-2 text-black bg-gray-100"
-            value="N/A"
-            readOnly
-          />
-        </div>
-        <div>
-          <label className="block text-lg text-gray-600 mb-1">Password</label>
-          <input
-            className="w-full rounded px-4 py-2 border-amber-50 text-black bg-gray-100"
-            type="password"
-            value={user.re_password}
-            readOnly
-          />
-        </div>
-        <div>
-          <label className="block text-lg text-gray-600 mb-1">User Type</label>
-          <input
-            className="w-full border rounded px-4 py-2 border-amber-50 text-black bg-gray-100"
-            value={user.vehcile_types}
-            readOnly
-          />
-        </div>
-        <div>
-          <label className="block text-lg text-gray-600 mb-1">Phone Number</label>
-          <input
-            className="w-full border rounded px-4 py-2 border-amber-50 text-black bg-gray-100"
-            value="N/A"
-            readOnly
-          />
-        </div>
-      </div>
-
-      {/* Email Address */}
-      <div className="mb-6">
-        <p className="text-gray-800 font-semibold mb-2">My email Address</p>
-        <div className="flex items-center gap-4 bg-gray-100 rounded p-4 max-w-md">
-          <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center">✉️</div>
-          <div>
-            <p className="text-lg text-black font-medium">{user.email}</p>
-            <p className="text-xs text-gray-800">Just now</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Profile Hero Section */}
+        <div className="bg-white rounded-3xl shadow-lg shadow-blue-500/10 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-12 relative">
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
+          <div className="px-8 pb-8 -mt-2 relative">
+            <div className="flex items-end gap-6 mb-6">
+              <div className="relative">
+                <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-white">
+                  <img src={user.img} className="w-12 h-12 text-gray-400" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+              </div>
+              <div className="flex-1 mt-4">
+                <h2 className="text-3xl font-bold text-gray-900 mb-1">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedUser.username}
+                      onChange={(e) => handleInputChange('username', e.target.value)}
+                      className="bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 w-full"
+                    />
+                  ) : (
+                    user.username
+                  )}
+                </h2>
+                <p className="text-gray-600 mb-3">
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      value={editedUser.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className="bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 w-full"
+                    />
+                  ) : (
+                    user.email
+                  )}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {user.vehcile_types}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <>
+                    <button 
+                      onClick={handleCancelClick}
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleEditClick}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                    >
+                      <Save className="w-4 h-4" />
+                      Save
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={handleEditClick}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-       
+
+        {/* Information Cards */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
+          {/* Personal Info Card */}
+          <div className="xl:col-span-3">
+            <div className="bg-white rounded-2xl shadow-lg shadow-gray-500/10 p-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
+                Personal Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Full Name</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedUser.username}
+                      onChange={(e) => handleInputChange('username', e.target.value)}
+                      className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-gray-200 focus:border-blue-200 w-full"
+                    />
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
+                      <p className="text-gray-900 font-medium">{user.username}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Username</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedUser.username}
+                      onChange={(e) => handleInputChange('username', e.target.value)}
+                      className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-gray-200 focus:border-blue-200 w-full"
+                    />
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
+                      <p className="text-gray-900 font-medium">{user.username}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">User Type</label>
+                  <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
+                    <p className="text-gray-900 font-medium">{user.vehcile_types}</p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Address</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedUser.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      placeholder="Enter your address"
+                      className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-gray-200 focus:border-blue-200 w-full"
+                    />
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
+                      <p className={user.address ? "text-gray-900 font-medium" : "text-gray-500 italic"}>
+                        {user.address || "Not provided"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Phone Number</label>
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      value={editedUser.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder="Enter your phone number"
+                      className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-gray-200 focus:border-blue-200 w-full"
+                    />
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
+                      <p className={user.phone ? "text-gray-900 font-medium" : "text-gray-500 italic"}>
+                        {user.phone || "Not provided"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Password</label>
+                  {isEditing ? (
+                    <input
+                      type="password"
+                      value={editedUser.re_password}
+                      onChange={(e) => handleInputChange('re_password', e.target.value)}
+                      className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-gray-200 focus:border-blue-200 w-full"
+                    />
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl px-4 py-4 border-2 border-transparent focus-within:border-blue-200">
+                      <p className="text-gray-900 font-medium">{user.re_password}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="xl:col-span-1 space-y-6">
+            {/* Quick Actions Card */}
+            <div className="bg-white rounded-2xl shadow-lg shadow-gray-500/10 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button className="w-full bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+                  <Car className="w-5 h-5" />
+                  Rent a Vehicle
+                </button>
+                <button className="w-full bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+                  <Settings className="w-5 h-5" />
+                  Account Settings
+                </button>
+                <button className="w-full bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-green-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+                  <MapPin className="w-5 h-5" />
+                  Add Address
+                </button>
+                <button className="w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+                  <Phone className="w-5 h-5" />
+                  Add Phone
+                </button>
+              </div>
+            </div>
+
+            {/* Security Card */}
+            <div className="bg-white rounded-2xl shadow-lg shadow-gray-500/10 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Lock className="w-5 h-5 text-green-600" />
+                Security
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                  <span className="text-sm font-medium text-green-800">Password</span>
+                  <span className="text-green-600 text-sm">✓ Protected</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                  <span className="text-sm font-medium text-blue-800">Email</span>
+                  <span className="text-blue-600 text-sm">✓ Verified</span>
+                </div>
+                <button className="w-full text-blue-600 hover:text-blue-700 font-medium py-2 text-sm border border-blue-200 rounded-xl hover:bg-blue-50 transition-all duration-200">
+                  Change Password
+                </button>
+              </div>
+            </div>
+
+            {/* Activity Card */}
+            <div className="bg-white rounded-2xl shadow-lg shadow-gray-500/10 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Profile Updated</p>
+                    <p className="text-xs text-gray-500">2 minutes ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Email Verified</p>
+                    <p className="text-xs text-gray-500">1 hour ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Account Created</p>
+                    <p className="text-xs text-gray-500">2 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Email Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-2xl shadow-lg shadow-gray-500/10 p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Mail className="w-5 h-5 text-blue-600" />
+              Primary Email Address
+            </h3>
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                  <Mail className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      value={editedUser.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className="bg-white border border-gray-300 rounded-xl px-3 py-2 w-full"
+                    />
+                  ) : (
+                    <>
+                      <p className="font-semibold text-gray-900">{user.email}</p>
+                      <p className="text-sm text-gray-600">Primary email • Verified</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Statistics Card */}
+          <div className="bg-white rounded-2xl shadow-lg shadow-gray-500/10 p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Account Statistics</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-xl">
+                <div className="text-2xl font-bold text-blue-600">0</div>
+                <div className="text-sm text-gray-600">Bookings Made</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-xl">
+                <div className="text-2xl font-bold text-green-600">2</div>
+                <div className="text-sm text-gray-600">Days Active</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-xl">
+                <div className="text-2xl font-bold text-purple-600">100%</div>
+                <div className="text-sm text-gray-600">Profile Complete</div>
+              </div>
+              <div className="text-center p-4 bg-orange-50 rounded-xl">
+                <div className="text-2xl font-bold text-orange-600">0</div>
+                <div className="text-sm text-gray-600">Reviews Given</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Save Button */}
-      
-    </div>
-
-
-
-       
     </div>
   );
 }
