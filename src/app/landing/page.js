@@ -810,10 +810,10 @@ useEffect(() => {
               </div>
             </div>
 
-            <button onClick={handleClick1} className="bg-[#ea580c] cursor-pointer text-white px-6 py-3 rounded-md font-medium flex items-center gap-2 mx-auto md:mx-0">
+            <Link href="/availablevehicle" className="bg-[#ea580c] cursor-pointer text-white px-6 py-3 rounded-md font-medium flex items-center gap-2 mx-auto md:mx-0">
               Start Your Journey
               <ArrowRight className="w-5 h-5" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>

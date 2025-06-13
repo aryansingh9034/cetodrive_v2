@@ -415,11 +415,21 @@ export default function Billing() {
                               required
                             >
                               <option value="">Select location</option>
-                              
-                             <option value="dallas-downtown">Downtown Dallas</option>
-                          <option value="dfw-airport">DFW International Airport</option>
-                          <option value="love-field">Dallas Love Field Airport</option>
-                          <option value="uptown">Uptown Dallas</option>
+
+
+<option value="dallas-downtown">Downtown Dallas</option>
+<option value="uptown">Uptown Dallas</option>
+
+
+<option value="dfw-airport">DFW International Airport (DFW)</option>
+<option value="love-field">Dallas Love Field Airport (DAL)</option>
+<option value="addison-airport">Addison Airport (ADS)</option>
+<option value="dallas-executive">Dallas Executive Airport (RBD)</option>
+<option value="fort-worth-alliance">Fort Worth Alliance Airport (AFW)</option>
+<option value="grand-prairie-airport">Grand Prairie Municipal Airport (GPM)</option>
+<option value="lancaster-airport">Lancaster Regional Airport (LNC)</option>
+<option value="mesquite-airport">Mesquite Metro Airport (HQZ)</option>
+
                               
                             </select>
                           </div>
@@ -517,13 +527,22 @@ export default function Billing() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
-                        <input
-                          type="date"
-                          placeholder=" MM / YY"
-                          value={paymentData.expiryDate}
-                          onChange={(e) => setPaymentData({...paymentData, expiryDate: e.target.value})}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                       <input
+  type="text"
+  placeholder="MM / YY"
+  value={paymentData.expiryDate}
+  onChange={(e) => {
+    const value = e.target.value;
+    // Optional: Allow only digits and slash, auto-format MM/YY
+    const formatted = value
+      .replace(/[^\d]/g, "")         // remove non-digits
+      .replace(/(\d{2})(\d{1,2})/, "$1 / $2")  // add slash after MM
+      .substr(0, 7);                 // limit to 7 characters "MM / YY"
+    setPaymentData({ ...paymentData, expiryDate: formatted });
+  }}
+  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+/>
+
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Card Holder</label>
