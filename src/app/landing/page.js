@@ -17,8 +17,19 @@ import TestimonialsPage from "../testimonial/page"
 
 export default function Home() {
   const router = useRouter();
-  const [pickupDate, setPickupDate] = useState(new Date())
-  const [returnDate, setReturnDate] = useState(new Date(new Date().setDate(new Date().getDate() + 1)))
+const [pickupDate, setPickupDate] = useState(() => {
+  const now = new Date();
+  // Round up to nearest 15 minutes
+  const roundedMinutes = Math.ceil(now.getMinutes() / 15) * 15;
+  now.setMinutes(roundedMinutes);
+  return now;
+});
+
+const [returnDate, setReturnDate] = useState(() => {
+  const returnDate = new Date(pickupDate);
+  returnDate.setHours(pickupDate.getHours() + 1); // Default to 1 hour after pickup
+  return returnDate;
+});
   const [location, setLocation] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cars, setCars] = useState([]);
@@ -149,47 +160,80 @@ useEffect(() => {
       onChange={(e) => setLocation(e.target.value)}
       className="w-full outline-none text-gray-700 text-sm bg-transparent"
     >
-      <option value="Dellas">Dellas</option>
+      <option value="Dellas">Dallas</option>
     </select>
   </div>
 </div>
 
       {/* Pickup Date */}
-      <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
-        <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
-        <div className="w-full">
-          <div className="text-xs font-bold text-gray-800">Pickup date</div>
-          <DatePicker
-            selected={pickupDate}
-            onChange={(date) => setPickupDate(date)}
-            showTimeSelect
-            timeFormat="HH:mm"
-            timeIntervals={15}
-            dateFormat="EEE, MMM d, HH:mm"
-            className="w-full outline-none text-gray-700 cursor-pointer text-sm"
-            customInput={<div className="cursor-pointer">{formatDate(pickupDate)}</div>}
-          />
-        </div>
-      </div>
+{/* Pickup Date */}
+<div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
+  <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
+  <div className="w-full">
+    <div className="text-xs font-bold text-gray-800">Pickup date</div>
+    <DatePicker
+      selected={pickupDate}
+      onChange={(date) => {
+        setPickupDate(date);
+        // If return date is before new pickup date, adjust return date
+        if (returnDate < date) {
+          const newReturnDate = new Date(date);
+          newReturnDate.setHours(date.getHours() + 1); // Add 1 hour as default
+          setReturnDate(newReturnDate);
+        }
+      }}
+      minDate={new Date()} // Disable past dates
+      minTime={new Date().getDate() === pickupDate.getDate() ? 
+               new Date() : // If today, only allow future times
+               new Date().setHours(0, 0, 0, 0)} // If future date, allow all times
+      maxTime={new Date().setHours(23, 59, 59, 999)}
+      showTimeSelect
+      timeFormat="HH:mm"
+      timeIntervals={15}
+      dateFormat="EEE, MMM d, HH:mm"
+      className="w-full outline-none text-gray-700 cursor-pointer text-sm"
+      customInput={<div className="cursor-pointer">{formatDate(pickupDate)}</div>}
+    />
+  </div>
+</div>
 
-      {/* Return Date */}
-      <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
-        <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
-        <div className="w-full">
-          <div className="text-xs font-bold text-gray-800">Return date</div>
-          <DatePicker
-            selected={returnDate}
-            onChange={(date) => setReturnDate(date)}
-            showTimeSelect
-            timeFormat="HH:mm"
-            timeIntervals={15}
-            dateFormat="EEE, MMM d, HH:mm"
-            className="w-full outline-none text-gray-700 cursor-pointer text-sm"
-            customInput={<div className="cursor-pointer">{formatDate(returnDate)}</div>}
-          />
-        </div>
-      </div>
-
+{/* Return Date */}
+{/* Return Date */}
+<div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
+  <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
+  <div className="w-full">
+    <div className="text-xs font-bold text-gray-800">Return date</div>
+    <DatePicker
+      selected={returnDate}
+      onChange={(date) => setReturnDate(date)}
+      minDate={pickupDate}
+      minTime={
+        returnDate && returnDate.getDate() === pickupDate.getDate() && 
+        returnDate.getMonth() === pickupDate.getMonth() && 
+        returnDate.getFullYear() === pickupDate.getFullYear()
+          ? new Date(pickupDate.getTime() + 15 * 60 * 1000) // 15 minutes after pickup
+          : new Date().setHours(0, 0, 0, 0) // Start of day
+      }
+      maxTime={new Date().setHours(23, 59, 59, 999)}
+      showTimeSelect
+      timeFormat="HH:mm"
+      timeIntervals={15}
+      dateFormat="EEE, MMM d, HH:mm"
+      className="w-full outline-none text-gray-700 cursor-pointer text-sm"
+      customInput={<div className="cursor-pointer">{formatDate(returnDate)}</div>}
+      filterTime={(time) => {
+        if (
+          time.getDate() === pickupDate.getDate() &&
+          time.getMonth() === pickupDate.getMonth() &&
+          time.getFullYear() === pickupDate.getFullYear()
+        ) {
+          return time.getTime() > pickupDate.getTime() + 15 * 60 * 1000;
+        }
+        return true;
+      }}
+    />
+  </div>
+</div>
       {/* Search Button */}
       <div className="flex justify-center p-2">
         <button

@@ -40,7 +40,7 @@ export default function ModernProfilePage() {
       // Save the changes
       setUser(editedUser);
       // In a real app, you would also save to localStorage/API here
-      // localStorage.setItem('userData', JSON.stringify(editedUser));
+       localStorage.setItem('userData', JSON.stringify(editedUser));
     }
   };
 

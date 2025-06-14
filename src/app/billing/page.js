@@ -12,6 +12,7 @@ export default function Billing() {
   const [showPopup, setShowPopup] = useState(false);
   const [showIdUploadPopup, setShowIdUploadPopup] = useState(false);
   const [idFiles, setIdFiles] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
   
   const handleRentNowClick = () => {
     if (isFormSubmitted && confirmationData.terms) {
@@ -97,6 +98,7 @@ export default function Billing() {
   const [submitMessage, setSubmitMessage] = useState("")
   const [pickupCompleted, setPickupCompleted] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState([])
+  
 
   // Handle billing form changes
   const handleBillingChange = (field, value) => {
@@ -212,6 +214,18 @@ export default function Billing() {
       default: return ""
     }
   }
+  // Helper function to add minutes to a time string (format "HH:MM")
+const addMinutesToTime = (timeString, minutesToAdd) => {
+  if (!timeString) return "00:00";
+  
+  let [hours, minutes] = timeString.split(':').map(Number);
+  minutes += minutesToAdd;
+  hours += Math.floor(minutes / 60);
+  minutes = minutes % 60;
+  hours = hours % 24;
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
 
   return (
     <div className="min-h-screen bg-gray-50 py-32">
@@ -306,308 +320,447 @@ export default function Billing() {
             )}
 
             {/* Step 2: Rental Info */}
-            {currentStep === 2 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm space-y-8">
-                {/* Pick-Up Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Pick-Up Information</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                      <select
-                        value={rentalData.pickupCity || ""}
-                        onChange={(e) => {
-                          handleRentalChange("pickupCity", e.target.value);
-                          handleRentalChange("pickupLocation", ""); // Reset location when city changes
-                        }}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                        required
-                      >
-                        <option value="">Select city</option>
-                        <option value="dallas">Dallas</option>
-                      </select>
-                    </div>
-                    
-                    {rentalData.pickupCity && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Location in {rentalData.pickupCity}</label>
-                        <select
-                          value={rentalData.pickupLocation}
-                          onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                          required
-                        >
-                          <option value="">Select location</option>
-                          
-                          <option value="dfw-airport">DFW International Airport</option>
-                          <option value="love-field">Dallas Love Field Airport</option>
-                          
-                        </select>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
-                      <input
-                        type="date"
-                        value={rentalData.pickupDate}
-                        onChange={(e) => handleRentalChange("pickupDate", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Time</label>
-                      <input
-                        type="time"
-                        value={rentalData.pickupTime}
-                        onChange={(e) => handleRentalChange("pickupTime", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  {!pickupCompleted && (
-                    <div className="flex justify-end">
-                      <button
-                        onClick={completePickup}
-                        disabled={!rentalData.pickupCity || !rentalData.pickupLocation || !rentalData.pickupDate || !rentalData.pickupTime}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Confirm Pickup
-                      </button>
-                    </div>
-                  )}
-                </div>
+{currentStep === 2 && (
+  <div className="bg-white rounded-lg p-6 shadow-sm space-y-8">
+    {/* Pick-Up Section */}
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900">Pick-Up Information</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* City Selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+          <select
+            value={rentalData.pickupCity || ""}
+            onChange={(e) => {
+              handleRentalChange("pickupCity", e.target.value);
+              handleRentalChange("pickupLocation", "");
+            }}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+            required
+          >
+            <option value="">Select city</option>
+            <option value="dallas">Dallas</option>
+          </select>
+        </div>
+        
+        {/* Location Selector */}
+        {rentalData.pickupCity && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Location in {rentalData.pickupCity}</label>
+            <select
+              value={rentalData.pickupLocation}
+              onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+              required
+            >
+              <option value="">Select location</option>
+              <option value="dfw-airport">DFW International Airport</option>
+              <option value="love-field">Dallas Love Field Airport</option>
+            </select>
+          </div>
+        )}
+        
+        {/* Pickup Date */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
+          <input
+            type="date"
+            value={rentalData.pickupDate}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={(e) => {
+              const today = new Date().toISOString().split('T')[0];
+              const currentTime = new Date().toTimeString().substring(0, 5);
+              const isToday = e.target.value === today;
+              
+              handleRentalChange("pickupDate", e.target.value);
+              
+              // Reset time if switching to today and current time is later
+              if (isToday && rentalData.pickupTime && rentalData.pickupTime < currentTime) {
+                handleRentalChange("pickupTime", currentTime);
+              }
+              
+              // Adjust dropoff if same day
+              if (rentalData.dropoffDate === e.target.value) {
+                const pickupTime = rentalData.pickupTime || (isToday ? currentTime : "12:00");
+                const minDropoffTime = addMinutesToTime(pickupTime, 15);
+                
+                if (!rentalData.dropoffTime || rentalData.dropoffTime <= pickupTime) {
+                  handleRentalChange("dropoffTime", minDropoffTime);
+                }
+              }
+            }}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+            required
+          />
+        </div>
+        
+        {/* Pickup Time */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Time</label>
+          <input
+            type="time"
+            value={rentalData.pickupTime}
+            min={
+              rentalData.pickupDate === new Date().toISOString().split('T')[0]
+                ? new Date().toTimeString().substring(0, 5)
+                : "00:00"
+            }
+            onChange={(e) => {
+              const today = new Date().toISOString().split('T')[0];
+              const currentTime = new Date().toTimeString().substring(0, 5);
+              const isToday = rentalData.pickupDate === today;
+              const newTime = isToday && e.target.value < currentTime ? currentTime : e.target.value;
+              
+              handleRentalChange("pickupTime", newTime);
+              
+              // Adjust dropoff if same day
+              if (rentalData.pickupDate === rentalData.dropoffDate) {
+                const minDropoffTime = addMinutesToTime(newTime, 15);
+                if (!rentalData.dropoffTime || rentalData.dropoffTime <= newTime) {
+                  handleRentalChange("dropoffTime", minDropoffTime);
+                }
+              }
+            }}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+            required
+          />
+        </div>
+      </div>
+      
+      {!pickupCompleted && (
+        <div className="flex justify-end">
+          <button
+            onClick={completePickup}
+            disabled={!rentalData.pickupCity || !rentalData.pickupLocation || !rentalData.pickupDate || !rentalData.pickupTime}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Confirm Pickup
+          </button>
+        </div>
+      )}
+    </div>
 
-                {/* Drop-Off Section - Only shown after pickup is completed */}
-                {pickupCompleted && (
-                  <>
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Drop-Off Information</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                          <select
-                            value={rentalData.dropoffCity || ""}
-                            onChange={(e) => {
-                              handleRentalChange("dropoffCity", e.target.value);
-                              handleRentalChange("dropoffLocation", ""); // Reset location when city changes
-                            }}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                            required
-                          >
-                            <option value="">Select city</option>
-                            <option value="dallas">Dallas</option>
-                          </select>
-                        </div>
-                        
-                        {rentalData.dropoffCity && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Location in {rentalData.dropoffCity}</label>
-                            <select
-                              value={rentalData.dropoffLocation}
-                              onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                              required
-                            >
-                              <option value="">Select location</option>
-
-
-<option value="dallas-downtown">Downtown Dallas</option>
-<option value="uptown">Uptown Dallas</option>
-
-
-<option value="dfw-airport">DFW International Airport (DFW)</option>
-<option value="love-field">Dallas Love Field Airport (DAL)</option>
-<option value="addison-airport">Addison Airport (ADS)</option>
-<option value="dallas-executive">Dallas Executive Airport (RBD)</option>
-<option value="fort-worth-alliance">Fort Worth Alliance Airport (AFW)</option>
-<option value="grand-prairie-airport">Grand Prairie Municipal Airport (GPM)</option>
-<option value="lancaster-airport">Lancaster Regional Airport (LNC)</option>
-<option value="mesquite-airport">Mesquite Metro Airport (HQZ)</option>
-
-                              
-                            </select>
-                          </div>
-                        )}
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Dropoff Date</label>
-                          <input
-                            type="date"
-                            min={rentalData.pickupDate}
-                            value={rentalData.dropoffDate}
-                            onChange={(e) => handleRentalChange("dropoffDate", e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Dropoff Time</label>
-                          <input
-                            type="time"
-                            value={rentalData.dropoffTime}
-                            onChange={(e) => handleRentalChange("dropoffTime", e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Flight Number Section */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Flight Information (Optional)</h3>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Flight Number</label>
-                        <input
-                          type="text"
-                          placeholder="Enter your flight number (optional)"
-                          value={rentalData.flightNumber || ""}
-                          onChange={(e) => handleRentalChange("flightNumber", e.target.value)}
-                          className="w-full px-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+    {/* Drop-Off Section */}
+    {pickupCompleted && (
+      <>
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Drop-Off Information</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Dropoff City */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+              <select
+                value={rentalData.dropoffCity || ""}
+                onChange={(e) => {
+                  handleRentalChange("dropoffCity", e.target.value);
+                  handleRentalChange("dropoffLocation", "");
+                }}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                required
+              >
+                <option value="">Select city</option>
+                <option value="dallas">Dallas</option>
+              </select>
+            </div>
+            
+            {/* Dropoff Location */}
+            {rentalData.dropoffCity && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location in {rentalData.dropoffCity}</label>
+                <select
+                  value={rentalData.dropoffLocation}
+                  onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                  required
+                >
+                  <option value="">Select location</option>
+                  <option value="dfw-airport">DFW International Airport</option>
+                  <option value="love-field">Dallas Love Field Airport</option>
+                  <option value="dallas-downtown">Downtown Dallas</option>
+                  <option value="uptown">Uptown Dallas</option>
+                </select>
               </div>
             )}
+            
+            {/* Dropoff Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Dropoff Date</label>
+              <input
+                type="date"
+                min={rentalData.pickupDate}
+                value={rentalData.dropoffDate}
+                onChange={(e) => {
+                  const isSameDay = e.target.value === rentalData.pickupDate;
+                  handleRentalChange("dropoffDate", e.target.value);
+                  
+                  if (isSameDay) {
+                    const pickupTime = rentalData.pickupTime || "12:00";
+                    const minDropoffTime = addMinutesToTime(pickupTime, 15);
+                    
+                    if (!rentalData.dropoffTime || rentalData.dropoffTime <= pickupTime) {
+                      handleRentalChange("dropoffTime", minDropoffTime);
+                    }
+                  }
+                }}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                required
+              />
+            </div>
+            
+            {/* Dropoff Time */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Dropoff Time</label>
+              <input
+                type="time"
+                value={rentalData.dropoffTime}
+                min={
+                  rentalData.dropoffDate === rentalData.pickupDate
+                    ? addMinutesToTime(rentalData.pickupTime || "12:00", 15)
+                    : "00:00"
+                }
+                onChange={(e) => {
+                  const newTime = e.target.value;
+                  const isSameDay = rentalData.dropoffDate === rentalData.pickupDate;
+                  
+                  if (isSameDay) {
+                    const pickupTime = rentalData.pickupTime || "12:00";
+                    const minDropoffTime = addMinutesToTime(pickupTime, 15);
+                    
+                    if (newTime <= pickupTime) {
+                      handleRentalChange("dropoffTime", minDropoffTime);
+                    } else {
+                      handleRentalChange("dropoffTime", newTime);
+                    }
+                  } else {
+                    handleRentalChange("dropoffTime", newTime);
+                  }
+                }}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
+                required
+              />
+            </div>
+          </div>
+        </div>
 
-            {/* Step 3: Payment Method */}
-            {currentStep === 3 && (
-              <div className="bg-white text-black rounded-lg p-6 shadow-sm">
-                {submitMessage && (
-                  <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-700">
-                    {submitMessage}
-                  </div>
-                )}
+        {/* Flight Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Flight Information (Optional)</h3>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Flight Number</label>
+            <input
+              type="text"
+              placeholder="Enter your flight number (optional)"
+              value={rentalData.flightNumber || ""}
+              onChange={(e) => handleRentalChange("flightNumber", e.target.value)}
+              className="w-full px-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </>
+    )}
+  </div>
+)}
 
-                <div className="mb-6">
-                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-4">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="credit-card"
-                        name="payment-method"
-                        value="credit-card"
-                        checked={selectedPaymentMethod === "credit-card"}
-                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <label htmlFor="credit-card" className="ml-2 text-sm font-medium text-gray-900">
-                        Credit Card
-                      </label>
-                    </div>
-                    <div className="flex space-x-2">
-                      <div className="w-8 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
-                        VISA
-                      </div>
-                      <div className="w-8 h-5 bg-gradient-to-r from-red-500 to-yellow-500 rounded text-white text-xs flex items-center justify-center font-bold">
-                        MC
-                      </div>
-                    </div>
-                  </div>
+{/* Step 3: Payment Method */}
+{currentStep === 3 && (
+  <div className="bg-white text-black rounded-lg p-6 shadow-sm">
+    {submitMessage && (
+      <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-700">
+        {submitMessage}
+      </div>
+    )}
 
-                  {selectedPaymentMethod === "credit-card" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
-                        <input
-                          type="number"
-                          placeholder="Card number"
-                          value={paymentData.cardNumber}
-                          onChange={(e) => setPaymentData({...paymentData, cardNumber: e.target.value})}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
-                       <input
-  type="text"
-  placeholder="MM / YY"
-  value={paymentData.expiryDate}
-  onChange={(e) => {
-    const value = e.target.value;
-    // Optional: Allow only digits and slash, auto-format MM/YY
-    const formatted = value
-      .replace(/[^\d]/g, "")         // remove non-digits
-      .replace(/(\d{2})(\d{1,2})/, "$1 / $2")  // add slash after MM
-      .substr(0, 7);                 // limit to 7 characters "MM / YY"
-    setPaymentData({ ...paymentData, expiryDate: formatted });
-  }}
-  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-/>
+    {errorMessage && (
+      <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700">
+        {errorMessage}
+      </div>
+    )}
 
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Card Holder</label>
-                        <input
-                          type="text"
-                          placeholder="Card holder"
-                          value={paymentData.cardHolder}
-                          onChange={(e) => setPaymentData({...paymentData, cardHolder: e.target.value})}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">CVC</label>
-                        <input
-                          type="number"
-                          placeholder="CVC"
-                          value={paymentData.cvc}
-                          onChange={(e) => setPaymentData({...paymentData, cvc: e.target.value})}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  )}
+    <div className="mb-6">
+      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-4">
+        <div className="flex items-center">
+          <input
+            type="radio"
+            id="credit-card"
+            name="payment-method"
+            value="credit-card"
+            checked={selectedPaymentMethod === "credit-card"}
+            onChange={(e) => {
+              setSelectedPaymentMethod(e.target.value);
+              setErrorMessage(''); // Clear error when switching methods
+            }}
+            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+          />
+          <label htmlFor="credit-card" className="ml-2 text-sm font-medium text-gray-900">
+            Credit Card
+          </label>
+        </div>
+        <div className="flex space-x-2">
+          <div className="w-8 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
+            VISA
+          </div>
+          <div className="w-8 h-5 bg-gradient-to-r from-red-500 to-yellow-500 rounded text-white text-xs flex items-center justify-center font-bold">
+            MC
+          </div>
+        </div>
+      </div>
 
-                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-6">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="paypal"
-                        name="payment-method"
-                        value="paypal"
-                        checked={selectedPaymentMethod === "paypal"}
-                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <label htmlFor="paypal" className="ml-2 text-sm font-medium text-gray-900">
-                        PayPal
-                      </label>
-                    </div>
-                    <div className="text-blue-600 font-bold text-lg">PayPal</div>
-                  </div>
-
-                  <div className="flex items-center w-full justify-center p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <label>Amount to be paid</label>:
-                      <input
-                        type="number"
-                        value={amount ?? ""}
-                        className="border border-gray-300 rounded px-2 py-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <button
-                    onClick={handlePayment}
-                    disabled={!isStep3Valid}
-                    className="px-6 py-3 bg-orange-500 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Process Payment
-                  </button>
-                </div>
-              </div>
+      {selectedPaymentMethod === "credit-card" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+            <input
+              type="text"
+              placeholder="Card number"
+              value={paymentData.cardNumber}
+              onChange={(e) => {
+                // Remove all non-digit characters and limit to 16 digits
+                const value = e.target.value.replace(/\D/g, '').substr(0, 16);
+                setPaymentData({...paymentData, cardNumber: value});
+              }}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {paymentData.cardNumber && paymentData.cardNumber.length !== 16 && (
+              <p className="text-red-500 text-xs mt-1">Card number must be 16 digits</p>
             )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
+            <input
+              type="text"
+              placeholder="MM/YY"
+              value={paymentData.expiryDate}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 2) {
+                  value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                setPaymentData({ ...paymentData, expiryDate: value });
+              }}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {paymentData.expiryDate && !/^\d{2}\/\d{2}$/.test(paymentData.expiryDate) && (
+              <p className="text-red-500 text-xs mt-1">Format: MM/YY</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Card Holder</label>
+            <input
+              type="text"
+              placeholder="Card holder"
+              value={paymentData.cardHolder}
+              onChange={(e) => setPaymentData({...paymentData, cardHolder: e.target.value})}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {paymentData.cardHolder && paymentData.cardHolder.trim().length < 2 && (
+              <p className="text-red-500 text-xs mt-1">Enter valid name</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">CVC</label>
+            <input
+              type="text"
+              placeholder="CVC"
+              value={paymentData.cvc}
+              onChange={(e) => {
+                // Remove all non-digit characters and limit to 3 or 4 digits
+                const value = e.target.value.replace(/\D/g, '').substr(0, 4);
+                setPaymentData({...paymentData, cvc: value});
+              }}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {paymentData.cvc && (paymentData.cvc.length < 3 || paymentData.cvc.length > 4) && (
+              <p className="text-red-500 text-xs mt-1">CVC must be 3-4 digits</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-6">
+        <div className="flex items-center">
+          <input
+            type="radio"
+            id="paypal"
+            name="payment-method"
+            value="paypal"
+            checked={selectedPaymentMethod === "paypal"}
+            onChange={(e) => {
+              setSelectedPaymentMethod(e.target.value);
+              setErrorMessage(''); // Clear error when switching methods
+            }}
+            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+          />
+          <label htmlFor="paypal" className="ml-2 text-sm font-medium text-gray-900">
+            PayPal
+          </label>
+        </div>
+        <div className="text-blue-600 font-bold text-lg">PayPal</div>
+      </div>
+
+      <div className="flex items-center w-full justify-center p-4 border border-gray-200 rounded-lg">
+        <div className="flex items-center gap-2">
+          <label>Amount to be paid</label>:
+          <input
+            type="number"
+            value={amount ?? ""}
+            onChange={(e) => {
+              const value = parseFloat(e.target.value);
+              if (!isNaN(value) && value > 0) {
+                setAmount(value);
+              } else {
+                setAmount(0);
+              }
+            }}
+            min="0.01"
+            step="0.01"
+            className="border border-gray-300 rounded px-2 py-1 w-24"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div className="text-center">
+      <button
+        onClick={() => {
+          // Validate based on payment method
+          if (selectedPaymentMethod === "credit-card") {
+            // Validate credit card details
+            if (!paymentData.cardNumber || paymentData.cardNumber.length !== 16) {
+              setErrorMessage('Please enter a valid 16-digit card number');
+              return;
+            }
+            if (!paymentData.expiryDate || !/^\d{2}\/\d{2}$/.test(paymentData.expiryDate)) {
+              setErrorMessage('Please enter a valid expiration date (MM/YY)');
+              return;
+            }
+            if (!paymentData.cardHolder || paymentData.cardHolder.trim().length < 2) {
+              setErrorMessage('Please enter the card holder name');
+              return;
+            }
+            if (!paymentData.cvc || paymentData.cvc.length < 3 || paymentData.cvc.length > 4) {
+              setErrorMessage('Please enter a valid CVC (3-4 digits)');
+              return;
+            }
+          }
+          
+          // Validate amount for both methods
+          if (!amount || amount <= 0) {
+            setErrorMessage('Please enter a valid payment amount');
+            return;
+          }
+
+          // If all validations pass, proceed with payment
+          handlePayment();
+        }}
+        className="px-6 py-3 bg-orange-500 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600"
+      >
+        Process Payment
+      </button>
+    </div>
+  </div>
+)}
 
             {/* Step 4: Confirmation */}
             {currentStep === 4 && (
