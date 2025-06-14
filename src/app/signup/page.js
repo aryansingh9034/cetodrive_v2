@@ -55,6 +55,19 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
 
+    const passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/;
+  
+  if (!passwordRegex.test(formData.password)) {
+    alert('Password must contain at least 8 characters, one uppercase letter, one number, and one special character');
+    return;
+  }
+  
+  if (formData.password !== formData.re_password) {
+    alert('Passwords do not match');
+    return;
+  }
+  
+
     if (formData.password !== formData.re_password) {
       setError("Passwords do not match");
       setIsLoading(false);
@@ -227,35 +240,45 @@ const sendOtp = async () => {
                 />
               </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-                  required
-                />
-              </div>
+           <div>
+  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+    Password
+  </label>
+  <input
+    type="password"
+    id="password"
+    value={formData.password}
+    onChange={handleChange}
+    placeholder="Enter your password (min 8 chars, 1 uppercase, 1 number, 1 special char)"
+    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+    required
+  />
+  {formData.password && !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/.test(formData.password) && (
+    <p className="mt-1 text-sm text-red-600">
+      Password must contain at least 8 characters, one uppercase letter, one number, and one special character
+    </p>
+  )}
+</div>
 
-              <div>
-                <label htmlFor="re_password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Re-enter Password
-                </label>
-                <input
-                  type="password"
-                  id="re_password"
-                  value={formData.re_password}
-                  onChange={handleChange}
-                  placeholder="Re-enter your password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-                  required
-                />
-              </div>
+<div>
+  <label htmlFor="re_password" className="block text-sm font-medium text-gray-700 mb-1">
+    Re-enter Password
+  </label>
+  <input
+    type="password"
+    id="re_password"
+    value={formData.re_password}
+    onChange={handleChange}
+    placeholder="Re-enter your password"
+    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+    required
+  />
+  {formData.password && formData.re_password && formData.password !== formData.re_password && (
+    <p className="mt-1 text-sm text-red-600">
+      Passwords do not match
+    </p>
+  )}
+</div>
 
               <div>
                 <label htmlFor="vehicle_types" className="block text-sm font-medium text-gray-700 mb-1">

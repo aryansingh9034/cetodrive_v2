@@ -12,11 +12,13 @@ import { useRouter } from 'next/navigation';
 import background from "../../../public/View.png"
 import Img from "../../../public/ImgKe.png"
 import Profile from "../../../public/Profill.png"
+import ForgotPasswordModal from "../forgotpassword/page";
 export default function LoginPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
   const router = useRouter(); // initialize router
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
@@ -145,7 +147,12 @@ export default function LoginPage() {
                   <input type="checkbox" id="remember" className="h-4 w-4 text-[#FF7A30] border-gray-300 rounded" />
                   <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">Remember Me</label>
                 </div>
-                <a href="#" className="text-sm text-[#FF7A30] hover:underline">Forgot Password</a>
+                <button 
+  onClick={() => setShowForgotPassword(true)}
+  className="text-sm text-[#FF7A30] hover:underline"
+>
+  Forgot Password
+</button>
               </div>
 
               <button
@@ -165,6 +172,10 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <ForgotPasswordModal 
+  show={showForgotPassword} 
+  onClose={() => setShowForgotPassword(false)} 
+/>
     </div>
   );
 }

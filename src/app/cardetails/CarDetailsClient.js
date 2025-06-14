@@ -320,7 +320,7 @@ export default function Home() {
         className="group bg-black text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:scale-105"
       >
         <span className="relative z-10">
-          {showReviewForm ? "×" : "+"}
+          {showReviewForm ? "×" : "Write Review"}
         </span>
       </button>
     </div>
@@ -419,7 +419,7 @@ export default function Home() {
               <Image
                 width={40}
                 height={40}
-                src={review.avatar}
+                src="/man.png"
                 alt={review.name}
                 className="w-10 h-10 rounded-full object-cover"
               />
