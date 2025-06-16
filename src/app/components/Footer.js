@@ -96,21 +96,15 @@ export default function Footer() {
           {/* Main content section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-16">
             {/* Left column */}
-           <div>
-  <h1 className="text-2xl font-bold mb-2">CatoDrive</h1>
-  <p className="text-sm mb-4 max-w-md">
+         <div className="flex flex-col items-start pl-0 -ml-16"> {/* Remove left padding and add negative margin */}
+  <img 
+    src="/footerlogo.png" 
+    alt="CatoDrive vehicle" 
+    className="w-full max-w-md rounded-lg"
+  />
+  <p className="text-lg text-center font-bold max-w-md w-full">
     Skip the cab, grab the keys!
   </p>
-  
-  {/* Animated car icon */}
-  {/* <div className=" w-12 h-12 mx-auto">
-    
-     <img 
-                src="/sport.jpg"
-                alt="Download on the App Store"
-                className="w-full"
-              />
-  </div> */}
 </div>
 
             {/* Right column */}

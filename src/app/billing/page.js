@@ -7,7 +7,7 @@ import { Phone, Mail, Star } from "lucide-react"
 import Modal from 'react-modal'
 import { useSession } from "next-auth/react" 
 
-Modal.setAppElement('#root');
+
 
 // Add these styles for the modal
 const customStyles = {
@@ -36,13 +36,46 @@ const customStyles = {
 
 // City to locations mapping
 const cityLocations = {
-  "Dallas": [
-    "Dallas/Fort Worth International Airport (DFW)",
-    "Dallas Love Field (DAL)",
-    "Addison Airport (ADS)",
-    "Dallas Executive Airport (RBD)"
-  ]
+  "Dallas": {
+    pickup: [
+      "Dallas/Fort Worth International Airport (DFW)",
+      "Dallas Love Field (DAL)"
+    ],
+    dropoff: [
+      // Major commercial airports
+      "Dallas/Fort Worth International Airport (DFW)",
+      "Dallas Love Field (DAL)",
+      // Reliever & municipal airports
+      "Addison Airport (ADS)",
+      "Dallas Executive Airport (RBD)",
+      "Arlington Municipal Airport (GKY)",
+      "Grand Prairie Municipal Airport (GPM)",
+      "Lancaster Regional Airport (LNC)",
+      "Mesquite Metro Airport (HQZ)",
+      "Fort Worth Alliance Airport (AFW)",
+      "Fort Worth Meacham International Airport (FTW)",
+      "Denton Enterprise Airport (DTO)",
+      "Mid‑Way Regional Airport (JWY)",
+      "Caddo Mills Municipal Airport (7F3)",
+      "Commerce Municipal Airport (2F7)",
+      "Ennis Municipal Airport (F41)",
+      "Ferris Red Oak Municipal Heliport (12T)",
+      "Garland/DFW Heloplex (T57)",
+      "DeSoto Heliport (73T)",
+      "Dallas CBD Vertiport (JDB)",
+      // Smaller public-use airports
+      "Majors Airport – Greenville (GVT)",
+      "McKinney National Airport (TKI)",
+      "Northwest Regional Airport (52F)",
+      "Parker County Airport (WEA)",
+      "Rhome Meadows Airport (T76)",
+      "Bourland Field (50F)",
+      "Air Park–Dallas (F69)"
+    ]
+  },
+  // Add other cities similarly if needed
 };
+
 
 export default function CarRentalForm() {
   const router = useRouter()
@@ -57,6 +90,11 @@ export default function CarRentalForm() {
   const [uploadedDocs, setUploadedDocs] = useState(null)
   const [availableLocations, setAvailableLocations] = useState([])
     const [customerId, setCustomerId] = useState(null)
+    const { data: session } = useSession()
+ useEffect(() => {
+    // This ensures the DOM is loaded before setting the app element
+    Modal.setAppElement('#root');
+  }, []);
 
   // Form data states
   const [billingData, setBillingData] = useState({
@@ -92,27 +130,38 @@ export default function CarRentalForm() {
     terms: false
   })
 
+  const [availablePickupLocations, setAvailablePickupLocations] = useState([]);
+const [availableDropoffLocations, setAvailableDropoffLocations] = useState([]);
+
+// Update available locations when city changes
 useEffect(() => {
+  if (billingData.city && cityLocations[billingData.city]) {
+    setAvailablePickupLocations(cityLocations[billingData.city].pickup);
+    setAvailableDropoffLocations(cityLocations[billingData.city].dropoff);
+  } else {
+    setAvailablePickupLocations([]);
+    setAvailableDropoffLocations([]);
+  }
+}, [billingData.city]);
+
+  useEffect(() => {
     // Load vehicle from localStorage
     const storedVehicle = localStorage.getItem("vehicle")
     if (storedVehicle) {
       setVehicle(JSON.parse(storedVehicle))
     }
 
-    // Method 1: From localStorage (temporary solution)
-    const storedCustomerId = localStorage.getItem('customerId')
-    if (storedCustomerId) {
-      setCustomerId(storedCustomerId)
+    // Get customer ID from NextAuth session
+    if (session?.user?.id) {
+      setCustomerId(session.user.id)
+    } else {
+      // Fallback to localStorage if not using NextAuth
+      const storedCustomerId = localStorage.getItem('customerId')
+      if (storedCustomerId) {
+        setCustomerId(storedCustomerId)
+      }
     }
-
-    // Method 2: From your auth system (recommended)
-    // const user = authService.getCurrentUser()
-    // if (user) setCustomerId(user.id)
-    
-    // Method 3: If using NextAuth
-    // const { data: session } = useSession()
-    // if (session?.user?.id) setCustomerId(session.user.id)
-  }, [])
+  }, [session])
 
   // Update available locations when city changes
   useEffect(() => {
@@ -124,18 +173,18 @@ useEffect(() => {
   }, [billingData.city])
 
   // Handle form field changes
-  const handleBillingChange = (field, value) => {
-    setBillingData(prev => ({ ...prev, [field]: value }))
-    
-    // Reset locations when city changes
-    if (field === "city") {
-      setRentalData(prev => ({
-        ...prev,
-        pickupLocation: "",
-        dropoffLocation: ""
-      }))
-    }
+const handleBillingChange = (field, value) => {
+  setBillingData(prev => ({ ...prev, [field]: value }));
+  
+  // Reset locations when city changes
+  if (field === "city") {
+    setRentalData(prev => ({
+      ...prev,
+      pickupLocation: "",
+      dropoffLocation: ""
+    }));
   }
+}
 
   const handleRentalChange = (field, value) => {
     setRentalData(prev => ({ ...prev, [field]: value }))
@@ -193,9 +242,10 @@ useEffect(() => {
     if (currentStep === 2) {
       setIsSubmitting(true)
       try {
-       const formData = new FormData()
-        formData.append("customer", customerId) // Use dynamic customerId
-        formData.append("vehicle", "11") 
+ const formData = new FormData()
+        formData.append("customer", customerId) // Use the dynamic customerId
+        formData.append("vehicle", vehicle?.id || "") // Use actual vehicle ID
+        formData.append("total_payment", calculateTotalPrice().toString());
         // Append billing data
         formData.append("name", billingData.name)
         formData.append("email", billingData.email)
@@ -217,7 +267,7 @@ useEffect(() => {
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         )
-
+        
         setBookingId(response.data?.data?.id)
         setAmount(response.data?.data?.total_payment)
         setCurrentStep(3)
@@ -268,7 +318,7 @@ const handleDocUpload = async () => {
     const formData = new FormData();
     
     // Required fields from API response
-    formData.append("customer", "1"); // Replace with actual customer ID from your auth system
+    formData.append("customer", customerId) // Replace with actual customer ID from your auth system
     formData.append("payment", "1"); // Replace with payment ID from booking response
     formData.append("booking", bookingId.toString());
     
@@ -332,8 +382,56 @@ const handleDocUpload = async () => {
   // Close thank you modal and redirect
   const closeThankYouModal = () => {
     setIsThankYouOpen(false)
-    router.push("/billing")
+    console.log("Redirecting to confirmation with booking ID:", bookingId);
+router.push(`/confirmation/${bookingId}`);// Use backticks for template literal
   }
+
+  // Add these helper functions at the top of your component
+const isFutureDate = (dateString) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day
+  const selectedDate = new Date(dateString);
+  return selectedDate >= today;
+};
+
+const calculateRentalDays = () => {
+  if (!rentalData.pickupDate || !rentalData.dropoffDate) return 0;
+  
+  const startDate = new Date(rentalData.pickupDate);
+  const endDate = new Date(rentalData.dropoffDate);
+  
+  // Calculate difference in milliseconds
+  const diffTime = endDate - startDate;
+  
+  // Convert to days and round up (to count partial days as full days)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Minimum rental period is 1 day
+  return Math.max(1, diffDays);
+};
+
+// Add this function to calculate the total price
+const calculateTotalPrice = () => {
+  if (!vehicle?.price) return 0;
+  
+  const rentalDays = calculateRentalDays();
+  return vehicle.price * rentalDays;
+};
+
+const isFutureDateTime = (dateString, timeString) => {
+  const now = new Date();
+  const selectedDate = new Date(dateString);
+  
+  // If date is today, check time
+  if (selectedDate.toDateString() === now.toDateString()) {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const selectedTime = new Date();
+    selectedTime.setHours(hours, minutes, 0, 0);
+    return selectedTime >= now;
+  }
+  
+  return isFutureDate(dateString);
+};
 
   return (
     <div className="min-h-screen bg-gray-50 py-24" id="root">
@@ -359,7 +457,7 @@ const handleDocUpload = async () => {
             </div>
 
             {/* Step 1: Billing Info */}
-            {currentStep >= 1 && (
+            {currentStep === 1 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                   <div>
@@ -431,141 +529,200 @@ const handleDocUpload = async () => {
             )}
 
             {/* Step 2: Rental Info */}
-            {currentStep >= 2 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Rental Info</h2>
-                    <p className="text-gray-500 text-sm">Please select your rental details</p>
-                  </div>
-                  <span className="text-gray-400 text-sm">Step 2 of 4</span>
-                </div>
+{currentStep === 2 && (
+  <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="flex justify-between items-center mb-6">
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">Rental Info</h2>
+        <p className="text-gray-500 text-sm">Please select your rental details</p>
+      </div>
+      <span className="text-gray-400 text-sm">Step 2 of 4</span>
+    </div>
 
-                <div className="mb-8">
-                  <div className="flex items-center mb-4">
-                    <input
-                      type="radio"
-                      id="pickup"
-                      name="rental-type"
-                      value="pickup"
-                      checked={rentalData.rentalType === "pickup"}
-                      onChange={() => handleRentalChange("rentalType", "pickup")}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                    />
-                    <label htmlFor="pickup" className="ml-2 text-sm font-medium text-gray-900">
-                      Pick - Up
-                    </label>
-                  </div>
+    {/* Pickup Section - Always Visible */}
+    <div className="mb-8">
+      <div className="flex items-center mb-4">
+       
+        <label htmlFor="pickup" className="ml-2 text-lg font-bold text-gray-900">
+          Pick - Up
+        </label>
+      </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                      <select
-                        value={rentalData.pickupLocation}
-                        onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={!billingData.city}
-                      >
-                        <option value="">Select location</option>
-                        {availableLocations.map(location => (
-                          <option key={location} value={location}>{location}</option>
-                        ))}
-                      </select>
-                      {!billingData.city && (
-                        <p className="text-xs text-red-500 mt-1">Please select a city first</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                      <input
-                        type="date"
-                        value={rentalData.pickupDate}
-                        onChange={(e) => handleRentalChange("pickupDate", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                      <input
-                        type="time"
-                        value={rentalData.pickupTime}
-                        onChange={(e) => handleRentalChange("pickupTime", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Pickup Location */}
+        {/* Pickup Location Select */}
+<div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+  <select
+    value={rentalData.pickupLocation}
+    onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
+    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    disabled={!billingData.city}
+  >
+    <option value="">Select pickup location</option>
+    {availablePickupLocations.map(location => (
+      <option key={location} value={location}>{location}</option>
+    ))}
+  </select>
+  {!billingData.city && (
+    <p className="text-xs text-red-500 mt-1">Please select a city first</p>
+  )}
+</div>
+        
+        {/* Pickup Date */}
+      {/* Pickup Date Input */}
+<div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+  <input
+    type="date"
+    value={rentalData.pickupDate}
+    onChange={(e) => {
+      if (isFutureDate(e.target.value)) {
+        handleRentalChange("pickupDate", e.target.value);
+      }
+    }}
+    min={new Date().toISOString().split('T')[0]} // Set min to today
+    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+  {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
+    <p className="text-xs text-red-500 mt-1">Please select a future date</p>
+  )}
+</div>
 
-                <div className="mb-8">
-                  <div className="flex items-center mb-4">
-                    <input
-                      type="radio"
-                      id="dropoff"
-                      name="rental-type"
-                      value="dropoff"
-                      checked={rentalData.rentalType === "dropoff"}
-                      onChange={() => handleRentalChange("rentalType", "dropoff")}
-                      className="w-4 h-4 text-blue-600  border-gray-300 focus:ring-blue-500"
-                    />
-                    <label htmlFor="dropoff" className="ml-2 text-sm font-medium text-gray-900">
-                      Drop - Off
-                    </label>
-                  </div>
+{/* Pickup Time Input */}
+<div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+  <input
+    type="time"
+    value={rentalData.pickupTime}
+    onChange={(e) => {
+      if (rentalData.pickupDate) {
+        if (isFutureDateTime(rentalData.pickupDate, e.target.value)) {
+          handleRentalChange("pickupTime", e.target.value);
+        }
+      } else {
+        handleRentalChange("pickupTime", e.target.value);
+      }
+    }}
+    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+  {rentalData.pickupTime && rentalData.pickupDate && 
+   !isFutureDateTime(rentalData.pickupDate, rentalData.pickupTime) && (
+    <p className="text-xs text-red-500 mt-1">Please select a future time</p>
+  )}
+</div>
+      </div>
+    </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                      <select
-                        value={rentalData.dropoffLocation}
-                        onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={!billingData.city}
-                      >
-                        <option value="">Select location</option>
-                        {availableLocations.map(location => (
-                          <option key={location} value={location}>{location}</option>
-                        ))}
-                      </select>
-                      {!billingData.city && (
-                        <p className="text-xs text-red-500 mt-1">Please select a city first</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                      <input
-                        type="date"
-                        value={rentalData.dropoffDate}
-                        onChange={(e) => handleRentalChange("dropoffDate", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                      <input
-                        type="time"
-                        value={rentalData.dropoffTime}
-                        onChange={(e) => handleRentalChange("dropoffTime", e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
+    {/* Dropoff Section - Only shows after pickup is complete */}
+    {rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
+      <div className="mb-8 fade-in">
+        <div className="flex items-center mb-4">
+      
+          <label htmlFor="dropoff" className="ml-2 text-lg font-bold text-gray-900">
+            Drop - Off
+          </label>
+        </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Flight Number (Optional)</label>
-                  <input
-                    type="text"
-                    placeholder="Enter your flight number"
-                    value={rentalData.flightNumber}
-                    onChange={(e) => handleRentalChange("flightNumber", e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Dropoff Location */}
+         {/* Dropoff Location Select */}
+<div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+  <select
+    value={rentalData.dropoffLocation}
+    onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
+    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    disabled={!billingData.city}
+  >
+    <option value="">Select dropoff location</option>
+    {availableDropoffLocations.map(location => (
+      <option key={location} value={location}>{location}</option>
+    ))}
+  </select>
+</div>
+          
+{/* Dropoff Date Input */}
+<div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+  <input
+    type="date"
+    value={rentalData.dropoffDate}
+    onChange={(e) => {
+      // Ensure dropoff is after pickup
+      if (isFutureDate(e.target.value) && 
+          (!rentalData.pickupDate || e.target.value >= rentalData.pickupDate)) {
+        handleRentalChange("dropoffDate", e.target.value);
+      }
+    }}
+    min={rentalData.pickupDate || new Date().toISOString().split('T')[0]}
+    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+  {rentalData.dropoffDate && 
+   (!isFutureDate(rentalData.dropoffDate) || 
+    (rentalData.pickupDate && rentalData.dropoffDate < rentalData.pickupDate)) && (
+    <p className="text-xs text-red-500 mt-1">
+      {!isFutureDate(rentalData.dropoffDate) 
+        ? "Please select a future date" 
+        : "Dropoff must be after pickup"}
+    </p>
+  )}
+</div>
+
+{/* Dropoff Time Input */}
+<div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+  <input
+    type="time"
+    value={rentalData.dropoffTime}
+    onChange={(e) => {
+      if (rentalData.dropoffDate) {
+        // If same date as pickup, ensure time is later
+        if (rentalData.dropoffDate === rentalData.pickupDate) {
+          if (e.target.value > rentalData.pickupTime) {
+            handleRentalChange("dropoffTime", e.target.value);
+          }
+        } else if (isFutureDateTime(rentalData.dropoffDate, e.target.value)) {
+          handleRentalChange("dropoffTime", e.target.value);
+        }
+      } else {
+        handleRentalChange("dropoffTime", e.target.value);
+      }
+    }}
+    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+  {rentalData.dropoffTime && rentalData.dropoffDate && 
+   ((rentalData.dropoffDate === rentalData.pickupDate && 
+     rentalData.dropoffTime <= rentalData.pickupTime) ||
+    !isFutureDateTime(rentalData.dropoffDate, rentalData.dropoffTime)) && (
+    <p className="text-xs text-red-500 mt-1">
+      {rentalData.dropoffDate === rentalData.pickupDate && 
+       rentalData.dropoffTime <= rentalData.pickupTime
+        ? "Dropoff time must be after pickup time"
+        : "Please select a future time"}
+    </p>
+  )}
+</div>
+        </div>
+      </div>
+    )}
+
+    {/* Flight Number (Optional) */}
+    <div className="mb-6">
+      <label className="block text-sm font-medium text-gray-700 mb-2">Flight Number (Optional)</label>
+      <input
+        type="text"
+        placeholder="Enter your flight number"
+        value={rentalData.flightNumber}
+        onChange={(e) => handleRentalChange("flightNumber", e.target.value)}
+        className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  </div>
+)}
 
             {/* Step 3: Payment Method */}
-            {currentStep >= 3 && (
+            {currentStep === 3 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                   <div>
@@ -678,14 +835,14 @@ const handleDocUpload = async () => {
                 <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center gap-2">
                     <label className="font-medium text-black">Amount to Pay:</label>
-                    <span className="text-lg text-black font-bold">${ vehicle?.price || "0"}</span>
+                    <span className="text-lg text-black font-bold">${ calculateTotalPrice()}</span>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Step 4: Confirmation */}
-            {currentStep >= 4 && (
+            {currentStep === 4 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                   <div>
@@ -815,7 +972,7 @@ const handleDocUpload = async () => {
               <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>${vehicle?.price || "0"}</span>
+                  <span>${calculateTotalPrice()}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Tax</span>
@@ -833,7 +990,7 @@ const handleDocUpload = async () => {
                     <div className="font-semibold text-gray-900">Total Rental Price</div>
                     <div className="text-sm text-gray-500">Includes all fees and taxes</div>
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">${ vehicle?.price || "0"}</div>
+                  <div className="text-2xl font-bold text-gray-900">${  calculateTotalPrice()}</div>
                 </div>
               </div>
 
@@ -854,7 +1011,7 @@ const handleDocUpload = async () => {
         contentLabel="Upload Documents Modal"
       >
         <div className="bg-white rounded-lg p-6 max-w-md w-full">
-          <h2 className="text-xl font-semibold mb-4">Upload Documents</h2>
+          <h2 className="text-xl text-gray-800 font-semibold mb-4">Upload Documents</h2>
           <p className="text-gray-600 mb-4">Please upload your ID or drivers license for verification</p>
           
           <div className="mb-4">
