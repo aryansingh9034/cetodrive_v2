@@ -11,6 +11,8 @@ export default function ModernProfilePage() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null); 
 
   useEffect(() => {
     // Simulating user data for demo
@@ -34,15 +36,64 @@ export default function ModernProfilePage() {
      }
   }, []);
 
-  const handleEditClick = () => {
-    setIsEditing(!isEditing);
-    if (isEditing) {
-      // Save the changes
-      setUser(editedUser);
-      // In a real app, you would also save to localStorage/API here
-       localStorage.setItem('userData', JSON.stringify(editedUser));
+// In your ModernProfilePage component, update the handleEditClick function:
+
+const handleEditClick = async () => {
+  if (isEditing) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const customerId = localStorage.getItem('customerId');
+      if (!customerId) {
+        throw new Error("User not authenticated");
+      }
+
+      const { re_password, otp, ...updateData } = editedUser;
+
+      const response = await fetch(`http://3.108.23.172:8002/api/customer/${customerId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      // First check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(text || "Invalid server response");
+      }
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to update profile");
+      }
+
+      const updatedUser = { ...user, ...updateData };
+      setUser(updatedUser);
+      localStorage.setItem('userData', JSON.stringify(updatedUser));
+      setIsEditing(false);
+      
+    } catch (error) {
+      let errorMessage = error.message;
+      
+      // Handle HTML error responses
+      if (errorMessage.startsWith("<!DOCTYPE html>")) {
+        errorMessage = "Server error - please try again later";
+      }
+      
+      setError(errorMessage);
+      console.error("Update error:", error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  } else {
+    setIsEditing(true);
+  }
+};
 
   const handleCancelClick = () => {
     setIsEditing(false);
@@ -141,12 +192,29 @@ export default function ModernProfilePage() {
                       Cancel
                     </button>
                     <button 
-                      onClick={handleEditClick}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      Save
-                    </button>
+  onClick={handleEditClick}
+  disabled={isLoading}
+  className={`bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+>
+  {isLoading ? (
+    <span className="flex items-center">
+      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Saving...
+    </span>
+  ) : (
+    <>
+      <Save className="w-4 h-4" />
+      Save
+    </>
+  )}{error && (
+  <div className="text-red-600 text-sm mt-2 p-2 bg-red-50 rounded-lg">
+    Error: {error}
+  </div>
+)}
+</button>
                   </>
                 ) : (
                   <button 

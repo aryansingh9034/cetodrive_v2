@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Montserrat, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header.js";
 import Footer from "./components/Footer";
+import { Providers } from './provider'
 
 // Font configurations (keep your existing font setup)
 const geistSans = Geist({
@@ -35,18 +36,13 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${montserrat.variable} font-sans`}> 
-      <body
-        className={`
-          ${geistSans.variable} 
-          ${geistMono.variable} 
-          ${spaceGrotesk.variable} 
-          antialiased
-        `}
-      >
-        <Header />
-        <main>{children}</main>
-        <Footer />
+     <html lang="en">
+      <body id="root">
+        <Providers>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
