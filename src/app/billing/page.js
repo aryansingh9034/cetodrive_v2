@@ -508,7 +508,7 @@ const isFutureDateTime = (dateString, timeString) => {
                       placeholder="Your name"
                       value={billingData.name}
                       onChange={(e) => handleBillingChange("name", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -518,7 +518,7 @@ const isFutureDateTime = (dateString, timeString) => {
                       placeholder="Your email"
                       value={billingData.email}
                       onChange={(e) => handleBillingChange("email", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -528,7 +528,7 @@ const isFutureDateTime = (dateString, timeString) => {
                       placeholder="Phone number"
                       value={billingData.phone}
                       onChange={(e) => handleBillingChange("phone", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -538,7 +538,7 @@ const isFutureDateTime = (dateString, timeString) => {
                       placeholder="Address"
                       value={billingData.address}
                       onChange={(e) => handleBillingChange("address", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
