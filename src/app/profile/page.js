@@ -14,27 +14,45 @@ export default function ModernProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null); 
 
-  useEffect(() => {
-    // Simulating user data for demo
-    const mockUser = {
-      username: "John Doe",
-      email: "john.doe@example.com",
-      re_password: "••••••••",
-      vehcile_types: "Premium User",
-      address: "",
-      phone: ""
-    };
+useEffect(() => {
+  // Simulating user data for demo (remove this in production)
+  const mockUser = {
+    username: "John Doe",
+    email: "john.doe@example.com",
+    re_password: "••••••••",
+    vehcile_types: "Premium User",
+    address: "",
+    phone: ""
+  };
+  
+  // Try to get user data from localStorage
+  try {
+    const storedUser = localStorage.getItem('userData');
+    
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      
+      // Validate the parsed data has minimum required fields
+      if (userData && typeof userData === 'object' && userData.email) {
+        setUser(userData);
+        setEditedUser({...userData});
+      } else {
+        // If invalid data, fall back to mock data
+        setUser(mockUser);
+        setEditedUser({...mockUser});
+      }
+    } else {
+      // If no stored user, use mock data
+      setUser(mockUser);
+      setEditedUser({...mockUser});
+    }
+  } catch (error) {
+    console.error("Error parsing user data:", error);
+    // Fall back to mock data if parsing fails
     setUser(mockUser);
     setEditedUser({...mockUser});
-    
-    // Uncomment this for real implementation:
-     const storedUser = localStorage.getItem('userData');
-     if (storedUser) {
-       const userData = JSON.parse(storedUser);
-       setUser(userData);
-       setEditedUser({...userData});
-     }
-  }, []);
+  }
+}, []);
 
 // In your ModernProfilePage component, update the handleEditClick function:
 
@@ -94,7 +112,15 @@ const handleEditClick = async () => {
     setIsEditing(true);
   }
 };
-
+const handleLogout = () => {
+  // Clear user data from localStorage
+  localStorage.removeItem('userData');
+  localStorage.removeItem('token');
+  localStorage.removeItem('customerId');
+  
+  // Redirect to login page
+  router.push('/login');
+};
   const handleCancelClick = () => {
     setIsEditing(false);
     setEditedUser({...user});
@@ -127,9 +153,7 @@ const handleEditClick = async () => {
             <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200">
               <Settings className="w-5 h-5" />
             </button>
-            <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-all duration-200">
-              <LogOut className="w-5 h-5" />
-            </button>
+
           </div>
         </div>
       </div>
@@ -316,6 +340,13 @@ const handleEditClick = async () => {
                   <Phone className="w-5 h-5" />
                   Add Phone
                 </button>
+                           <button 
+                          onClick={handleLogout}
+                           className="p-2 w-full text-gray-600 flex hover:text-red-600 bg-red-50 rounded-xl py-3 px-4 transition-all duration-200"
+                           >
+                            <LogOut className="w-5 h-5 mx-2" /><p className="text-black ">Logout</p>
+  
+                           </button>
               </div>
             </div>
 
