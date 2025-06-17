@@ -6,6 +6,7 @@ import axios from "axios"
 import { Phone, Mail, Star } from "lucide-react"
 import Modal from 'react-modal'
 import { useSession } from "next-auth/react" 
+import LoginModal from '@/app/loginmodal/page'
 
 
 
@@ -89,7 +90,12 @@ export default function CarRentalForm() {
   const [isThankYouOpen, setIsThankYouOpen] = useState(false)
   const [uploadedDocs, setUploadedDocs] = useState(null)
   const [availableLocations, setAvailableLocations] = useState([])
-    const [customerId, setCustomerId] = useState(null)
+    const [customerId, setCustomerId] = useState(
+  // Initialize with value from localStorage
+  typeof window !== 'undefined' ? localStorage.getItem('customerId') : null
+);
+    const [showLoginModal, setShowLoginModal] = useState(false);
+const [pendingBookingData, setPendingBookingData] = useState(null);
     const { data: session } = useSession()
  useEffect(() => {
     // This ensures the DOM is loaded before setting the app element
@@ -132,6 +138,28 @@ export default function CarRentalForm() {
 
   const [availablePickupLocations, setAvailablePickupLocations] = useState([]);
 const [availableDropoffLocations, setAvailableDropoffLocations] = useState([]);
+
+const handleLoginSuccess = () => {
+  // After successful login, customerId will be available in localStorage
+  const storedCustomerId = localStorage.getItem('customerId');
+  setCustomerId(storedCustomerId);
+  
+  // If there was pending booking data, submit it
+  if (pendingBookingData) {
+    // You might want to restore the form state here
+    setBillingData(pendingBookingData.billingData);
+    setRentalData(pendingBookingData.rentalData);
+    setVehicle(pendingBookingData.vehicle);
+    
+    // Then trigger the submission again
+    // You might want to add a slight delay to ensure state updates
+    setTimeout(() => {
+      handleSubmit();
+    }, 100);
+  }
+  
+  setPendingBookingData(null);
+};
 
 // Update available locations when city changes
 useEffect(() => {
@@ -224,11 +252,16 @@ const handleBillingChange = (field, value) => {
 
   // Form submission
   const handleSubmit = async () => {
-     if (!customerId) {
-      setSubmitMessage("Please log in to complete your booking")
-      router.push('/login') // Redirect to login if no customer ID
-      return
-    }
+      if (!customerId) {
+    // Save form state before showing login modal
+    setPendingBookingData({
+      billingData,
+      rentalData,
+      vehicle
+    });
+    setShowLoginModal(true);
+    return;
+  }
     if (currentStep === 1 && !validateStep1()) {
       setSubmitMessage("Please fill all billing information")
       return
@@ -261,7 +294,7 @@ const handleBillingChange = (field, value) => {
         formData.append("drop_of_Date", rentalData.dropoffDate)
         formData.append("drop_of_time", rentalData.dropoffTime)
         formData.append("flight_number", rentalData.flightNumber)
-        
+
         const response = await axios.post(
           "http://3.108.23.172:8002/api/booking/booking/", 
           formData,
@@ -527,7 +560,11 @@ const isFutureDateTime = (dateString, timeString) => {
                 </div>
               </div>
             )}
-
+    <LoginModal
+      show={showLoginModal}
+      onClose={() => setShowLoginModal(false)}
+      onLoginSuccess={handleLoginSuccess}
+    />
             {/* Step 2: Rental Info */}
 {currentStep === 2 && (
   <div className="bg-white rounded-lg p-6 shadow-sm">

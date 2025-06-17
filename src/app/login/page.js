@@ -19,60 +19,64 @@ export default function LoginPage() {
     router.push('/signup');
   };
  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setIsLoading(true);
 
-    // Client-side validation
-    if (!email || !password) {
-      setError("Please fill in all fields");
+  // Client-side validation
+  if (!email || !password) {
+    setError("Please fill in all fields");
+    setIsLoading(false);
+    return;
+  }
+
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    setError("Please enter a valid email address");
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const response = await fetch("http://3.108.23.172:8002/api/customer/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const responseData = await response.json();
+
+    // Check if login failed
+    if (responseData.status === 'failure') {
+      setError(responseData.msg || "Invalid credentials. Please check your email and password.");
       setIsLoading(false);
       return;
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Please enter a valid email address");
+    // Check if login succeeded but missing required data
+    if (!responseData.data || !responseData.data.id) {
+      setError("Login successful but missing user data. Please contact support.");
       setIsLoading(false);
       return;
     }
 
-    try {
-      const response = await fetch("http://3.108.23.172:8002/api/customer/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Handle specific error cases based on your API response
-        if (data.message && data.message.toLowerCase().includes("invalid credentials")) {
-          setError("Wrong password. Please try again.");
-        } else if (data.message && data.message.toLowerCase().includes("user not found")) {
-          setError("Email not registered. Please sign up first.");
-        } else {
-          // Fallback error message
-          setError(data.message || "Login failed. Please try again.");
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // Login successful
-      localStorage.setItem('userData', JSON.stringify(data.data));
-      localStorage.setItem('customerId', data.data.id);
-      router.push('/profile');
-      
-    } catch (error) {
-      console.error("Login error:", error);
-      setError("Network error. Please try again later.");
-      setIsLoading(false);
-    }
-  };
+    // Successful login with valid data
+    localStorage.setItem('userData', JSON.stringify(responseData.data));
+    localStorage.setItem('customerId', responseData.data.id);
+    router.push('/profile');
+    
+  } catch (error) {
+    console.error("Login error:", error);
+    setError(
+      error instanceof TypeError && error.message === "Failed to fetch"
+        ? "Network error. Please check your connection"
+        : "An unexpected error occurred"
+    );
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="w-full min-h-screen bg-white py-16">
