@@ -8,8 +8,6 @@ import Modal from 'react-modal'
 import { useSession } from "next-auth/react" 
 import LoginModal from '@/app/loginmodal/page'
 
-
-
 // Add these styles for the modal
 const customStyles = {
   overlay: {
@@ -43,10 +41,8 @@ const cityLocations = {
       "Dallas Love Field (DAL)"
     ],
     dropoff: [
-      // Major commercial airports
       "Dallas/Fort Worth International Airport (DFW)",
       "Dallas Love Field (DAL)",
-      // Reliever & municipal airports
       "Addison Airport (ADS)",
       "Dallas Executive Airport (RBD)",
       "Arlington Municipal Airport (GKY)",
@@ -55,28 +51,10 @@ const cityLocations = {
       "Mesquite Metro Airport (HQZ)",
       "Fort Worth Alliance Airport (AFW)",
       "Fort Worth Meacham International Airport (FTW)",
-      "Denton Enterprise Airport (DTO)",
-      "Mid‑Way Regional Airport (JWY)",
-      "Caddo Mills Municipal Airport (7F3)",
-      "Commerce Municipal Airport (2F7)",
-      "Ennis Municipal Airport (F41)",
-      "Ferris Red Oak Municipal Heliport (12T)",
-      "Garland/DFW Heloplex (T57)",
-      "DeSoto Heliport (73T)",
-      "Dallas CBD Vertiport (JDB)",
-      // Smaller public-use airports
-      "Majors Airport – Greenville (GVT)",
-      "McKinney National Airport (TKI)",
-      "Northwest Regional Airport (52F)",
-      "Parker County Airport (WEA)",
-      "Rhome Meadows Airport (T76)",
-      "Bourland Field (50F)",
-      "Air Park–Dallas (F69)"
+      "Denton Enterprise Airport (DTO)"
     ]
   },
-  // Add other cities similarly if needed
 };
-
 
 export default function CarRentalForm() {
   const router = useRouter()
@@ -90,17 +68,17 @@ export default function CarRentalForm() {
   const [isThankYouOpen, setIsThankYouOpen] = useState(false)
   const [uploadedDocs, setUploadedDocs] = useState(null)
   const [availableLocations, setAvailableLocations] = useState([])
-    const [customerId, setCustomerId] = useState(
-  // Initialize with value from localStorage
-  typeof window !== 'undefined' ? localStorage.getItem('customerId') : null
-);
-    const [showLoginModal, setShowLoginModal] = useState(false);
-const [pendingBookingData, setPendingBookingData] = useState(null);
-    const { data: session } = useSession()
- useEffect(() => {
-    // This ensures the DOM is loaded before setting the app element
+  const [customerId, setCustomerId] = useState(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const { data: session } = useSession()
+
+  useEffect(() => {
     Modal.setAppElement('#root');
-  }, []);
+    const storedVehicle = localStorage.getItem("vehicle")
+    if (storedVehicle) {
+      setVehicle(JSON.parse(storedVehicle))
+    }
+  }, [])
 
   // Form data states
   const [billingData, setBillingData] = useState({
@@ -137,82 +115,30 @@ const [pendingBookingData, setPendingBookingData] = useState(null);
   })
 
   const [availablePickupLocations, setAvailablePickupLocations] = useState([]);
-const [availableDropoffLocations, setAvailableDropoffLocations] = useState([]);
-
-const handleLoginSuccess = () => {
-  // After successful login, customerId will be available in localStorage
-  const storedCustomerId = localStorage.getItem('customerId');
-  setCustomerId(storedCustomerId);
-  
-  // If there was pending booking data, submit it
-  if (pendingBookingData) {
-    // You might want to restore the form state here
-    setBillingData(pendingBookingData.billingData);
-    setRentalData(pendingBookingData.rentalData);
-    setVehicle(pendingBookingData.vehicle);
-    
-    // Then trigger the submission again
-    // You might want to add a slight delay to ensure state updates
-    setTimeout(() => {
-      handleSubmit();
-    }, 100);
-  }
-  
-  setPendingBookingData(null);
-};
-
-// Update available locations when city changes
-useEffect(() => {
-  if (billingData.city && cityLocations[billingData.city]) {
-    setAvailablePickupLocations(cityLocations[billingData.city].pickup);
-    setAvailableDropoffLocations(cityLocations[billingData.city].dropoff);
-  } else {
-    setAvailablePickupLocations([]);
-    setAvailableDropoffLocations([]);
-  }
-}, [billingData.city]);
-
-  useEffect(() => {
-    // Load vehicle from localStorage
-    const storedVehicle = localStorage.getItem("vehicle")
-    if (storedVehicle) {
-      setVehicle(JSON.parse(storedVehicle))
-    }
-
-    // Get customer ID from NextAuth session
-    if (session?.user?.id) {
-      setCustomerId(session.user.id)
-    } else {
-      // Fallback to localStorage if not using NextAuth
-      const storedCustomerId = localStorage.getItem('customerId')
-      if (storedCustomerId) {
-        setCustomerId(storedCustomerId)
-      }
-    }
-  }, [session])
+  const [availableDropoffLocations, setAvailableDropoffLocations] = useState([]);
 
   // Update available locations when city changes
   useEffect(() => {
     if (billingData.city && cityLocations[billingData.city]) {
-      setAvailableLocations(cityLocations[billingData.city])
+      setAvailablePickupLocations(cityLocations[billingData.city].pickup);
+      setAvailableDropoffLocations(cityLocations[billingData.city].dropoff);
     } else {
-      setAvailableLocations([])
+      setAvailablePickupLocations([]);
+      setAvailableDropoffLocations([]);
     }
-  }, [billingData.city])
+  }, [billingData.city]);
 
   // Handle form field changes
-const handleBillingChange = (field, value) => {
-  setBillingData(prev => ({ ...prev, [field]: value }));
-  
-  // Reset locations when city changes
-  if (field === "city") {
-    setRentalData(prev => ({
-      ...prev,
-      pickupLocation: "",
-      dropoffLocation: ""
-    }));
+  const handleBillingChange = (field, value) => {
+    setBillingData(prev => ({ ...prev, [field]: value }));
+    if (field === "city") {
+      setRentalData(prev => ({
+        ...prev,
+        pickupLocation: "",
+        dropoffLocation: ""
+      }));
+    }
   }
-}
 
   const handleRentalChange = (field, value) => {
     setRentalData(prev => ({ ...prev, [field]: value }))
@@ -238,30 +164,8 @@ const handleBillingChange = (field, value) => {
     return true
   }
 
-  useEffect(() => {
-    // Method 1: From localStorage (temporary solution)
-    const storedCustomerId = localStorage.getItem('customerId')
-    if (storedCustomerId) {
-      setCustomerId(storedCustomerId)
-    }
-
-    // // Method 2: From your auth system (recommended)
-    //  const user = authService.getCurrentUser()
-    //  if (user) setCustomerId(user.id)
-  }, [])
-
   // Form submission
   const handleSubmit = async () => {
-      if (!customerId) {
-    // Save form state before showing login modal
-    setPendingBookingData({
-      billingData,
-      rentalData,
-      vehicle
-    });
-    setShowLoginModal(true);
-    return;
-  }
     if (currentStep === 1 && !validateStep1()) {
       setSubmitMessage("Please fill all billing information")
       return
@@ -272,60 +176,73 @@ const handleBillingChange = (field, value) => {
       return
     }
 
-    if (currentStep === 2) {
-      setIsSubmitting(true)
-      try {
- const formData = new FormData()
-        formData.append("customer", customerId) // Use the dynamic customerId
-        formData.append("vehicle", vehicle?.id || "") // Use actual vehicle ID
-        formData.append("total_payment", calculateTotalPrice().toString());
-        // Append billing data
-        formData.append("name", billingData.name)
-        formData.append("email", billingData.email)
-        formData.append("Phone_number", billingData.phone)
-        formData.append("Address", billingData.address)
-        formData.append("Town", billingData.city)
-        
-        // Append rental data
-        formData.append("pick_up_location", rentalData.pickupLocation)
-        formData.append("pick_up_Date", rentalData.pickupDate)
-        formData.append("pick_up_time", rentalData.pickupTime)
-        formData.append("Drop_off_location", rentalData.dropoffLocation)
-        formData.append("drop_of_Date", rentalData.dropoffDate)
-        formData.append("drop_of_time", rentalData.dropoffTime)
-        formData.append("flight_number", rentalData.flightNumber)
+    if (currentStep === 3 && !validateStep3()) {
+      setSubmitMessage("Please fill all payment information")
+      return
+    }
 
-        const response = await axios.post(
-          "http://3.108.23.172:8002/api/booking/booking/", 
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        )
-        
-        setBookingId(response.data?.data?.id)
-        setAmount(response.data?.data?.total_payment)
-        setCurrentStep(3)
-        setSubmitMessage("Form submitted successfully! Proceed to payment.")
-      }catch (error) {
-        console.error("Submission error:", error)
-        setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."))
-      } finally {
-        setIsSubmitting(false)
-      }
-    } else if (currentStep === 3) {
+    if (currentStep === 3) {
       // Handle payment submission
       setIsSubmitting(true)
       try {
         // Simulate payment processing
         await new Promise(resolve => setTimeout(resolve, 1500))
         setCurrentStep(4)
-        setSubmitMessage("Payment successful! Complete your rental.")
+        setSubmitMessage("Payment successful! Please login to complete your booking.")
       } catch (error) {
         setSubmitMessage("Payment failed. Please try again.")
       } finally {
         setIsSubmitting(false)
       }
-    } else {
+    } else if (currentStep !== 4) {
+      // For steps 1 and 2, just proceed without login
       setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const handleLoginSuccess = async () => {
+    const storedCustomerId = localStorage.getItem('customerId')
+    setCustomerId(storedCustomerId)
+    
+    // Now that we're logged in, proceed with the booking submission
+    try {
+      setIsSubmitting(true)
+      
+      const formData = new FormData()
+      formData.append("customer", storedCustomerId)
+      formData.append("vehicle", vehicle?.id || "")
+      formData.append("total_payment", calculateTotalPrice().toString())
+      
+      // Append billing data
+      formData.append("name", billingData.name)
+      formData.append("email", billingData.email)
+      formData.append("Phone_number", billingData.phone)
+      formData.append("Address", billingData.address)
+      formData.append("Town", billingData.city)
+      
+      // Append rental data
+      formData.append("pick_up_location", rentalData.pickupLocation)
+      formData.append("pick_up_Date", rentalData.pickupDate)
+      formData.append("pick_up_time", rentalData.pickupTime)
+      formData.append("Drop_off_location", rentalData.dropoffLocation)
+      formData.append("drop_of_Date", rentalData.dropoffDate)
+      formData.append("drop_of_time", rentalData.dropoffTime)
+      formData.append("flight_number", rentalData.flightNumber)
+
+      const response = await axios.post(
+        "http://3.108.23.172:8002/api/booking/booking/", 
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      )
+      
+      setBookingId(response.data?.data?.id)
+      setAmount(response.data?.data?.total_payment)
+      setIsDocUploadOpen(true)
+    } catch (error) {
+      console.error("Submission error:", error)
+      setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -336,135 +253,95 @@ const handleBillingChange = (field, value) => {
 
   // Complete rental
   const completeRental = () => {
-    setIsDocUploadOpen(true)
+    if (!customerId) {
+      setShowLoginModal(true)
+    } else {
+      setIsDocUploadOpen(true)
+    }
   }
 
   // Handle document upload
-const handleDocUpload = async () => {
-  if (!uploadedDocs || uploadedDocs.length === 0) {
-    setSubmitMessage("Please upload at least one document");
-    return;
-  }
-
-  setIsSubmitting(true);
-  try {
-    const formData = new FormData();
-    
-    // Required fields from API response
-    formData.append("customer", customerId) // Replace with actual customer ID from your auth system
-    formData.append("payment", "1"); // Replace with payment ID from booking response
-    formData.append("booking", bookingId.toString());
-    
-    // Add customer email to ensure notification
-    formData.append("customer_email", billingData.email);
-    
-    // Add document files - field name must match API expectations
-    Array.from(uploadedDocs).forEach((file) => {
-      formData.append("licence_images", file); // Using plural form as per API
-    });
-
-    // Debug: Log FormData contents
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
+  const handleDocUpload = async () => {
+    if (!uploadedDocs || uploadedDocs.length === 0) {
+      setSubmitMessage("Please upload at least one document");
+      return;
     }
 
-    const response = await axios.post(
-      "http://3.108.23.172:8002/api/licence/licence/", 
-      formData,
-      { 
-        headers: { 
-          "Content-Type": "multipart/form-data",
-        } 
-      }
-    );
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("customer", customerId)
+      formData.append("payment", "1");
+      formData.append("booking", bookingId.toString());
+      formData.append("customer_email", billingData.email);
+      
+      Array.from(uploadedDocs).forEach((file) => {
+        formData.append("licence_images", file);
+      });
 
-    console.log("Full API response:", response.data);
-    
-    if (response.data.email_sent) {
-      console.log("Email notification was sent successfully");
-    } else {
-      console.warn("API didn't send email despite successful upload");
+      const response = await axios.post(
+        "http://3.108.23.172:8002/api/licence/licence/", 
+        formData,
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data",
+          } 
+        }
+      );
+
+      setIsDocUploadOpen(false);
+      setIsThankYouOpen(true);
+      
+    } catch (error) {
+      console.error("Upload error:", error);
+      setSubmitMessage("Document upload failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsDocUploadOpen(false);
-    setIsThankYouOpen(true);
-    
-  } catch (error) {
-    console.error("Upload error details:", {
-      error: error,
-      response: error.response?.data,
-      status: error.response?.status,
-      headers: error.response?.headers
-    });
-
-    let errorMessage = "Document upload failed";
-    if (error.response?.data?.message) {
-      errorMessage += `: ${error.response.data.message}`;
-    } else if (error.response?.data) {
-      errorMessage += `: ${JSON.stringify(error.response.data)}`;
-    } else {
-      errorMessage += `: ${error.message}`;
-    }
-
-    setSubmitMessage(errorMessage);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   // Close thank you modal and redirect
   const closeThankYouModal = () => {
     setIsThankYouOpen(false)
-    console.log("Redirecting to confirmation with booking ID:", bookingId);
-router.push(`/confirmation/${bookingId}`);// Use backticks for template literal
+    router.push(`/confirmation/${bookingId}`);
   }
 
-  // Add these helper functions at the top of your component
-const isFutureDate = (dateString) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set to start of day
-  const selectedDate = new Date(dateString);
-  return selectedDate >= today;
-};
+  // Helper functions
+  const isFutureDate = (dateString) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(dateString);
+    return selectedDate >= today;
+  };
 
-const calculateRentalDays = () => {
-  if (!rentalData.pickupDate || !rentalData.dropoffDate) return 0;
-  
-  const startDate = new Date(rentalData.pickupDate);
-  const endDate = new Date(rentalData.dropoffDate);
-  
-  // Calculate difference in milliseconds
-  const diffTime = endDate - startDate;
-  
-  // Convert to days and round up (to count partial days as full days)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  // Minimum rental period is 1 day
-  return Math.max(1, diffDays);
-};
+  const calculateRentalDays = () => {
+    if (!rentalData.pickupDate || !rentalData.dropoffDate) return 0;
+    const startDate = new Date(rentalData.pickupDate);
+    const endDate = new Date(rentalData.dropoffDate);
+    const diffTime = endDate - startDate;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays);
+  };
 
-// Add this function to calculate the total price
-const calculateTotalPrice = () => {
-  if (!vehicle?.price) return 0;
-  
-  const rentalDays = calculateRentalDays();
-  return vehicle.price * rentalDays;
-};
+  const calculateTotalPrice = () => {
+    if (!vehicle?.price) return 0;
+    const rentalDays = calculateRentalDays();
+    return vehicle.price * rentalDays;
+  };
 
-const isFutureDateTime = (dateString, timeString) => {
-  const now = new Date();
-  const selectedDate = new Date(dateString);
-  
-  // If date is today, check time
-  if (selectedDate.toDateString() === now.toDateString()) {
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const selectedTime = new Date();
-    selectedTime.setHours(hours, minutes, 0, 0);
-    return selectedTime >= now;
-  }
-  
-  return isFutureDate(dateString);
-};
+  const isFutureDateTime = (dateString, timeString) => {
+    const now = new Date();
+    const selectedDate = new Date(dateString);
+    
+    if (selectedDate.toDateString() === now.toDateString()) {
+      const [hours, minutes] = timeString.split(':').map(Number);
+      const selectedTime = new Date();
+      selectedTime.setHours(hours, minutes, 0, 0);
+      return selectedTime >= now;
+    }
+    
+    return isFutureDate(dateString);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-24" id="root">
@@ -560,11 +437,12 @@ const isFutureDateTime = (dateString, timeString) => {
                 </div>
               </div>
             )}
-    <LoginModal
-      show={showLoginModal}
-      onClose={() => setShowLoginModal(false)}
-      onLoginSuccess={handleLoginSuccess}
-    />
+
+            <LoginModal
+              show={showLoginModal}
+              onClose={() => setShowLoginModal(false)}
+              onLoginSuccess={handleLoginSuccess}
+            />
             {/* Step 2: Rental Info */}
 {currentStep === 2 && (
   <div className="bg-white rounded-lg p-6 shadow-sm">
@@ -948,7 +826,7 @@ const isFutureDateTime = (dateString, timeString) => {
                   </button>
                 )}
 
-                <button
+                 <button
                   onClick={currentStep === 4 ? completeRental : handleSubmit}
                   disabled={
                     (currentStep === 1 && !validateStep1()) ||
@@ -962,7 +840,7 @@ const isFutureDateTime = (dateString, timeString) => {
                   } transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto`}
                 >
                   {isSubmitting ? "Processing..." : 
-                   currentStep === 4 ? "Confirm Booking" : 
+                   currentStep === 4 ? (customerId ? "Confirm Booking" : "Login to Confirm") : 
                    currentStep === 3 ? "Make Payment" : "Next"}
                 </button>
               </div>
