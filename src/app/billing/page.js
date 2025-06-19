@@ -87,6 +87,8 @@ export default function CarRentalForm() {
     phone: "",
     address: "",
     city: "",
+    state: "",
+    zipcode: ""
   })
 
   const [rentalData, setRentalData] = useState({
@@ -150,7 +152,7 @@ export default function CarRentalForm() {
 
   // Step validation functions
   const validateStep1 = () => {
-    return billingData.name && billingData.email && billingData.phone && billingData.address && billingData.city
+    return billingData.name && billingData.email && billingData.phone && billingData.address && billingData.city && billingData.state && billingData.zipcode
   }
 
   const validateStep2 = () => {
@@ -367,76 +369,96 @@ export default function CarRentalForm() {
             </div>
 
             {/* Step 1: Billing Info */}
-            {currentStep === 1 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Billing Info</h2>
-                    <p className="text-gray-500 text-sm">Please enter your billing info</p>
-                  </div>
-                  <span className="text-gray-400 text-sm">Step 1 of 4</span>
-                </div>
+{currentStep === 1 && (
+  <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="flex justify-between items-center mb-6">
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">Billing Info</h2>
+        <p className="text-gray-500 text-sm">Please enter your billing info</p>
+      </div>
+      <span className="text-gray-400 text-sm">Step 1 of 4</span>
+    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      value={billingData.name}
-                      onChange={(e) => handleBillingChange("name", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input
-                      type="email"
-                      placeholder="Your email"
-                      value={billingData.email}
-                      onChange={(e) => handleBillingChange("email", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <input
-                      type="tel"
-                      placeholder="Phone number"
-                      value={billingData.phone}
-                      onChange={(e) => handleBillingChange("phone", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                    <input
-                      type="text"
-                      placeholder="Address"
-                      value={billingData.address}
-                      onChange={(e) => handleBillingChange("address", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                    <input
-                      type="text"
-                      placeholder="Enter city"
-                      value={billingData.city}
-                      onChange={(e) => handleBillingChange("city", e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      list="cityOptions"
-                    />
-                    <datalist id="cityOptions">
-                      {Object.keys(cityLocations).map(city => (
-                        <option key={city} value={city} />
-                      ))}
-                    </datalist>
-                  </div>
-                </div>
-              </div>
-            )}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+        <input
+          type="text"
+          placeholder="Your name"
+          value={billingData.name}
+          onChange={(e) => handleBillingChange("name", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+        <input
+          type="email"
+          placeholder="Your email"
+          value={billingData.email}
+          onChange={(e) => handleBillingChange("email", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+        <input
+          type="tel"
+          placeholder="Phone number"
+          value={billingData.phone}
+          onChange={(e) => handleBillingChange("phone", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+        <input
+          type="text"
+          placeholder="Address"
+          value={billingData.address}
+          onChange={(e) => handleBillingChange("address", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+        <input
+          type="text"
+          placeholder="Enter city"
+          value={billingData.city}
+          onChange={(e) => handleBillingChange("city", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          list="cityOptions"
+        />
+        <datalist id="cityOptions">
+          {Object.keys(cityLocations).map(city => (
+            <option key={city} value={city} />
+          ))}
+        </datalist>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+        <input
+          type="text"
+          placeholder="Enter state"
+          value={billingData.state}
+          onChange={(e) => handleBillingChange("state", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
+        <input
+          type="text"
+          placeholder="Enter zip code"
+          value={billingData.zipcode}
+          onChange={(e) => handleBillingChange("zipcode", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    </div>
+  </div>
+)}
 
             <LoginModal
               show={showLoginModal}
@@ -457,7 +479,6 @@ export default function CarRentalForm() {
     {/* Pickup Section - Always Visible */}
     <div className="mb-8">
       <div className="flex items-center mb-4">
-       
         <label htmlFor="pickup" className="ml-2 text-lg font-bold text-gray-900">
           Pick - Up
         </label>
@@ -465,75 +486,97 @@ export default function CarRentalForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Pickup Location */}
-        {/* Pickup Location Select */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-  <select
-    value={rentalData.pickupLocation}
-    onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
-    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    disabled={!billingData.city}
-  >
-    <option value="">Select pickup location</option>
-    {availablePickupLocations.map(location => (
-      <option key={location} value={location}>{location}</option>
-    ))}
-  </select>
-  {!billingData.city && (
-    <p className="text-xs text-red-500 mt-1">Please select a city first</p>
-  )}
-</div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+          <select
+            value={rentalData.pickupLocation}
+            onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={!billingData.city}
+          >
+            <option value="">Select pickup location</option>
+            {availablePickupLocations.map(location => (
+              <option key={location} value={location}>{location}</option>
+            ))}
+          </select>
+          {!billingData.city && (
+            <p className="text-xs text-red-500 mt-1">Please select a city first</p>
+          )}
+        </div>
         
         {/* Pickup Date */}
-      {/* Pickup Date Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-  <input
-    type="date"
-    value={rentalData.pickupDate}
-    onChange={(e) => {
-      if (isFutureDate(e.target.value)) {
-        handleRentalChange("pickupDate", e.target.value);
-      }
-    }}
-    min={new Date().toISOString().split('T')[0]} // Set min to today
-    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
-    <p className="text-xs text-red-500 mt-1">Please select a future date</p>
-  )}
-</div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+          <input
+            type="date"
+            value={rentalData.pickupDate}
+            onChange={(e) => {
+              if (isFutureDate(e.target.value)) {
+                handleRentalChange("pickupDate", e.target.value);
+                // Calculate minimum dropoff date (24 hours after pickup)
+                if (rentalData.pickupTime) {
+                  const pickupDateTime = new Date(`${e.target.value}T${rentalData.pickupTime}`);
+                  const minDropoffDate = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
+                  const formattedMinDate = minDropoffDate.toISOString().split('T')[0];
+                  
+                  // If current dropoff is invalid, update it
+                  if (!rentalData.dropoffDate || rentalData.dropoffDate < formattedMinDate) {
+                    handleRentalChange("dropoffDate", formattedMinDate);
+                  }
+                }
+              }
+            }}
+            min={new Date().toISOString().split('T')[0]}
+            className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
+            <p className="text-xs text-red-500 mt-1">Please select a future date</p>
+          )}
+        </div>
 
-{/* Pickup Time Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-  <input
-    type="time"
-    value={rentalData.pickupTime}
-    onChange={(e) => {
-      if (rentalData.pickupDate) {
-        if (isFutureDateTime(rentalData.pickupDate, e.target.value)) {
-          handleRentalChange("pickupTime", e.target.value);
-        }
-      } else {
-        handleRentalChange("pickupTime", e.target.value);
-      }
-    }}
-    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  {rentalData.pickupTime && rentalData.pickupDate && 
-   !isFutureDateTime(rentalData.pickupDate, rentalData.pickupTime) && (
-    <p className="text-xs text-red-500 mt-1">Please select a future time</p>
-  )}
-</div>
+        {/* Pickup Time */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+          <input
+            type="time"
+            value={rentalData.pickupTime}
+            onChange={(e) => {
+              if (rentalData.pickupDate) {
+                if (isFutureDateTime(rentalData.pickupDate, e.target.value)) {
+                  handleRentalChange("pickupTime", e.target.value);
+                  
+                  // Calculate minimum dropoff datetime (24 hours after pickup)
+                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${e.target.value}`);
+                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
+                  const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
+                  const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5);
+                  
+                  // If current dropoff is invalid, update it
+                  if (!rentalData.dropoffDate || 
+                      rentalData.dropoffDate < formattedMinDate || 
+                      (rentalData.dropoffDate === formattedMinDate && rentalData.dropoffTime < formattedMinTime)) {
+                    handleRentalChange("dropoffDate", formattedMinDate);
+                    handleRentalChange("dropoffTime", formattedMinTime);
+                  }
+                }
+              } else {
+                handleRentalChange("pickupTime", e.target.value);
+              }
+            }}
+            className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {rentalData.pickupTime && rentalData.pickupDate && 
+           !isFutureDateTime(rentalData.pickupDate, rentalData.pickupTime) && (
+            <p className="text-xs text-red-500 mt-1">Please select a future time</p>
+          )}
+        </div>
       </div>
     </div>
 
-    {/* Dropoff Section - Only shows after pickup is complete */}
+    {/* Dropoff Section */}
     {rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
       <div className="mb-8 fade-in">
         <div className="flex items-center mb-4">
-      
           <label htmlFor="dropoff" className="ml-2 text-lg font-bold text-gray-900">
             Drop - Off
           </label>
@@ -541,83 +584,110 @@ export default function CarRentalForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Dropoff Location */}
-         {/* Dropoff Location Select */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-  <select
-    value={rentalData.dropoffLocation}
-    onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
-    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    disabled={!billingData.city}
-  >
-    <option value="">Select dropoff location</option>
-    {availableDropoffLocations.map(location => (
-      <option key={location} value={location}>{location}</option>
-    ))}
-  </select>
-</div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+            <select
+              value={rentalData.dropoffLocation}
+              onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!billingData.city}
+            >
+              <option value="">Select dropoff location</option>
+              {availableDropoffLocations.map(location => (
+                <option key={location} value={location}>{location}</option>
+              ))}
+            </select>
+          </div>
           
-{/* Dropoff Date Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-  <input
-    type="date"
-    value={rentalData.dropoffDate}
-    onChange={(e) => {
-      // Ensure dropoff is after pickup
-      if (isFutureDate(e.target.value) && 
-          (!rentalData.pickupDate || e.target.value >= rentalData.pickupDate)) {
-        handleRentalChange("dropoffDate", e.target.value);
-      }
-    }}
-    min={rentalData.pickupDate || new Date().toISOString().split('T')[0]}
-    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  {rentalData.dropoffDate && 
-   (!isFutureDate(rentalData.dropoffDate) || 
-    (rentalData.pickupDate && rentalData.dropoffDate < rentalData.pickupDate)) && (
-    <p className="text-xs text-red-500 mt-1">
-      {!isFutureDate(rentalData.dropoffDate) 
-        ? "Please select a future date" 
-        : "Dropoff must be after pickup"}
-    </p>
-  )}
-</div>
+          {/* Dropoff Date */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+            <input
+              type="date"
+              value={rentalData.dropoffDate}
+              onChange={(e) => {
+                // Calculate minimum dropoff date (24 hours after pickup)
+                const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+                const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
+                const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
+                
+                if (e.target.value >= formattedMinDate) {
+                  handleRentalChange("dropoffDate", e.target.value);
+                  
+                  // If same day as minimum, ensure time is valid
+                  if (e.target.value === formattedMinDate) {
+                    const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5);
+                    if (rentalData.dropoffTime < formattedMinTime) {
+                      handleRentalChange("dropoffTime", formattedMinTime);
+                    }
+                  }
+                }
+              }}
+              min={(() => {
+                if (rentalData.pickupDate && rentalData.pickupTime) {
+                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
+                  return minDropoffDateTime.toISOString().split('T')[0];
+                }
+                return rentalData.pickupDate || new Date().toISOString().split('T')[0];
+              })()}
+              className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {rentalData.dropoffDate && 
+             ((rentalData.pickupDate && rentalData.pickupTime && 
+               new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime || '00:00'}`) < 
+               new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000))) && (
+              <p className="text-xs text-red-500 mt-1">
+                Dropoff must be at least 24 hours after pickup
+              </p>
+            )}
+          </div>
 
-{/* Dropoff Time Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-  <input
-    type="time"
-    value={rentalData.dropoffTime}
-    onChange={(e) => {
-      if (rentalData.dropoffDate) {
-        // If same date as pickup, ensure time is later
-        if (rentalData.dropoffDate === rentalData.pickupDate) {
-          if (e.target.value > rentalData.pickupTime) {
-            handleRentalChange("dropoffTime", e.target.value);
-          }
-        } else if (isFutureDateTime(rentalData.dropoffDate, e.target.value)) {
-          handleRentalChange("dropoffTime", e.target.value);
-        }
-      } else {
-        handleRentalChange("dropoffTime", e.target.value);
-      }
-    }}
-    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  {rentalData.dropoffTime && rentalData.dropoffDate && 
-   ((rentalData.dropoffDate === rentalData.pickupDate && 
-     rentalData.dropoffTime <= rentalData.pickupTime) ||
-    !isFutureDateTime(rentalData.dropoffDate, rentalData.dropoffTime)) && (
-    <p className="text-xs text-red-500 mt-1">
-      {rentalData.dropoffDate === rentalData.pickupDate && 
-       rentalData.dropoffTime <= rentalData.pickupTime
-        ? "Dropoff time must be after pickup time"
-        : "Please select a future time"}
-    </p>
-  )}
-</div>
+          {/* Dropoff Time */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+            <input
+              type="time"
+              value={rentalData.dropoffTime}
+              onChange={(e) => {
+                if (rentalData.dropoffDate) {
+                  // Calculate minimum dropoff datetime (24 hours after pickup)
+                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
+                  const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
+                  const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5);
+                  
+                  // Check if selected time is valid
+                  if (rentalData.dropoffDate > formattedMinDate || 
+                      (rentalData.dropoffDate === formattedMinDate && e.target.value >= formattedMinTime)) {
+                    handleRentalChange("dropoffTime", e.target.value);
+                  }
+                } else {
+                  handleRentalChange("dropoffTime", e.target.value);
+                }
+              }}
+              min={(() => {
+                if (rentalData.pickupDate && rentalData.pickupTime && rentalData.dropoffDate) {
+                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
+                  const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
+                  
+                  if (rentalData.dropoffDate === formattedMinDate) {
+                    return minDropoffDateTime.toTimeString().substring(0, 5);
+                  }
+                }
+                return '00:00';
+              })()}
+              className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {rentalData.dropoffTime && rentalData.dropoffDate && rentalData.pickupDate && rentalData.pickupTime && 
+             new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) < 
+             new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000) && (
+              <p className="text-xs text-red-500 mt-1">
+                Dropoff must be at least 24 hours after pickup
+              </p>
+            )}
+          </div>
         </div>
       </div>
     )}

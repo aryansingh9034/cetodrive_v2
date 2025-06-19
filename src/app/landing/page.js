@@ -175,14 +175,11 @@ useEffect(() => {
       selected={pickupDate}
       onChange={(date) => {
         setPickupDate(date);
-        // If return date is before new pickup date, adjust return date
-        if (returnDate < date) {
-          const newReturnDate = new Date(date);
-          newReturnDate.setHours(date.getHours() + 1); // Add 1 hour as default
-          setReturnDate(newReturnDate);
-        }
+        // Set return date to at least 24 hours after pickup
+        const newReturnDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+        setReturnDate(newReturnDate);
       }}
-      minDate={new Date()} // Disable past dates
+      minDate={new Date()}
       minTime={new Date().getDate() === pickupDate.getDate() ? 
                new Date() : // If today, only allow future times
                new Date().setHours(0, 0, 0, 0)} // If future date, allow all times
@@ -198,7 +195,6 @@ useEffect(() => {
 </div>
 
 {/* Return Date */}
-{/* Return Date */}
 <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
   <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
   <div className="w-full">
@@ -206,12 +202,11 @@ useEffect(() => {
     <DatePicker
       selected={returnDate}
       onChange={(date) => setReturnDate(date)}
-      minDate={pickupDate}
+      minDate={new Date(pickupDate.getTime() + 24 * 60 * 60 * 1000)} // 24 hours after pickup
       minTime={
-        returnDate && returnDate.getDate() === pickupDate.getDate() && 
-        returnDate.getMonth() === pickupDate.getMonth() && 
-        returnDate.getFullYear() === pickupDate.getFullYear()
-          ? new Date(pickupDate.getTime() + 15 * 60 * 1000) // 15 minutes after pickup
+        // If return date is same calendar day as pickup date + 1 day
+        returnDate.getDate() === new Date(pickupDate.getTime() + 24 * 60 * 60 * 1000).getDate()
+          ? new Date(pickupDate.getTime() + 24 * 60 * 60 * 1000) // Exactly 24 hours after pickup
           : new Date().setHours(0, 0, 0, 0) // Start of day
       }
       maxTime={new Date().setHours(23, 59, 59, 999)}
@@ -222,14 +217,8 @@ useEffect(() => {
       className="w-full outline-none text-gray-700 cursor-pointer text-sm"
       customInput={<div className="cursor-pointer">{formatDate(returnDate)}</div>}
       filterTime={(time) => {
-        if (
-          time.getDate() === pickupDate.getDate() &&
-          time.getMonth() === pickupDate.getMonth() &&
-          time.getFullYear() === pickupDate.getFullYear()
-        ) {
-          return time.getTime() > pickupDate.getTime() + 15 * 60 * 1000;
-        }
-        return true;
+        // Disable any times that are less than 24 hours after pickup
+        return time.getTime() >= pickupDate.getTime() + 24 * 60 * 60 * 1000;
       }}
     />
   </div>
