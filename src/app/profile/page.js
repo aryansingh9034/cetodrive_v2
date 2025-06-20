@@ -332,14 +332,14 @@ const handleLogout = () => {
               <div className="space-y-3">
                 <Link href="/vehicleform" className="w-full bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
                   <Car className="w-5 h-5" />
-                  Rent a Vehicle
+                  Rent Your Vehicle
                 </Link>
                 
                
-                <button className="w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+                {/* <button className="w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center gap-3">
                   <Phone className="w-5 h-5" />
                   Add Phone
-                </button>
+                </button> */}
                            <button 
                           onClick={handleLogout}
                            className="p-2 w-full text-gray-600 flex hover:text-red-600 bg-red-50 rounded-xl py-3 px-4 transition-all duration-200"

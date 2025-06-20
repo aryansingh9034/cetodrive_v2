@@ -3,13 +3,21 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, ArrowRight, Car, Zap } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { Menu, X, ArrowRight, Car, Zap, User, LogOut } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Check if user is logged in
+  useEffect(() => {
+    const userData = localStorage.getItem('userData');
+    setIsLoggedIn(!!userData);
+  }, [pathname]); // Re-run when path changes
 
   // Handle scroll effect for header background
   useEffect(() => {
@@ -20,20 +28,18 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-   //const isCarDetailsClient = pathname.includes('/cardetail');
-   const isBilling = pathname.includes('/billing');
-   const isProfile = pathname.includes('/profile');
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const isBilling = pathname.includes('/billing');
+  const isProfile = pathname.includes('/profile');
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('userData');
+    localStorage.removeItem('customerId');
+    setIsLoggedIn(false);
+    router.push('/');
   };
 
   return (
@@ -72,11 +78,11 @@ export default function Header() {
                 </Link>
               </div>
             )} */}
-            {isBilling && (
-              <div className="flex items-center gap-4">
+             {isBilling && !isLoggedIn && (
+              <div className="hidden md:flex items-center gap-4">
                 <Link 
                   href="/login" 
-                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400  transition-colors duration-300"
+                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
                 >
                   Login
                 </Link>
@@ -88,17 +94,70 @@ export default function Header() {
                 </Link>
               </div>
             )}
-{isProfile && (
-              <div className="flex items-center gap-4">
+             {/* {isBilling && isLoggedIn && (
+              <div className="hidden md:flex items-center gap-4">
+                <Link 
+                  href="/profile" 
+                  className="flex items-center gap-2 px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
+                >
+                  <User size={18} />
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
+            )} */}
+
+            {isLoggedIn && (
+              <div className="hidden md:flex items-center gap-4">
+                <Link 
+                  href="/profile" 
+                  className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-300"
+                  title="Profile"
+                >
+                  <User className="w-5 h-5 text-orange-400" />
+                </Link>
+              </div>
+            )}
+
+            
+          
+            {/* {isProfile && isLoggedIn && (
+              <div className="hidden md:flex items-center gap-4">
+                <Link 
+                  href="/profile" 
+                  className="flex items-center gap-2 px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
+                >
+                  <User size={18} />
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
+            )} */}
+
+            {/* Show "Rent Your Car" only on profile page */}
+            {isProfile && (
+              <div className="hidden md:flex items-center gap-4">
                 <Link 
                   href="/vehicleform" 
-                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400  transition-colors duration-300"
+                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
                 >
                   Rent Your Car
                 </Link>
-                
               </div>
             )}
+
             {/* Hamburger Menu Button */}
             <button 
               className="group relative p-3 rounded-2xl bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25" 
@@ -183,44 +242,81 @@ export default function Header() {
             </div>
 
             {/* Navigation Grid */}
-            <nav className="grid gap-4 max-w-md mx-auto w-full">
-              {[
-                { href: "/", label: "Home", delay: 0 },
-                { href: "/WhyChooseUs", label: "Why Choose Us", delay: 100 },
-                { href: "/contactus", label: "Contact", delay: 200 },
-                { href: "/availablevehicle", label: "Available Vehicle", delay: 300 },
-                { href: "/login", label: "Login", delay: 400 },
-                { href: "/signup", label: "Sign Up", delay: 500 },
-              ].map((item, index) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`group block transition-all duration-500 ${
-                    mobileMenuOpen 
-                      ? 'opacity-100 translate-x-0' 
-                      : 'opacity-0 translate-x-8'
-                  }`}
-                  style={{ transitionDelay: `${item.delay + 200}ms` }}
-                  onClick={toggleMobileMenu}
-                >
-                  <div className="relative overflow-hidden">
-                    <div className="flex items-center justify-between py-4 px-8 mx-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/30 group-hover:border-orange-500/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-orange-500/10">
-                      
-                      {/* Background glow effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      
-                      <span className="relative text-xl font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
-                        {item.label}
-                      </span>
-                      
-                      <div className="relative flex items-center">
-                        <ArrowRight className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </nav>
+             <nav className="grid gap-4 max-w-md mx-auto w-full">
+      {[
+        { href: "/", label: "Home", delay: 0 },
+        { href: "/WhyChooseUs", label: "Why Choose Us", delay: 100 },
+        { href: "/contactus", label: "Contact", delay: 200 },
+        { href: "/availablevehicle", label: "Available Vehicle", delay: 300 },
+        ...(isLoggedIn
+          ? [
+              { href: "/profile", label: "Profile", delay: 400 },
+              { 
+                label: "Logout", 
+                delay: 500,
+                action: handleLogout,
+                icon: <LogOut className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />
+              }
+            ]
+          : [
+              { href: "/login", label: "Login", delay: 400 },
+              { href: "/signup", label: "Sign Up", delay: 500 }
+            ]
+        )
+      ].map((item, index) => (
+        item.href ? (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`group block transition-all duration-500 ${
+              mobileMenuOpen 
+                ? 'opacity-100 translate-x-0' 
+                : 'opacity-0 translate-x-8'
+            }`}
+            style={{ transitionDelay: `${item.delay + 200}ms` }}
+            onClick={toggleMobileMenu}
+          >
+            <div className="relative overflow-hidden">
+              <div className="flex items-center justify-between py-4 px-8 mx-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/30 group-hover:border-orange-500/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-orange-500/10">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative text-xl font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                  {item.label}
+                </span>
+                <div className="relative flex items-center">
+                  <ArrowRight className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />
+                </div>
+              </div>
+            </div>
+          </Link>
+        ) : (
+          <button
+            key={item.label}
+            className={`group block transition-all duration-500 ${
+              mobileMenuOpen 
+                ? 'opacity-100 translate-x-0' 
+                : 'opacity-0 translate-x-8'
+            }`}
+            style={{ transitionDelay: `${item.delay + 200}ms` }}
+            onClick={() => {
+              item.action();
+              toggleMobileMenu();
+            }}
+          >
+            <div className="relative overflow-hidden">
+              <div className="flex items-center justify-between py-4 px-8 mx-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/30 group-hover:border-orange-500/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-orange-500/10">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative text-xl font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                  {item.label}
+                </span>
+                <div className="relative flex items-center">
+                  {item.icon || <ArrowRight className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />}
+                </div>
+              </div>
+            </div>
+          </button>
+        )
+      ))}
+    </nav>
 
             {/* Footer Section */}
             <div className={`text-center mt-12 transition-all duration-1000 delay-700 ${
