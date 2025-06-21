@@ -98,11 +98,11 @@ export default function Footer() {
             {/* Left column */}
          <div className="flex flex-col items-start pl-0 -ml-16"> {/* Remove left padding and add negative margin */}
   <img 
-    src="/footerlogo.png" 
+    src="/1.jpeg" 
     alt="CatoDrive vehicle" 
     className="w-full max-w-md rounded-lg"
   />
-  <p className="text-lg text-center font-bold max-w-md w-full">
+  <p className="text-2xl text-center mt-4 font-bold max-w-md w-full">
     Skip the cab, grab the keys!
   </p>
 </div>

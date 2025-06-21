@@ -8,8 +8,6 @@ import Modal from 'react-modal'
 import { useSession } from "next-auth/react" 
 import LoginModal from '@/app/loginmodal/page'
 
-
-
 // Add these styles for the modal
 const customStyles = {
   overlay: {
@@ -43,10 +41,8 @@ const cityLocations = {
       "Dallas Love Field (DAL)"
     ],
     dropoff: [
-      // Major commercial airports
       "Dallas/Fort Worth International Airport (DFW)",
       "Dallas Love Field (DAL)",
-      // Reliever & municipal airports
       "Addison Airport (ADS)",
       "Dallas Executive Airport (RBD)",
       "Arlington Municipal Airport (GKY)",
@@ -64,7 +60,6 @@ const cityLocations = {
       "Garland/DFW Heloplex (T57)",
       "DeSoto Heliport (73T)",
       "Dallas CBD Vertiport (JDB)",
-      // Smaller public-use airports
       "Majors Airport – Greenville (GVT)",
       "McKinney National Airport (TKI)",
       "Northwest Regional Airport (52F)",
@@ -76,7 +71,6 @@ const cityLocations = {
   },
   // Add other cities similarly if needed
 };
-
 
 export default function CarRentalForm() {
   const router = useRouter()
@@ -90,17 +84,17 @@ export default function CarRentalForm() {
   const [isThankYouOpen, setIsThankYouOpen] = useState(false)
   const [uploadedDocs, setUploadedDocs] = useState(null)
   const [availableLocations, setAvailableLocations] = useState([])
-    const [customerId, setCustomerId] = useState(
-  // Initialize with value from localStorage
-  typeof window !== 'undefined' ? localStorage.getItem('customerId') : null
-);
-    const [showLoginModal, setShowLoginModal] = useState(false);
-const [pendingBookingData, setPendingBookingData] = useState(null);
-    const { data: session } = useSession()
- useEffect(() => {
-    // This ensures the DOM is loaded before setting the app element
-    Modal.setAppElement('#root');
-  }, []);
+  const [customerId, setCustomerId] = useState(
+    typeof window !== 'undefined' ? localStorage.getItem('customerId') : null
+  )
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [pendingBookingData, setPendingBookingData] = useState(null)
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false)
+  const { data: session } = useSession()
+
+  useEffect(() => {
+    Modal.setAppElement('#root')
+  }, [])
 
   // Form data states
   const [billingData, setBillingData] = useState({
@@ -138,54 +132,89 @@ const [pendingBookingData, setPendingBookingData] = useState(null);
     terms: false
   })
 
-  const [availablePickupLocations, setAvailablePickupLocations] = useState([]);
-const [availableDropoffLocations, setAvailableDropoffLocations] = useState([]);
+  const [availablePickupLocations, setAvailablePickupLocations] = useState([])
+  const [availableDropoffLocations, setAvailableDropoffLocations] = useState([])
 
-const handleLoginSuccess = () => {
-  // After successful login, customerId will be available in localStorage
-  const storedCustomerId = localStorage.getItem('customerId');
-  setCustomerId(storedCustomerId);
-  
-  // If there was pending booking data, submit it
-  if (pendingBookingData) {
-    // You might want to restore the form state here
-    setBillingData(pendingBookingData.billingData);
-    setRentalData(pendingBookingData.rentalData);
-    setVehicle(pendingBookingData.vehicle);
+  // Fetch user's current location and auto-fill billing address
+  useEffect(() => {
+    if (currentStep === 1 && navigator.geolocation) {
+      setIsFetchingLocation(true)
+      
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords
+            const response = await axios.get(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDBVacETwtRCfrK9FJo0ee3gUQA-ImyCPc`
+            )
+            
+            if (response.data.results.length > 0) {
+              const addressComponents = response.data.results[0].address_components
+              const streetNumber = addressComponents.find(c => c.types.includes('street_number'))?.long_name || ''
+              const route = addressComponents.find(c => c.types.includes('route'))?.long_name || ''
+              const city = addressComponents.find(c => c.types.includes('locality'))?.long_name || ''
+              const state = addressComponents.find(c => c.types.includes('administrative_area_level_1'))?.short_name || ''
+              const zipcode = addressComponents.find(c => c.types.includes('postal_code'))?.long_name || ''
+              
+              setBillingData(prev => ({
+                ...prev,
+                address: `${streetNumber} ${route}`.trim(),
+                city,
+                state,
+                zipcode
+              }))
+            }
+          } catch (error) {
+            console.error("Error fetching location data:", error)
+          } finally {
+            setIsFetchingLocation(false)
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error)
+          setIsFetchingLocation(false)
+        }
+      )
+    }
+  }, [currentStep])
+
+  const handleLoginSuccess = () => {
+    const storedCustomerId = localStorage.getItem('customerId')
+    setCustomerId(storedCustomerId)
     
-    // Then trigger the submission again
-    // You might want to add a slight delay to ensure state updates
-    setTimeout(() => {
-      handleSubmit();
-    }, 100);
+    if (pendingBookingData) {
+      setBillingData(pendingBookingData.billingData)
+      setRentalData(pendingBookingData.rentalData)
+      setVehicle(pendingBookingData.vehicle)
+      
+      setTimeout(() => {
+        handleSubmit()
+      }, 100)
+    }
+    
+    setPendingBookingData(null)
   }
-  
-  setPendingBookingData(null);
-};
 
-// Update available locations when city changes
-useEffect(() => {
-  if (billingData.city && cityLocations[billingData.city]) {
-    setAvailablePickupLocations(cityLocations[billingData.city].pickup);
-    setAvailableDropoffLocations(cityLocations[billingData.city].dropoff);
-  } else {
-    setAvailablePickupLocations([]);
-    setAvailableDropoffLocations([]);
-  }
-}, [billingData.city]);
+  // Update available locations when city changes
+  useEffect(() => {
+    if (rentalData.city && cityLocations[rentalData.city]) {
+      setAvailablePickupLocations(cityLocations[rentalData.city].pickup)
+      setAvailableDropoffLocations(cityLocations[rentalData.city].dropoff)
+    } else {
+      setAvailablePickupLocations([])
+      setAvailableDropoffLocations([])
+    }
+  }, [rentalData.city])
 
   useEffect(() => {
-    // Load vehicle from localStorage
     const storedVehicle = localStorage.getItem("vehicle")
     if (storedVehicle) {
       setVehicle(JSON.parse(storedVehicle))
     }
 
-    // Get customer ID from NextAuth session
     if (session?.user?.id) {
       setCustomerId(session.user.id)
     } else {
-      // Fallback to localStorage if not using NextAuth
       const storedCustomerId = localStorage.getItem('customerId')
       if (storedCustomerId) {
         setCustomerId(storedCustomerId)
@@ -193,28 +222,10 @@ useEffect(() => {
     }
   }, [session])
 
-  // Update available locations when city changes
-  useEffect(() => {
-    if (billingData.city && cityLocations[billingData.city]) {
-      setAvailableLocations(cityLocations[billingData.city])
-    } else {
-      setAvailableLocations([])
-    }
-  }, [billingData.city])
-
   // Handle form field changes
-const handleBillingChange = (field, value) => {
-  setBillingData(prev => ({ ...prev, [field]: value }));
-  
-  // Reset locations when city changes
-  if (field === "city") {
-    setRentalData(prev => ({
-      ...prev,
-      pickupLocation: "",
-      dropoffLocation: ""
-    }));
+  const handleBillingChange = (field, value) => {
+    setBillingData(prev => ({ ...prev, [field]: value }))
   }
-}
 
   const handleRentalChange = (field, value) => {
     setRentalData(prev => ({ ...prev, [field]: value }))
@@ -226,11 +237,11 @@ const handleBillingChange = (field, value) => {
 
   // Step validation functions
   const validateStep1 = () => {
-    return billingData.name && billingData.email && billingData.phone && billingData.address && billingData.city
+    return billingData.name && billingData.email && billingData.phone && billingData.address
   }
 
   const validateStep2 = () => {
-    return rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime
+    return rentalData.city && rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime
   }
 
   const validateStep3 = () => {
@@ -240,30 +251,18 @@ const handleBillingChange = (field, value) => {
     return true
   }
 
-  useEffect(() => {
-    // Method 1: From localStorage (temporary solution)
-    const storedCustomerId = localStorage.getItem('customerId')
-    if (storedCustomerId) {
-      setCustomerId(storedCustomerId)
-    }
-
-    // // Method 2: From your auth system (recommended)
-    //  const user = authService.getCurrentUser()
-    //  if (user) setCustomerId(user.id)
-  }, [])
-
   // Form submission
   const handleSubmit = async () => {
-      if (!customerId) {
-    // Save form state before showing login modal
-    setPendingBookingData({
-      billingData,
-      rentalData,
-      vehicle
-    });
-    setShowLoginModal(true);
-    return;
-  }
+    if (!customerId) {
+      setPendingBookingData({
+        billingData,
+        rentalData,
+        vehicle
+      })
+      setShowLoginModal(true)
+      return
+    }
+
     if (currentStep === 1 && !validateStep1()) {
       setSubmitMessage("Please fill all billing information")
       return
@@ -277,18 +276,15 @@ const handleBillingChange = (field, value) => {
     if (currentStep === 2) {
       setIsSubmitting(true)
       try {
- const formData = new FormData()
-        formData.append("customer", customerId) // Use the dynamic customerId
-        formData.append("vehicle", vehicle?.id || "") // Use actual vehicle ID
-        formData.append("total_payment", calculateTotalPrice().toString());
-        // Append billing data
+        const formData = new FormData()
+        formData.append("customer", customerId)
+        formData.append("vehicle", vehicle?.id || "")
+        formData.append("total_payment", calculateTotalPrice().toString())
         formData.append("name", billingData.name)
         formData.append("email", billingData.email)
         formData.append("Phone_number", billingData.phone)
         formData.append("Address", billingData.address)
         formData.append("Town", billingData.city)
-        
-        // Append rental data
         formData.append("pick_up_location", rentalData.pickupLocation)
         formData.append("pick_up_Date", rentalData.pickupDate)
         formData.append("pick_up_time", rentalData.pickupTime)
@@ -307,17 +303,15 @@ const handleBillingChange = (field, value) => {
         setAmount(response.data?.data?.total_payment)
         setCurrentStep(3)
         setSubmitMessage("Form submitted successfully! Proceed to payment.")
-      }catch (error) {
+      } catch (error) {
         console.error("Submission error:", error)
         setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."))
       } finally {
         setIsSubmitting(false)
       }
     } else if (currentStep === 3) {
-      // Handle payment submission
       setIsSubmitting(true)
       try {
-        // Simulate payment processing
         await new Promise(resolve => setTimeout(resolve, 1500))
         setCurrentStep(4)
         setSubmitMessage("Payment successful! Complete your rental.")
@@ -342,131 +336,112 @@ const handleBillingChange = (field, value) => {
   }
 
   // Handle document upload
-const handleDocUpload = async () => {
-  if (!uploadedDocs || uploadedDocs.length === 0) {
-    setSubmitMessage("Please upload at least one document");
-    return;
-  }
-
-  setIsSubmitting(true);
-  try {
-    const formData = new FormData();
-    
-    // Required fields from API response
-    formData.append("customer", customerId) // Replace with actual customer ID from your auth system
-    formData.append("payment", "1"); // Replace with payment ID from booking response
-    formData.append("booking", bookingId.toString());
-    
-    // Add customer email to ensure notification
-    formData.append("customer_email", billingData.email);
-    
-    // Add document files - field name must match API expectations
-    Array.from(uploadedDocs).forEach((file) => {
-      formData.append("licence_images", file); // Using plural form as per API
-    });
-
-    // Debug: Log FormData contents
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
+  const handleDocUpload = async () => {
+    if (!uploadedDocs || uploadedDocs.length === 0) {
+      setSubmitMessage("Please upload at least one document")
+      return
     }
 
-    const response = await axios.post(
-      "http://3.108.23.172:8002/api/licence/licence/", 
-      formData,
-      { 
-        headers: { 
-          "Content-Type": "multipart/form-data",
-        } 
+    setIsSubmitting(true)
+    try {
+      const formData = new FormData()
+      formData.append("customer", customerId)
+      formData.append("payment", "1")
+      formData.append("booking", bookingId.toString())
+      formData.append("customer_email", billingData.email)
+      
+      Array.from(uploadedDocs).forEach((file) => {
+        formData.append("licence_images", file)
+      })
+
+      const response = await axios.post(
+        "http://3.108.23.172:8002/api/licence/licence/", 
+        formData,
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data",
+          } 
+        }
+      )
+
+      console.log("Full API response:", response.data)
+      
+      if (response.data.email_sent) {
+        console.log("Email notification was sent successfully")
+      } else {
+        console.warn("API didn't send email despite successful upload")
       }
-    );
 
-    console.log("Full API response:", response.data);
-    
-    if (response.data.email_sent) {
-      console.log("Email notification was sent successfully");
-    } else {
-      console.warn("API didn't send email despite successful upload");
+      setIsDocUploadOpen(false)
+      setIsThankYouOpen(true)
+      
+    } catch (error) {
+      console.error("Upload error details:", {
+        error: error,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      })
+
+      let errorMessage = "Document upload failed"
+      if (error.response?.data?.message) {
+        errorMessage += `: ${error.response.data.message}`
+      } else if (error.response?.data) {
+        errorMessage += `: ${JSON.stringify(error.response.data)}`
+      } else {
+        errorMessage += `: ${error.message}`
+      }
+
+      setSubmitMessage(errorMessage)
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setIsDocUploadOpen(false);
-    setIsThankYouOpen(true);
-    
-  } catch (error) {
-    console.error("Upload error details:", {
-      error: error,
-      response: error.response?.data,
-      status: error.response?.status,
-      headers: error.response?.headers
-    });
-
-    let errorMessage = "Document upload failed";
-    if (error.response?.data?.message) {
-      errorMessage += `: ${error.response.data.message}`;
-    } else if (error.response?.data) {
-      errorMessage += `: ${JSON.stringify(error.response.data)}`;
-    } else {
-      errorMessage += `: ${error.message}`;
-    }
-
-    setSubmitMessage(errorMessage);
-  } finally {
-    setIsSubmitting(false);
   }
-};
 
   // Close thank you modal and redirect
   const closeThankYouModal = () => {
     setIsThankYouOpen(false)
-    console.log("Redirecting to confirmation with booking ID:", bookingId);
-router.push(`/confirmation/${bookingId}`);// Use backticks for template literal
+    console.log("Redirecting to confirmation with booking ID:", bookingId)
+    router.push(`/confirmation/${bookingId}`)
   }
 
-  // Add these helper functions at the top of your component
-const isFutureDate = (dateString) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set to start of day
-  const selectedDate = new Date(dateString);
-  return selectedDate >= today;
-};
-
-const calculateRentalDays = () => {
-  if (!rentalData.pickupDate || !rentalData.dropoffDate) return 0;
-  
-  const startDate = new Date(rentalData.pickupDate);
-  const endDate = new Date(rentalData.dropoffDate);
-  
-  // Calculate difference in milliseconds
-  const diffTime = endDate - startDate;
-  
-  // Convert to days and round up (to count partial days as full days)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  // Minimum rental period is 1 day
-  return Math.max(1, diffDays);
-};
-
-// Add this function to calculate the total price
-const calculateTotalPrice = () => {
-  if (!vehicle?.price) return 0;
-  
-  const rentalDays = calculateRentalDays();
-  return vehicle.price * rentalDays;
-};
-
-const isFutureDateTime = (dateString, timeString) => {
-  const now = new Date();
-  const selectedDate = new Date(dateString);
-  
-  // If date is today, check time
-  if (selectedDate.toDateString() === now.toDateString()) {
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const selectedTime = new Date();
-    selectedTime.setHours(hours, minutes, 0, 0);
-    return selectedTime >= now;
+  // Helper functions
+  const isFutureDate = (dateString) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const selectedDate = new Date(dateString)
+    return selectedDate >= today
   }
-  
-  return isFutureDate(dateString);
-};
+
+  const calculateRentalDays = () => {
+    if (!rentalData.pickupDate || !rentalData.dropoffDate) return 0
+    
+    const startDate = new Date(rentalData.pickupDate)
+    const endDate = new Date(rentalData.dropoffDate)
+    const diffTime = endDate - startDate
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return Math.max(1, diffDays)
+  }
+
+  const calculateTotalPrice = () => {
+    if (!vehicle?.price) return 0
+    const rentalDays = calculateRentalDays()
+    return vehicle.price * rentalDays
+  }
+
+  const isFutureDateTime = (dateString, timeString) => {
+    const now = new Date()
+    const selectedDate = new Date(dateString)
+    
+    if (selectedDate.toDateString() === now.toDateString()) {
+      const [hours, minutes] = timeString.split(':').map(Number)
+      const selectedTime = new Date()
+      selectedTime.setHours(hours, minutes, 0, 0)
+      return selectedTime >= now
+    }
+    
+    return isFutureDate(dateString)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-24" id="root">
@@ -497,7 +472,7 @@ const isFutureDateTime = (dateString, timeString) => {
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">Billing Info</h2>
-                    <p className="text-gray-500 text-sm">Please enter your billing info</p>
+                    <p className="text-gray-500 text-sm">Please enter your billing information</p>
                   </div>
                   <span className="text-gray-400 text-sm">Step 1 of 4</span>
                 </div>
@@ -547,293 +522,290 @@ const isFutureDateTime = (dateString, timeString) => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
                     <input
                       type="text"
-                      placeholder="Enter city"
+                      placeholder="City"
                       value={billingData.city}
                       onChange={(e) => handleBillingChange("city", e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      list="cityOptions"
+                      disabled={isFetchingLocation}
                     />
-                    <datalist id="cityOptions">
-                      {Object.keys(cityLocations).map(city => (
-                        <option key={city} value={city} />
-                      ))}
-                    </datalist>
+                    {isFetchingLocation && (
+                      <p className="text-xs text-gray-500 mt-1">Detecting your location...</p>
+                    )}
                   </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
-        <input
-          type="text"
-          placeholder="Enter state"
-          value={billingData.state}
-          onChange={(e) => handleBillingChange("state", e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
-        <input
-          type="text"
-          placeholder="Enter zip code"
-          value={billingData.zipcode}
-          onChange={(e) => handleBillingChange("zipcode", e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <input
+                      type="text"
+                      placeholder="State"
+                      value={billingData.state}
+                      onChange={(e) => handleBillingChange("state", e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={isFetchingLocation}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
+                    <input
+                      type="text"
+                      placeholder="Zip code"
+                      value={billingData.zipcode}
+                      onChange={(e) => handleBillingChange("zipcode", e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={isFetchingLocation}
+                    />
+                  </div>
                 </div>
               </div>
             )}
-    <LoginModal
-      show={showLoginModal}
-      onClose={() => setShowLoginModal(false)}
-      onLoginSuccess={handleLoginSuccess}
-    />
+
+            <LoginModal
+              show={showLoginModal}
+              onClose={() => setShowLoginModal(false)}
+              onLoginSuccess={handleLoginSuccess}
+            />
+
             {/* Step 2: Rental Info */}
-{currentStep === 2 && (
-  <div className="bg-white rounded-lg p-6 shadow-sm">
-    <div className="flex justify-between items-center mb-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900">Rental Info</h2>
-        <p className="text-gray-500 text-sm">Please select your rental details</p>
-      </div>
-      <span className="text-gray-400 text-sm">Step 2 of 4</span>
-    </div>
+            {currentStep === 2 && (
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">Rental Info</h2>
+                    <p className="text-gray-500 text-sm">Please select your rental details</p>
+                  </div>
+                  <span className="text-gray-400 text-sm">Step 2 of 4</span>
+                </div>
 
-    {/* Pickup Section - Always Visible */}
-    <div className="mb-8">
-      <div className="flex items-center mb-4">
-       
-        <label htmlFor="pickup" className="ml-2 text-lg font-bold text-gray-900">
-          Pick - Up
-        </label>
-      </div>
+                {/* City Selection */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                  <select
+                    value={rentalData.city}
+                    onChange={(e) => handleRentalChange("city", e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a city</option>
+                    {Object.keys(cityLocations).map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Pickup Location */}
-        {/* Pickup Location Select */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-  <select
-    value={rentalData.pickupLocation}
-    onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
-    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    disabled={!billingData.city}
-  >
-    <option value="">Select pickup location</option>
-    {availablePickupLocations.map(location => (
-      <option key={location} value={location}>{location}</option>
-    ))}
-  </select>
-  {!billingData.city && (
-    <p className="text-xs text-red-500 mt-1">Please select a city first</p>
-  )}
-</div>
-        
-        {/* Pickup Date */}
-      {/* Pickup Date Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-  <input
-    type="date"
-    value={rentalData.pickupDate}
-    onChange={(e) => {
-      if (isFutureDate(e.target.value)) {
-        handleRentalChange("pickupDate", e.target.value);
-                // Calculate minimum dropoff date (24 hours after pickup)
-                if (rentalData.pickupTime) {
-                  const pickupDateTime = new Date(`${e.target.value}T${rentalData.pickupTime}`);
-                  const minDropoffDate = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
-                  const formattedMinDate = minDropoffDate.toISOString().split('T')[0];
-                  
-                  // If current dropoff is invalid, update it
-                  if (!rentalData.dropoffDate || rentalData.dropoffDate < formattedMinDate) {
-                    handleRentalChange("dropoffDate", formattedMinDate);
-                  }
-                }
-              }
-            }}
-            min={new Date().toISOString().split('T')[0]}
-    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
-    <p className="text-xs text-red-500 mt-1">Please select a future date</p>
-  )}
-</div>
+                {/* Pickup Section */}
+                {rentalData.city && (
+                  <div className="mb-8">
+                    <div className="flex items-center mb-4">
+                      <label className="text-lg font-bold text-gray-900">Pick - Up</label>
+                    </div>
 
-{/* Pickup Time Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-  <input
-    type="time"
-    value={rentalData.pickupTime}
-    onChange={(e) => {
-      if (rentalData.pickupDate) {
-        if (isFutureDateTime(rentalData.pickupDate, e.target.value)) {
-          handleRentalChange("pickupTime", e.target.value);
-                  
-                  // Calculate minimum dropoff datetime (24 hours after pickup)
-                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${e.target.value}`);
-                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
-                  const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
-                  const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5);
-                  
-                  // If current dropoff is invalid, update it
-                  if (!rentalData.dropoffDate || 
-                      rentalData.dropoffDate < formattedMinDate || 
-                      (rentalData.dropoffDate === formattedMinDate && rentalData.dropoffTime < formattedMinTime)) {
-                    handleRentalChange("dropoffDate", formattedMinDate);
-                    handleRentalChange("dropoffTime", formattedMinTime);
-                  }
-        }
-      } else {
-        handleRentalChange("pickupTime", e.target.value);
-      }
-    }}
-    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  {rentalData.pickupTime && rentalData.pickupDate && 
-   !isFutureDateTime(rentalData.pickupDate, rentalData.pickupTime) && (
-    <p className="text-xs text-red-500 mt-1">Please select a future time</p>
-  )}
-</div>
-      </div>
-    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Pickup Location */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+                        <select
+                          value={rentalData.pickupLocation}
+                          onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select pickup location</option>
+                          {availablePickupLocations.map(location => (
+                            <option key={location} value={location}>{location}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Pickup Date */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+                        <input
+                          type="date"
+                          value={rentalData.pickupDate}
+                          onChange={(e) => {
+                            if (isFutureDate(e.target.value)) {
+                              handleRentalChange("pickupDate", e.target.value)
+                              if (rentalData.pickupTime) {
+                                const pickupDateTime = new Date(`${e.target.value}T${rentalData.pickupTime}`)
+                                const minDropoffDate = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
+                                const formattedMinDate = minDropoffDate.toISOString().split('T')[0]
+                                
+                                if (!rentalData.dropoffDate || rentalData.dropoffDate < formattedMinDate) {
+                                  handleRentalChange("dropoffDate", formattedMinDate)
+                                }
+                              }
+                            }
+                          }}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
+                          <p className="text-xs text-red-500 mt-1">Please select a future date</p>
+                        )}
+                      </div>
 
-    {/* Dropoff Section - Only shows after pickup is complete */}
-    {rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
-      <div className="mb-8 fade-in">
-        <div className="flex items-center mb-4">
-      
-          <label htmlFor="dropoff" className="ml-2 text-lg font-bold text-gray-900">
-            Drop - Off
-          </label>
-        </div>
+                      {/* Pickup Time */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+                        <input
+                          type="time"
+                          value={rentalData.pickupTime}
+                          onChange={(e) => {
+                            if (rentalData.pickupDate) {
+                              if (isFutureDateTime(rentalData.pickupDate, e.target.value)) {
+                                handleRentalChange("pickupTime", e.target.value)
+                                
+                                const pickupDateTime = new Date(`${rentalData.pickupDate}T${e.target.value}`)
+                                const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
+                                const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
+                                const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
+                                
+                                if (!rentalData.dropoffDate || 
+                                    rentalData.dropoffDate < formattedMinDate || 
+                                    (rentalData.dropoffDate === formattedMinDate && rentalData.dropoffTime < formattedMinTime)) {
+                                  handleRentalChange("dropoffDate", formattedMinDate)
+                                  handleRentalChange("dropoffTime", formattedMinTime)
+                                }
+                              }
+                            } else {
+                              handleRentalChange("pickupTime", e.target.value)
+                            }
+                          }}
+                          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {rentalData.pickupTime && rentalData.pickupDate && 
+                        !isFutureDateTime(rentalData.pickupDate, rentalData.pickupTime) && (
+                          <p className="text-xs text-red-500 mt-1">Please select a future time</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Dropoff Location */}
-         {/* Dropoff Location Select */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-  <select
-    value={rentalData.dropoffLocation}
-    onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
-    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    disabled={!billingData.city}
-  >
-    <option value="">Select dropoff location</option>
-    {availableDropoffLocations.map(location => (
-      <option key={location} value={location}>{location}</option>
-    ))}
-  </select>
-</div>
-          
-{/* Dropoff Date Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-  <input
-    type="date"
-    value={rentalData.dropoffDate}
-    onChange={(e) => {
-                // Calculate minimum dropoff date (24 hours after pickup)
-                const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
-                const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
-                const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
-                
-                if (e.target.value >= formattedMinDate) {
-        handleRentalChange("dropoffDate", e.target.value);
-                  
-                  // If same day as minimum, ensure time is valid
-                  if (e.target.value === formattedMinDate) {
-                    const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5);
-                    if (rentalData.dropoffTime < formattedMinTime) {
-                      handleRentalChange("dropoffTime", formattedMinTime);
-                    }
-                  }
-                }
-    }}
-              min={(() => {
-                if (rentalData.pickupDate && rentalData.pickupTime) {
-                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
-                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
-                  return minDropoffDateTime.toISOString().split('T')[0];
-                }
-                return rentalData.pickupDate || new Date().toISOString().split('T')[0];
-              })()}
-    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  {rentalData.dropoffDate && 
-             ((rentalData.pickupDate && rentalData.pickupTime && 
-               new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime || '00:00'}`) < 
-               new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000))) && (
-    <p className="text-xs text-red-500 mt-1">
-      {!isFutureDate(rentalData.dropoffDate) 
-        ? "Please select a future date" 
-        : "Dropoff must be after pickup"}
-    </p>
-  )}
-</div>
+                {/* Dropoff Section */}
+                {rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
+                  <div className="mb-8 fade-in">
+                    <div className="flex items-center mb-4">
+                      <label className="text-lg font-bold text-gray-900">Drop - Off</label>
+                    </div>
 
-{/* Dropoff Time Input */}
-<div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-  <input
-    type="time"
-    value={rentalData.dropoffTime}
-    onChange={(e) => {
-      if (rentalData.dropoffDate) {
-                  // Calculate minimum dropoff datetime (24 hours after pickup)
-                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
-                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
-                  const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
-                  const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5);
-                  
-                  // Check if selected time is valid
-                  if (rentalData.dropoffDate > formattedMinDate || 
-                      (rentalData.dropoffDate === formattedMinDate && e.target.value >= formattedMinTime)) {
-          handleRentalChange("dropoffTime", e.target.value);
-        }
-      } else {
-        handleRentalChange("dropoffTime", e.target.value);
-      }
-    }}
-              min={(() => {
-                if (rentalData.pickupDate && rentalData.pickupTime && rentalData.dropoffDate) {
-                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
-                  const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
-                  const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0];
-                  
-                  if (rentalData.dropoffDate === formattedMinDate) {
-                    return minDropoffDateTime.toTimeString().substring(0, 5);
-                  }
-                }
-                return '00:00';
-              })()}
-    className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-            {rentalData.dropoffTime && rentalData.dropoffDate && rentalData.pickupDate && rentalData.pickupTime && 
-             new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) < 
-             new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000) && (
-    <p className="text-xs text-red-500 mt-1">
-                Dropoff must be at least 24 hours after pickup
-    </p>
-  )}
-</div>
-        </div>
-      </div>
-    )}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Dropoff Location */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+                        <select
+                          value={rentalData.dropoffLocation}
+                          onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select dropoff location</option>
+                          {availableDropoffLocations.map(location => (
+                            <option key={location} value={location}>{location}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Dropoff Date */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+                        <input
+                          type="date"
+                          value={rentalData.dropoffDate}
+                          onChange={(e) => {
+                            const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
+                            const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
+                            const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
+                            
+                            if (e.target.value >= formattedMinDate) {
+                              handleRentalChange("dropoffDate", e.target.value)
+                              
+                              if (e.target.value === formattedMinDate) {
+                                const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
+                                if (rentalData.dropoffTime < formattedMinTime) {
+                                  handleRentalChange("dropoffTime", formattedMinTime)
+                                }
+                              }
+                            }
+                          }}
+                          min={(() => {
+                            if (rentalData.pickupDate && rentalData.pickupTime) {
+                              const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
+                              const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
+                              return minDropoffDateTime.toISOString().split('T')[0]
+                            }
+                            return rentalData.pickupDate || new Date().toISOString().split('T')[0]
+                          })()}
+                          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {rentalData.dropoffDate && 
+                        ((rentalData.pickupDate && rentalData.pickupTime && 
+                          new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime || '00:00'}`) < 
+                          new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000)) && (
+                          <p className="text-xs text-red-500 mt-1">
+                            {!isFutureDate(rentalData.dropoffDate) 
+                              ? "Please select a future date" 
+                              : "Dropoff must be after pickup"}
+                          </p>
+                        ))}
+                      </div>
 
-    {/* Flight Number (Optional) */}
-    <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Flight Number (Optional)</label>
-      <input
-        type="text"
-        placeholder="Enter your flight number"
-        value={rentalData.flightNumber}
-        onChange={(e) => handleRentalChange("flightNumber", e.target.value)}
-        className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
-  </div>
-)}
+                      {/* Dropoff Time */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+                        <input
+                          type="time"
+                          value={rentalData.dropoffTime}
+                          onChange={(e) => {
+                            if (rentalData.dropoffDate) {
+                              const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
+                              const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
+                              const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
+                              const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
+                              
+                              if (rentalData.dropoffDate > formattedMinDate || 
+                                  (rentalData.dropoffDate === formattedMinDate && e.target.value >= formattedMinTime)) {
+                                handleRentalChange("dropoffTime", e.target.value)
+                              }
+                            } else {
+                              handleRentalChange("dropoffTime", e.target.value)
+                            }
+                          }}
+                          min={(() => {
+                            if (rentalData.pickupDate && rentalData.pickupTime && rentalData.dropoffDate) {
+                              const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
+                              const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
+                              const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
+                              
+                              if (rentalData.dropoffDate === formattedMinDate) {
+                                return minDropoffDateTime.toTimeString().substring(0, 5)
+                              }
+                            }
+                            return '00:00'
+                          })()}
+                          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {rentalData.dropoffTime && rentalData.dropoffDate && rentalData.pickupDate && rentalData.pickupTime && 
+                        new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) < 
+                        new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000) && (
+                          <p className="text-xs text-red-500 mt-1">
+                            Dropoff must be at least 24 hours after pickup
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Flight Number (Optional) */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Flight Number (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Enter your flight number"
+                    value={rentalData.flightNumber}
+                    onChange={(e) => handleRentalChange("flightNumber", e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Step 3: Payment Method */}
             {currentStep === 3 && (
@@ -949,7 +921,7 @@ const isFutureDateTime = (dateString, timeString) => {
                 <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center gap-2">
                     <label className="font-medium text-black">Amount to Pay:</label>
-                    <span className="text-lg text-black font-bold">${ calculateTotalPrice()}</span>
+                    <span className="text-lg text-black font-bold">${calculateTotalPrice()}</span>
                   </div>
                 </div>
               </div>
@@ -1104,7 +1076,7 @@ const isFutureDateTime = (dateString, timeString) => {
                     <div className="font-semibold text-gray-900">Total Rental Price</div>
                     <div className="text-sm text-gray-500">Includes all fees and taxes</div>
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">${  calculateTotalPrice()}</div>
+                  <div className="text-2xl font-bold text-gray-900">${calculateTotalPrice()}</div>
                 </div>
               </div>
 
