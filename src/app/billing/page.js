@@ -136,47 +136,181 @@ export default function CarRentalForm() {
   const [availableDropoffLocations, setAvailableDropoffLocations] = useState([])
 
   // Fetch user's current location and auto-fill billing address
-  useEffect(() => {
-    if (currentStep === 1 && navigator.geolocation) {
-      setIsFetchingLocation(true)
-      
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { latitude, longitude } = position.coords
-            const response = await axios.get(
-              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDBVacETwtRCfrK9FJo0ee3gUQA-ImyCPc`
-            )
+// Enhanced location fetching useEffect with complete address
+// Enhanced location fetching useEffect with proper address separation
+// Enhanced location fetching useEffect with proper city extraction
+// Enhanced location fetching useEffect with improved address extraction
+useEffect(() => {
+  if (currentStep === 1 && navigator.geolocation) {
+    setIsFetchingLocation(true)
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDBVacETwtRCfrK9FJo0ee3gUQA-ImyCPc`
+          )
+          
+          if (response.data.results.length > 0) {
+            const result = response.data.results[0]
+            const addressComponents = result.address_components
             
-            if (response.data.results.length > 0) {
-              const addressComponents = response.data.results[0].address_components
-              const streetNumber = addressComponents.find(c => c.types.includes('street_number'))?.long_name || ''
-              const route = addressComponents.find(c => c.types.includes('route'))?.long_name || ''
-              const city = addressComponents.find(c => c.types.includes('locality'))?.long_name || ''
-              const state = addressComponents.find(c => c.types.includes('administrative_area_level_1'))?.short_name || ''
-              const zipcode = addressComponents.find(c => c.types.includes('postal_code'))?.long_name || ''
-              
-              setBillingData(prev => ({
-                ...prev,
-                address: `${streetNumber} ${route}`.trim(),
-                city,
-                state,
-                zipcode
-              }))
+            // Extract all address components
+            const streetNumber = addressComponents.find(c => c.types.includes('street_number'))?.long_name || ''
+            const route = addressComponents.find(c => c.types.includes('route'))?.long_name || ''
+            const sublocality = addressComponents.find(c => c.types.includes('sublocality'))?.long_name || ''
+            const sublocalityLevel1 = addressComponents.find(c => c.types.includes('sublocality_level_1'))?.long_name || ''
+            const sublocalityLevel2 = addressComponents.find(c => c.types.includes('sublocality_level_2'))?.long_name || ''
+            const neighborhood = addressComponents.find(c => c.types.includes('neighborhood'))?.long_name || ''
+            const premise = addressComponents.find(c => c.types.includes('premise'))?.long_name || ''
+            const subpremise = addressComponents.find(c => c.types.includes('subpremise'))?.long_name || ''
+            
+            // IMPROVED CITY EXTRACTION - prioritize actual city over sublocality
+            const city = addressComponents.find(c => 
+              c.types.includes('locality') || // Primary city
+              c.types.includes('administrative_area_level_3') // Secondary city
+            )?.long_name || 
+            addressComponents.find(c => 
+              c.types.includes('administrative_area_level_2') // District/County level
+            )?.long_name || ''
+            
+            // Full state name
+            const state = addressComponents.find(c => c.types.includes('administrative_area_level_1'))?.long_name || ''
+            
+            const zipcode = addressComponents.find(c => c.types.includes('postal_code'))?.long_name || ''
+            const country = addressComponents.find(c => c.types.includes('country'))?.long_name || ''
+            
+            // IMPROVED ADDRESS BUILDING - include area/colony names
+            let streetAddress = ''
+            
+            // Strategy 1: Build comprehensive address from components
+            const addressParts = []
+            
+            // Add subpremise (apartment/unit number) first
+            if (subpremise) addressParts.push(subpremise)
+            
+            // Add premise (building name/number) 
+            if (premise && !streetNumber) addressParts.push(premise)
+            
+            // Add street number and route (main street address)
+            if (streetNumber && route) {
+              addressParts.push(`${streetNumber} ${route}`)
+            } else if (route) {
+              addressParts.push(route)
+            } else if (streetNumber) {
+              // If we have street number but no route, combine with area info
+              const areaInfo = sublocalityLevel2 || sublocalityLevel1 || sublocality || neighborhood
+              if (areaInfo && areaInfo !== city) {
+                addressParts.push(`${streetNumber}, ${areaInfo}`)
+              } else {
+                addressParts.push(streetNumber)
+              }
             }
-          } catch (error) {
-            console.error("Error fetching location data:", error)
-          } finally {
-            setIsFetchingLocation(false)
+            
+            // Add area information (colony, sector, etc.) if not already included
+            if (addressParts.length === 0 || (streetNumber && !route)) {
+              const areaInfo = sublocalityLevel2 || sublocalityLevel1 || sublocality || neighborhood
+              if (areaInfo && areaInfo !== city) {
+                if (streetNumber && addressParts.length === 0) {
+                  addressParts.push(`${streetNumber}, ${areaInfo}`)
+                } else if (!addressParts.some(part => part.includes(areaInfo))) {
+                  addressParts.push(areaInfo)
+                }
+              }
+            }
+            
+            streetAddress = addressParts.join(', ')
+            
+            // Strategy 2: Enhanced fallback - parse from formatted address
+            if (!streetAddress && result.formatted_address) {
+              let cleanAddress = result.formatted_address
+              
+              // Remove city, state, zipcode, and country from the end
+              const removeItems = [city, state, zipcode, country].filter(Boolean)
+              removeItems.forEach(item => {
+                if (item) {
+                  // Remove item and any trailing comma/space
+                  cleanAddress = cleanAddress.replace(new RegExp(`,?\\s*${item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*,?`, 'gi'), '')
+                }
+              })
+              
+              // Clean up extra commas and spaces
+              cleanAddress = cleanAddress.replace(/,+\s*$/, '').replace(/^,+\s*/, '').trim()
+              
+              // Only use if it's not empty and contains meaningful address info
+              if (cleanAddress && cleanAddress.length > 2 && cleanAddress !== city) {
+                streetAddress = cleanAddress
+              }
+            }
+            
+            // Strategy 3: Final fallback for Indian addresses - combine available components
+            if (!streetAddress || streetAddress.length < 3) {
+              const fallbackParts = []
+              
+              if (streetNumber) fallbackParts.push(streetNumber)
+              if (sublocalityLevel2 && sublocalityLevel2 !== city) fallbackParts.push(sublocalityLevel2)
+              if (sublocalityLevel1 && sublocalityLevel1 !== city && sublocalityLevel1 !== sublocalityLevel2) {
+                fallbackParts.push(sublocalityLevel1)
+              }
+              if (sublocality && sublocality !== city && sublocality !== sublocalityLevel1 && sublocality !== sublocalityLevel2) {
+                fallbackParts.push(sublocality)
+              }
+              if (neighborhood && neighborhood !== city && !fallbackParts.includes(neighborhood)) {
+                fallbackParts.push(neighborhood)
+              }
+              
+              if (fallbackParts.length > 0) {
+                streetAddress = fallbackParts.join(', ')
+              }
+            }
+            
+            // Final cleanup - ensure we don't have city name in address
+            if (streetAddress && city) {
+              streetAddress = streetAddress.replace(new RegExp(`\\b${city}\\b,?\\s*`, 'gi'), '').trim()
+              streetAddress = streetAddress.replace(/^,+\s*|,+\s*$/g, '').trim()
+            }
+            
+            console.log('Enhanced Location Data:', {
+              formatted_address: result.formatted_address,
+              street_address: streetAddress,
+              city,
+              state,
+              zipcode,
+              country,
+              components: {
+                streetNumber,
+                route,
+                sublocality,
+                sublocalityLevel1,
+                sublocalityLevel2,
+                neighborhood,
+                premise,
+                subpremise
+              }
+            })
+            
+            setBillingData(prev => ({
+              ...prev,
+              address: streetAddress, // Complete address with area/colony
+              city, // Actual city name
+              state,
+              zipcode
+            }))
           }
-        },
-        (error) => {
-          console.error("Geolocation error:", error)
+        } catch (error) {
+          console.error("Error fetching location data:", error)
+        } finally {
           setIsFetchingLocation(false)
         }
-      )
-    }
-  }, [currentStep])
+      },
+      (error) => {
+        console.error("Geolocation error:", error)
+        setIsFetchingLocation(false)
+      }
+    )
+  }
+}, [currentStep])
 
   const handleLoginSuccess = () => {
     const storedCustomerId = localStorage.getItem('customerId')
