@@ -17,11 +17,11 @@ export default function ContactSupport() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Hero Section */}
-      <div className="relative w-full min-h-[600px] md:min-h-[700px] lg:h-screen bg-[#0f172a] overflow-hidden">
+      <div className="relative w-full  min-h-screen bg-[#0f172a] overflow-hidden">
         <Image src={background || "/placeholder.svg"} alt="Hero background" fill className="object-cover" priority />
 
         {/* Hero Content */}
-       <div className="relative z-5 w-full flex flex-col h-full mt-20 lg:mt-0 justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
+       <div className="relative z-5 w-full h-screen flex flex-col mt-20 lg:mt-0 justify-center items-center px-4 sm:px-6 lg:px-20 pb-16 md:pb-24 pt-16 md:pt-0">
   <h1
     className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mt-8 md:mt-16 mb-4 text-center"
     style={{

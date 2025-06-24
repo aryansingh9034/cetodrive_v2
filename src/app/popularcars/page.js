@@ -120,7 +120,7 @@ const handleImageClick = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Hero Section with Background */}
-       <div className="relative w-full min-h-[600px] md:min-h-[700px] lg:h-screen bg-[#0f172a] overflow-hidden">
+       <div className="relative w-full  h-screen bg-[#0f172a] overflow-hidden">
         <Image src={background || "/placeholder.svg"} alt="Hero background" fill className="object-cover" priority />
 
 
