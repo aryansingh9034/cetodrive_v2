@@ -254,7 +254,7 @@ useEffect(() => {
               {/* Car Image */}
               <div className="w-full md:w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                 <img
-                  src={car.images?.[0]?.image ? `http://143.110.242.217:8031${car.images[0].image}` : "/placeholder.svg"}
+                  src={car.images?.[0]?.image ? `http://3.108.23.172:8002${car.images[0].image}` : "/placeholder.svg"}
                   alt={car.name}
                   className="w-full h-full object-cover"
                 />
@@ -524,7 +524,7 @@ useEffect(() => {
             {/* Image Section */}
             <div className="relative overflow-hidden">
               <img
-                src={`http://143.110.242.217:8031${car.images?.[1]?.image || car.images?.[0]?.image || ""}`}
+                src={`http://3.108.23.172:8002${car.images?.[1]?.image || car.images?.[0]?.image || ""}`}
                 alt={car.vehicle_model || "Car"}
                 className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
               />
@@ -844,10 +844,16 @@ useEffect(() => {
               </div>
             </div>
 
-            <Link href="/availablevehicle" className="bg-[#ea580c] cursor-pointer text-white px-6 py-3 rounded-md font-medium flex items-center gap-2 mx-auto md:mx-0">
-              Start Your Journey
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+           <Link
+  href="/availablevehicle"
+  className="bg-[#ea580c] w-3/5 lg:w-2/5 text-white px-6 py-3 rounded-md font-medium flex items-center gap-2"
+>
+  Start Your Journey
+  <ArrowRight className="w-5 h-5" />
+</Link>
+
+
+
           </div>
         </div>
       </section>

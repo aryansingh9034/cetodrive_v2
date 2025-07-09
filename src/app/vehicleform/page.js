@@ -35,6 +35,7 @@ export default function VehicleForm() {
     vehicle_type: 1,
     equipment: [],
     price: "",
+    status: "pending"
   })
 
   const handleChange = (e) => {
@@ -91,6 +92,7 @@ export default function VehicleForm() {
     data.append("distance", formData.distance);
     data.append("vehicle_type", formData.vehicle_type);
     data.append("price", formData.price);
+    data.append("status", formData.status); // Assuming status is a field you want to send
 
     // Append array of equipment (as JSON string or individual fields, depends on backend)
     formData.equipment.forEach((id) => data.append("equipment[]", id));
@@ -126,6 +128,8 @@ export default function VehicleForm() {
       vehicle_type: 1,
       equipment: [],
       price: "",
+      status: "pending"
+      
     });
     setImages([]);
   } catch (err) {
