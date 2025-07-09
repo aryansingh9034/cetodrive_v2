@@ -2,7 +2,7 @@
 
 import { Check, MapPin, Clock } from "lucide-react"
 import Image from "next/image"
-import background from "../../../public/2.jpg"
+import background from "../../../public/2.png"
 
 export default function ServicesPage() {
   const services = [

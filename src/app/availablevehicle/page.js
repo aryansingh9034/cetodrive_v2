@@ -303,7 +303,7 @@ export default function Home() {
                   {/* Image Container */}
                   <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex-shrink-0">
                     <img
-                      src={`http://143.110.242.217:8031${vehicle.images?.[1]?.image || vehicle.images?.[0]?.image}`}
+                      src={`http://3.108.23.172:8002${vehicle.images?.[1]?.image || vehicle.images?.[0]?.image}`}
                       alt={vehicle.vehicle_model || "Vehicle"}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />

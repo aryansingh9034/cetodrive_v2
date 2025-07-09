@@ -102,7 +102,7 @@ export default function Home() {
             transmission: vehicle.gear_box,
             fuel: vehicle.fuel,
             price: vehicle.price,
-            image: vehicle.images?.[0]?.image ? `http://143.110.242.217:8031${vehicle.images[0].image}` : "/placeholder.svg",
+            image: vehicle.images?.[0]?.image ? `http://3.108.23.172:8002${vehicle.images[0].image}` : "/placeholder.svg",
           }));
         setSimilarVehicles(similar);
         setSimilarLoading(false);
@@ -156,7 +156,7 @@ export default function Home() {
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
   const toggleReviewForm = () => setShowReviewForm(!showReviewForm)
 
-  const images = vehicle?.images?.map((img) => `http://143.110.242.217:8031${img.image}`) || []
+  const images = vehicle?.images?.map((img) => `http://3.108.23.172:8002${img.image}`) || []
   const currentImage = images[selectedImg] || "/placeholder.svg?height=350&width=690"
 
   const StarRating = ({ rating, interactive = false, onRate = () => {} }) => {
