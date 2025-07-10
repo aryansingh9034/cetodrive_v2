@@ -361,142 +361,178 @@ export default function Footer() {
       </div>
 
       {/* Signup Modal */}
-      {showSignupModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={closeModal}>
-          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-[#FF7A30]">Create New Account</h2>
-                <button 
-                  onClick={closeModal}
-                  className="text-gray-500 hover:text-gray-700 text-xl"
-                >
-                  ×
-                </button>
-              </div>
+{showSignupModal && (
+  <div 
+    className="fixed inset-0 top-20 bg-black bg-opacity-50 z-1000 flex items-start justify-center p-4 overflow-y-auto pt-[--header-height]"
+    onClick={closeModal}
+    style={{"--header-height": "64px"}} // Set your actual header height here
+  >
+    <div 
+      className="bg-white rounded-xl w-full max-w-md my-4 max-h-[calc(100vh-var(--header-height)-2rem)] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="p-6">
+        {/* Header with close button */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-[#FF7A30]">Create New Account</h2>
+          <button 
+            onClick={closeModal}
+            className="text-gray-500 hover:text-gray-700 text-xl focus:outline-none"
+            aria-label="Close signup modal"
+          >
+            ×
+          </button>
+        </div>
 
-              {/* Google Login Placeholder */}
-              <button className="w-full border rounded-xl border-gray-300 py-3 flex items-center justify-center gap-2 mb-4 hover:bg-gray-50 transition-colors">
-                <svg width="18" height="18" viewBox="0 0 48 48">
-                  <path fill="#FFC107" d="M43.611,20.083H42V20H24v8..." />
-                  <path fill="#FF3D00" d="M6.306,14.691l6.571..." />
-                  <path fill="#4CAF50" d="M24,44c5.166,0..." />
-                  <path fill="#1976D2" d="M43.611,20.083H42..." />
+        {/* Google Signup Button */}
+        <button 
+          className="w-full border rounded-xl border-gray-300 py-3 flex items-center justify-center gap-2 mb-4 hover:bg-gray-50 transition-colors"
+          type="button"
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20c0-1.341-.138-2.65-.389-3.917H43.611z"/>
+            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+          </svg>
+          <span className="text-sm font-medium text-gray-700">Sign up with Google</span>
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center mb-4">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="mx-4 text-sm text-gray-500">or</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        {/* Signup Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Enter your username"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+              required
+              minLength={3}
+              maxLength={20}
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+              required
+              minLength={8}
+            />
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter your password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* Vehicle Type */}
+          <div>
+            <label htmlFor="vehicleType" className="block text-sm font-medium text-gray-700 mb-1">
+              Vehicle Type
+            </label>
+            <div className="relative">
+              <select
+                id="vehicleType"
+                name="vehicleType"
+                value={formData.vehicleType}
+                onChange={handleChange}
+                className="appearance-none w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+                required
+              >
+                <option value="" disabled>Choose your vehicle type</option>
+                <option value="Driver">Driver</option>
+                <option value="Owner">Car Owner</option>
+              </select>
+              <div className="absolute right-3 top-3.5 pointer-events-none">
+                <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-                <span className="text-sm font-medium text-gray-700">Log in with Google</span>
-              </button>
-
-              <div className="flex items-center justify-center mb-4">
-                <span className="text-sm text-gray-400">or</span>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4 text-black">
-                <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    id="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    placeholder="Enter your username"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Enter your email"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="re_password" className="block text-sm font-medium text-gray-700 mb-1">
-                    Re-enter Password
-                  </label>
-                  <input
-                    type="password"
-                    id="re_password"
-                    value={formData.re_password}
-                    onChange={handleChange}
-                    placeholder="Re-enter your password"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="vehicle_types" className="block text-sm font-medium text-gray-700 mb-1">
-                    Vehicle Type
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="vehicle_types"
-                      value={formData.vehicle_types}
-                      onChange={handleChange}
-                      className="appearance-none w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-                      required
-                    >
-                      <option value="" disabled>Choose your vehicle type</option>
-                      <option value="Driver">Driver</option>
-                      <option value="Owner">Car Owner</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-gray-500 pointer-events-none" />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-[#FF7A30] text-white py-3 rounded-xl hover:bg-[#e86e29] transition-colors font-medium"
-                >
-                  Register
-                </button>
-              </form>
-
-              <div className="text-center mt-4">
-                <p className="text-sm text-[#FF7A30]">
-                  Already have an account?
-                  <button 
-                    onClick={() => {
-                      closeModal();
-                      router.push('/login');
-                    }}
-                    className="text-black hover:underline ml-1"
-                  >
-                    Login
-                  </button>
-                </p>
               </div>
             </div>
           </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-[#FF7A30] text-white py-3 rounded-xl hover:bg-[#e86e29] transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:ring-offset-2"
+          >
+            Register
+          </button>
+        </form>
+
+        {/* Login Link */}
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={() => {
+                closeModal();
+                router.push('/login');
+              }}
+              className="text-[#FF7A30] hover:underline font-medium focus:outline-none"
+            >
+              Login
+            </button>
+          </p>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
     </>
   );
 }
