@@ -1165,7 +1165,7 @@ useEffect(() => {
                   <div className="w-24 h-16 rounded-lg mr-4 bg-gray-100 flex items-center justify-center overflow-hidden">
                     {vehicle.images?.[0]?.image ? (
                       <img 
-                        src={`http://143.110.242.217:8031${vehicle.images[0].image}`}
+                        src={`http://3.108.23.172:8002${vehicle.images[0].image}`}
                         alt={vehicle.name}
                         className="object-cover w-full h-full"
                       />
