@@ -38,7 +38,7 @@ const handleSubmit = async (e) => {
   }
 
   try {
-    const response = await fetch("http://3.108.23.172:8002/api/customer/login", {
+    const response = await fetch(" https://backend.catodrive.com/api/customer/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

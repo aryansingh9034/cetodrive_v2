@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import background from "../../../public/car4.jpg"
+import background from "../../../public/car5.webp"
 
 export default function FAQPage() {
   const [activeIndex, setActiveIndex] = useState(null)

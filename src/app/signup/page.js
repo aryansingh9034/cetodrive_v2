@@ -75,7 +75,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("http://3.108.23.172:8002/api/customer/", {
+      const response = await fetch(" https://backend.catodrive.com/api/customer/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,7 +111,7 @@ const sendOtp = async () => {
   setError("");
   
   try {
-    const response = await fetch("http://3.108.23.172:8002/api/customer/otp", {
+    const response = await fetch(" https://backend.catodrive.com/api/customer/otp", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -143,7 +143,7 @@ const sendOtp = async () => {
     setError("");
 
     try {
-      const response = await fetch("http://3.108.23.172:8002/api/customer/verifyotp", {
+      const response = await fetch(" https://backend.catodrive.com/api/customer/verifyotp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

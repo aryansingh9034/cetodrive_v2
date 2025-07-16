@@ -103,7 +103,7 @@ export default function VehicleForm() {
     });
 
     // Send FormData using fetch (or use axios with `headers: { 'Content-Type': 'multipart/form-data' }`)
-    const response = await fetch("http://3.108.23.172:8002/api/vehicle/vehicle/", {
+    const response = await fetch(" https://backend.catodrive.com/api/vehicle/vehicle/", {
       method: "POST",
       body: data,
     });

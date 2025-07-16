@@ -68,7 +68,7 @@ const handleEditClick = async () => {
 
       const { re_password, otp, ...updateData } = editedUser;
 
-      const response = await fetch(`http://3.108.23.172:8002/api/customer/${customerId}`, {
+      const response = await fetch(` https://backend.catodrive.com/api/customer/${customerId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
