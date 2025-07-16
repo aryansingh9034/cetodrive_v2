@@ -36,7 +36,7 @@ export default function Home() {
 
     // Fetch vehicle details
     axios
-      .get(` https://backend.catodrive.com/api/vehicle/vehicle/${id}`)
+      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/${id}`)
       .then((response) => {
         const vehicleData = response.data.data;
         localStorage.removeItem("vehicle");
@@ -61,7 +61,7 @@ export default function Home() {
   const fetchVehicleReviews = (vehicleId) => {
     setReviewsLoading(true);
     axios
-      .get(` https://backend.catodrive.com/api/reviews/reviews/?vehicle=${vehicleId}`)
+      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/?vehicle=${vehicleId}`)
       .then((response) => {
         const formattedReviews = response.data.data.map((item) => ({
           id: item.id,
@@ -88,7 +88,7 @@ export default function Home() {
   const fetchSimilarVehicles = (vehicleTypeId, currentVehicleId) => {
     setSimilarLoading(true);
     axios
-      .get(` https://backend.catodrive.com/api/vehicle/vehicle/?vehicle_type=${vehicleTypeId}`)
+      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?vehicle_type=${vehicleTypeId}`)
       .then((response) => {
         // Filter out the current vehicle and limit to 3 similar vehicles
         const similar = response.data.data
@@ -102,7 +102,7 @@ export default function Home() {
             transmission: vehicle.gear_box,
             fuel: vehicle.fuel,
             price: vehicle.price,
-            image: vehicle.images?.[0]?.image ? ` https://backend.catodrive.com${vehicle.images[0].image}` : "/placeholder.svg",
+            image: vehicle.images?.[0]?.image ? ` ${process.env. NEXT_PUBLIC_API_BASE_URL}${vehicle.images[0].image}` : "/placeholder.svg",
           }));
         setSimilarVehicles(similar);
         setSimilarLoading(false);
@@ -126,7 +126,7 @@ export default function Home() {
     };
 
     axios
-      .post(" https://backend.catodrive.com/api/reviews/reviews/", reviewData)
+      .post(`${process.env. NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`, reviewData)
       .then((response) => {
         setSubmitSuccess(true);
         setReviewForm({ title: "", rating: 0, context: "" });
@@ -156,7 +156,7 @@ export default function Home() {
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
   const toggleReviewForm = () => setShowReviewForm(!showReviewForm)
 
-  const images = vehicle?.images?.map((img) => ` https://backend.catodrive.com${img.image}`) || []
+  const images = vehicle?.images?.map((img) => ` ${process.env. NEXT_PUBLIC_API_BASE_URL}${img.image}`) || []
   const currentImage = images[selectedImg] || "/placeholder.svg?height=350&width=690"
 
   const StarRating = ({ rating, interactive = false, onRate = () => {} }) => {

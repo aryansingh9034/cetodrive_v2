@@ -35,7 +35,7 @@ export default function Footer() {
     }
 
     try {
-      const response = await fetch(" https://backend.catodrive.com/api/customer/", {
+      const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/customer/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -428,7 +428,7 @@ useEffect(() => {
         formData.append("flight_number", rentalData.flightNumber)
 
         const response = await axios.post(
-          " https://backend.catodrive.com/api/booking/booking/", 
+          ` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`, 
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         )
@@ -489,7 +489,7 @@ useEffect(() => {
       })
 
       const response = await axios.post(
-        " https://backend.catodrive.com/api/licence/licence/", 
+        ` ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/licence/licence/`, 
         formData,
         { 
           headers: { 
@@ -1165,7 +1165,7 @@ useEffect(() => {
                   <div className="w-24 h-16 rounded-lg mr-4 bg-gray-100 flex items-center justify-center overflow-hidden">
                     {vehicle.images?.[0]?.image ? (
                       <img 
-                        src={` https://backend.catodrive.com${vehicle.images[0].image}`}
+                        src={` ${process.env. NEXT_PUBLIC_API_BASE_URL}${vehicle.images[0].image}`}
                         alt={vehicle.name}
                         className="object-cover w-full h-full"
                       />

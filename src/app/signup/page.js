@@ -75,7 +75,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch(" https://backend.catodrive.com/api/customer/", {
+      const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}api/customer/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,7 +111,7 @@ const sendOtp = async () => {
   setError("");
   
   try {
-    const response = await fetch(" https://backend.catodrive.com/api/customer/otp", {
+    const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/customer/otp`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -143,7 +143,7 @@ const sendOtp = async () => {
     setError("");
 
     try {
-      const response = await fetch(" https://backend.catodrive.com/api/customer/verifyotp", {
+      const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/customer/verifyotp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

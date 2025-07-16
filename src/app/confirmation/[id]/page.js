@@ -51,7 +51,7 @@ export default function ConfirmationPage() {
 
         // Fetch booking details
         const bookingResponse = await axios.get(
-          ` https://backend.catodrive.com/api/booking/booking/${bookingId}/`
+          ` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/${bookingId}/`
         )
         
         console.log("Booking details response:", bookingResponse.data)
@@ -69,7 +69,7 @@ export default function ConfirmationPage() {
         if (vehicleId) {
           try {
             const vehicleResponse = await axios.get(
-              ` https://backend.catodrive.com/api/vehicle/vehicle/${vehicleId}/`
+              ` ${process.env. NEXT_PUBLIC_API_BASE_URL}api/vehicle/vehicle/${vehicleId}/`
             )
             setVehicle(vehicleResponse.data?.data)
           } catch (vehicleError) {
@@ -206,7 +206,7 @@ export default function ConfirmationPage() {
                 <div className="w-full md:w-48 h-32 rounded-xl mr-6 mb-4 md:mb-0 bg-white shadow-md overflow-hidden">
                   {vehicle.images?.[0]?.image ? (
                     <img 
-                      src={`http://143.110.242.217:8031${vehicle.images[0].image}`}
+                      src={`${process.env. NEXT_PUBLIC_API_BASE_URL}${vehicle.images[0].image}`}
                       alt={vehicle.name}
                       className="object-cover w-full h-full"
                     />

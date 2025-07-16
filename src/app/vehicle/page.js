@@ -30,7 +30,7 @@ export default function Home() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(" https://backend.catodrive.com/api/vehicle/vehicle/"); // Replace with your actual API
+        const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/`); // Replace with your actual API
         const json = await response.json();
         const data = json.data || [];
 
