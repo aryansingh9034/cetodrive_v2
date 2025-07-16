@@ -19,7 +19,7 @@ export default function ForgotPasswordModal({ show, onClose }) {
     try {
       if (step === 1) {
         // Step 1: Verify email
-        const response = await fetch("http://3.108.23.172:8002/api/customer/change_password/", {
+        const response = await fetch(" https://backend.catodrive.com/api/customer/change_password/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export default function ForgotPasswordModal({ show, onClose }) {
           return;
         }
 
-        const response = await fetch("http://3.108.23.172:8002/api/customer/change_password/", {
+        const response = await fetch(" https://backend.catodrive.com/api/customer/change_password/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

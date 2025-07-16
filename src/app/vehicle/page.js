@@ -30,7 +30,7 @@ export default function Home() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch("http://3.108.23.172:8002/api/vehicle/vehicle/"); // Replace with your actual API
+        const response = await fetch(" https://backend.catodrive.com/api/vehicle/vehicle/"); // Replace with your actual API
         const json = await response.json();
         const data = json.data || [];
 
