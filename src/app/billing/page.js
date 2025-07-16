@@ -489,7 +489,7 @@ useEffect(() => {
       })
 
       const response = await axios.post(
-        ` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/licence/licence/`, 
+        ` ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/licence/licence/`, 
         formData,
         { 
           headers: { 
