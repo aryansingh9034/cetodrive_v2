@@ -30,7 +30,7 @@ export default function Home() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch("http://3.108.23.172:8002/api/vehicle/vehicle/");
+        const response = await fetch(`${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/`);
         const json = await response.json();
         const data = json.data || [];
 
@@ -303,7 +303,7 @@ export default function Home() {
                   {/* Image Container */}
                   <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex-shrink-0">
                     <img
-                      src={`http://3.108.23.172:8002${vehicle.images?.[1]?.image || vehicle.images?.[0]?.image}`}
+                      src={` ${process.env. NEXT_PUBLIC_API_BASE_URL}${vehicle.images?.[1]?.image || vehicle.images?.[0]?.image}`}
                       alt={vehicle.vehicle_model || "Vehicle"}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />

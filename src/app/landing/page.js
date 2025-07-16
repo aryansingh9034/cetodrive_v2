@@ -41,7 +41,7 @@ const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     axios
-      .get(" https://backend.catodrive.com/api/vehicle/vehicle/")
+      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/`)
       .then((response) => {
         console.log("keshav",response.data.data);
         setCars(response.data.data || []);
@@ -55,7 +55,7 @@ const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
   axios
-    .get(" https://backend.catodrive.com/api/vehicle/vehicle/")
+    .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/`)
     .then((response) => {
       // Add mock location data if not present
       const carsWithLocation = response.data.data.map((car, index) => ({
@@ -254,7 +254,7 @@ useEffect(() => {
               {/* Car Image */}
               <div className="w-full md:w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                 <img
-                  src={car.images?.[0]?.image ? ` https://backend.catodrive.com${car.images[0].image}` : "/placeholder.svg"}
+                  src={car.images?.[0]?.image ? ` ${process.env. NEXT_PUBLIC_API_BASE_URL}${car.images[0].image}` : "/placeholder.svg"}
                   alt={car.name}
                   className="w-full h-full object-cover"
                 />
@@ -524,7 +524,7 @@ useEffect(() => {
             {/* Image Section */}
             <div className="relative overflow-hidden">
               <img
-                src={` https://backend.catodrive.com${car.images?.[1]?.image || car.images?.[0]?.image || ""}`}
+                src={` ${process.env. NEXT_PUBLIC_API_BASE_URL}${car.images?.[1]?.image || car.images?.[0]?.image || ""}`}
                 alt={car.vehicle_model || "Car"}
                 className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
               />

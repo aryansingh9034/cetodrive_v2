@@ -51,7 +51,7 @@ export default function ConfirmationPage() {
 
         // Fetch booking details
         const bookingResponse = await axios.get(
-          ` https://backend.catodrive.com/api/booking/booking/${bookingId}/`
+          ` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/${bookingId}/`
         )
         
         console.log("Booking details response:", bookingResponse.data)
@@ -69,7 +69,7 @@ export default function ConfirmationPage() {
         if (vehicleId) {
           try {
             const vehicleResponse = await axios.get(
-              ` https://backend.catodrive.com/api/vehicle/vehicle/${vehicleId}/`
+              ` ${process.env. NEXT_PUBLIC_API_BASE_URL}api/vehicle/vehicle/${vehicleId}/`
             )
             setVehicle(vehicleResponse.data?.data)
           } catch (vehicleError) {
