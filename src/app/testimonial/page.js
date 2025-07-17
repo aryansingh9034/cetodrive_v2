@@ -5,52 +5,64 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const testimonials = [
   {
-    name: 'Sarah Mitchell',
-    role: 'Founder, EcoTech Solutions',
-    feedback: 'Working with The Creative Hub transformed our digital presence completely. Their innovative approach to social media marketing helped us reach 50,000+ new customers and increase our conversion rate by 65% in just four months.',
-    image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-  },
-  {
-    name: 'Michael Chen',
-    role: 'Director of Growth, FoodieApp',
-    feedback: 'The team at The Creative Hub delivered exceptional results for our mobile app launch. Their comprehensive marketing strategy and creative content helped us achieve 100k downloads in our first month, exceeding all expectations.',
+    name: 'James Wilson',
+    role: 'Business Traveler',
+    feedback: 'I rent cars weekly for work, and CatoDrive consistently impresses me. Their DFW airport pickup service saves me at least an hour every trip - no shuttle waits, just a clean car ready at arrivals. The Mercedes E-Class I got last week was so comfortable that I actually looked forward to my commute!',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
   },
   {
-    name: 'Emma Rodriguez',
-    role: 'Lifestyle Blogger & Influencer',
-    feedback: 'Collaborating with The Creative Hub has been incredible for my personal brand. Their content creation team perfectly captures my aesthetic and voice, resulting in a 200% increase in engagement and several brand partnership opportunities.',
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
-  },
-  {
-    name: 'David Thompson',
-    role: 'Event Producer & Creative Director',
-    feedback: 'The Creative Hub videography team exceeded every expectation for our luxury brand event. Their cinematic storytelling and attention to detail created a stunning promotional video that has become our most successful marketing asset.',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-  },
-  {
-    name: 'Lisa Park',
-    role: 'Senior Real Estate Agent',
-    feedback: 'The Creative Hub photography services revolutionized how we showcase properties. Their artistic eye and professional techniques have made our listings stand out, resulting in 40% faster sales and higher closing prices.',
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face'
-  },
-  {
-    name: 'Marcus Johnson',
-    role: 'CEO, Wellness Brand Co.',
-    feedback: 'Our brand identity transformation with The Creative Hub was phenomenal. The new logo and visual identity they created perfectly represents our values and has helped us establish a premium market position.',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
-  },
-  {
-    name: 'Zoe Williams',
-    role: 'Digital Marketing Manager',
-    feedback: 'The Creative Hub comprehensive digital strategy transformed our online presence across all platforms. From SEO to social media, their expertise delivered measurable results with a 300% increase in qualified leads.',
+    name: 'Sarah Chen',
+    role: 'Weekend Traveler',
+    feedback: 'First time renting from CatoDrive and it was flawless! The online booking took 3 minutes, and when we arrived, the staff upgraded us to an SUV at no extra cost. The car smelled brand new and had full tank of gas - little touches that made our Hill Country getaway perfect.',
     image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face'
   },
   {
-    name: 'Alex Rivera',
-    role: 'Brand Strategy Consultant',
-    feedback: 'Thanks to The Creative Hub strategic insights, our client collaborations have reached new heights. Their deep understanding of market dynamics and consumer behavior has made every campaign more effective and authentic.',
+    name: 'Michael Rodriguez',
+    role: 'Frequent Renter',
+    feedback: 'What keeps me coming back is their reliability. Whether I need a compact for downtown meetings or a truck for Home Depot runs, they always have what I need. Their app lets me extend rentals with one tap when my flights get delayed - no stressful phone calls!',
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+  },
+  {
+    name: 'Emily Park',
+    role: 'Family Vacationer',
+    feedback: 'Traveling with three kids is chaotic, but CatoDrive made the car rental part easy. They installed our car seats in advance and helped load all our luggage. The Toyota Highlander had enough space for all our gear, and the free roadside assistance gave me peace of mind on our road trip to San Antonio.',
+    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face'
+  },
+  {
+    name: 'David Thompson',
+    role: 'First-Time Customer',
+    feedback: 'I was nervous about renting after bad experiences elsewhere, but CatoDrive changed my mind. The agent patiently explained all the features of the BMW I rented, and when I scratched the rim (oops!), their damage waiver covered it completely with no hassle. Now I recommend them to all my friends.',
+    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
+  },
+  {
+    name: 'Lisa Johnson',
+    role: 'Luxury Car Renter',
+    feedback: 'For my anniversary weekend, I surprised my wife with a convertible Mustang from CatoDrive. The car was detailed to perfection with a full tank and even had a complimentary "Happy Anniversary" note inside! Cruising through Highland Park with the top down made our celebration unforgettable. Worth every penny.',
+    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
+  },
+  {
+    name: 'Robert Kim',
+    role: 'Road Trip Enthusiast',
+    feedback: 'Just completed a 1,200-mile Texas road trip in a CatoDrive rental. The Hyundai Tucson handled everything from Dallas highways to Big Bend dirt roads flawlessly. Their unlimited mileage policy saved me hundreds compared to other companies, and the 24/7 support line gave me confidence driving through remote areas.',
     image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&h=150&fit=crop&crop=face'
+  },
+  {
+    name: 'Amanda Williams',
+    role: 'Last-Minute Booker',
+    feedback: 'When my flight got rescheduled last-minute, CatoDrive saved my business trip. I booked a car through their app during my layover, and it was waiting when I landed at Love Field at midnight. The agent even stayed late to complete the paperwork - now that iss service! I will never use airport rental counters again.',
+    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face'
+  },
+  {
+    name: 'Daniel Brown',
+    role: 'Moving Helper',
+    feedback: 'Rented a Ford F-150 to move my daughter into her SMU dorm. The truck bed fit all her furniture perfectly, and CatoDrive waived the young driver fee since she is a student. The drop-off took 2 minutes - just parked it and texted them the mileage. So much better than U-Haul!',
+    image: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=150&h=150&fit=crop&crop=face'
+  },
+  {
+    name: 'Priya Patel',
+    role: 'International Visitor',
+    feedback: 'As someone visiting from India, I appreciated how CatoDrive made the rental process simple. They accepted my international license without issues, explained Texas driving laws clearly, and even programmed my hotel into the GPS. The Toyota Camrys fuel efficiency saved me so much on gas while exploring Dallas!',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face'
   }
 ];
 

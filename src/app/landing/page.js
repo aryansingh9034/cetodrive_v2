@@ -77,7 +77,7 @@ const [showResults, setShowResults] = useState(false);
 };
 
    const handleClick1 = () => {
-    router.push('/vehicle'); // navigate to /cardetails
+    router.push('/availablevehicle'); // navigate to /cardetails
   };
     const formatDate = (date) => {
     if (!date) return ""
