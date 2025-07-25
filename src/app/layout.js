@@ -32,6 +32,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata = {
   title: "CatoDrive",
   description: "CatoDrive - Your Ultimate Car Rental Experience",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }) {
