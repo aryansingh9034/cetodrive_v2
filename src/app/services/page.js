@@ -135,10 +135,10 @@ export default function ServicesPage() {
               </div>
             </div>
           </div>
-          <div className="bg-gray-100 rounded-2xl p-8 h-full">
-            <div className="aspect-w-16 aspect-h-9 relative h-64 w-full">
+          <div className="bg-gray-100 rounded-2xl  h-full">
+            <div className=" relative h-full w-full">
               <Image 
-                src="/service-map.jpg"
+                src="/rent.jpeg"
                 alt="Service coverage map"
                 fill
                 className="object-cover rounded-lg"

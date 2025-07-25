@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { Phone, Mail, Apple, PlayCircle, Navigation } from "lucide-react"
 import Image from "next/image"
-import { ArrowRight, Calendar, Check, MapPin, Menu  , X} from "lucide-react"
-import { useState , useEffect, useRef } from "react"
+import { ArrowRight, Calendar, Check, MapPin, Menu, X } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { useRouter } from 'next/navigation';
@@ -12,74 +12,59 @@ import background from "../../../public/backgorund.jpg"
 import { Search, ChevronRight } from 'lucide-react';
 import Steps from "@/app/steps/page"
 import axios from "axios"
-import { Car, Award, Users, Shield, RefreshCw, Monitor } from "lucide-react";
+import { Car, Award, Users, Shield, RefreshCw, Monitor, Settings, Fuel } from "lucide-react";
 import TestimonialsPage from "../testimonial/page"
 
 export default function Home() {
   const router = useRouter();
-const [pickupDate, setPickupDate] = useState(() => {
-  const now = new Date();
-  // Round up to nearest 15 minutes
-  const roundedMinutes = Math.ceil(now.getMinutes() / 15) * 15;
-  now.setMinutes(roundedMinutes);
-  return now;
-});
+  const [pickupDate, setPickupDate] = useState(() => {
+    const now = new Date();
+    const roundedMinutes = Math.ceil(now.getMinutes() / 15) * 15;
+    now.setMinutes(roundedMinutes);
+    return now;
+  });
 
-const [returnDate, setReturnDate] = useState(() => {
-  const returnDate = new Date(pickupDate);
-  returnDate.setHours(pickupDate.getHours() + 1); // Default to 1 hour after pickup
-  return returnDate;
-});
-  const [location, setLocation] = useState("")
+  const [returnDate, setReturnDate] = useState(() => {
+    const returnDate = new Date(pickupDate);
+    returnDate.setHours(pickupDate.getHours() + 1);
+    return returnDate;
+  });
+  
+  const [location, setLocation] = useState("Dellas")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-const searchResultsRef = useRef(null);
+  const searchResultsRef = useRef(null);
+  const [showResults, setShowResults] = useState(false);
 
-const [showResults, setShowResults] = useState(false);
-
-
+  // Single API call to fetch only approved cars
   useEffect(() => {
-    axios
-      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/`)
-      .then((response) => {
-        console.log("keshav",response.data.data);
+    const fetchApprovedCars = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?status=approved`
+        );
+        console.log("Approved cars:", response.data.data);
         setCars(response.data.data || []);
-        setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("API Error:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchApprovedCars();
   }, []);
 
-  useEffect(() => {
-  axios
-    .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/`)
-    .then((response) => {
-      // Add mock location data if not present
-      const carsWithLocation = response.data.data.map((car, index) => ({
-        ...car,
-        location: car.location || ["Dellas"]
-      }));
-      setCars(carsWithLocation || []);
-      setLoading(false);
-    })
-    .catch((error) => {
-      console.error("API Error:", error);
-      setLoading(false);
-    });
-}, []);
-
   const handleClick = (id) => {
-  console.log(id)  
-  router.push(`/cardetails?id=${id}`);
-};
-
-   const handleClick1 = () => {
-    router.push('/availablevehicle'); // navigate to /cardetails
+    router.push(`/cardetails?id=${id}`);
   };
-    const formatDate = (date) => {
+
+  const handleClick1 = () => {
+    router.push('/availablevehicle');
+  };
+
+  const formatDate = (date) => {
     if (!date) return ""
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -93,14 +78,11 @@ const [showResults, setShowResults] = useState(false);
     return `${dayName} ${day} ${month}, ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
   }
 
-  const [searchResults, setSearchResults] = useState([]);
-
 const handleSearch = () => {
-  // Since Dellas is the only location, show all cars
-  setSearchResults(cars);
+  // Filter for approved cars before setting results
+  setSearchResults(cars.filter(car => car.status === "approved"));
   setShowResults(true);
   
-  // Scroll to results
   setTimeout(() => {
     const resultsSection = document.getElementById("search-results");
     if (resultsSection) {
@@ -108,7 +90,7 @@ const handleSearch = () => {
     }
   }, 100);
 };
-
+const [searchResults, setSearchResults] = useState([]);
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
   }
@@ -237,69 +219,67 @@ useEffect(() => {
   </div>
 
   {/* Search Results - List View */}
+
 {searchResults.length > 0 && showResults && (
   <div ref={searchResultsRef} className="w-full max-w-[1050px] mx-auto">
     <div className="bg-white rounded-xl rounded-t-none shadow-md overflow-hidden">
       <div className="p-2 px-4 border-b bg-gray-50">
         <h2 className="text-md font-semibold text-gray-800">
-          {searchResults.length} vehicles found
+          {searchResults.filter(car => car.status === "approved").length} approved vehicles found
         </h2>
       </div>
       
-      {/* Add max-height and overflow-y-auto here */}
       <div className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
-        {searchResults.map((car, index) => (
-          <div key={car.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Car Image */}
-              <div className="w-full md:w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  src={car.images?.[0]?.image ? ` ${process.env. NEXT_PUBLIC_API_BASE_URL}${car.images[0].image}` : "/placeholder.svg"}
-                  alt={car.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              {/* Car Details */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div className="flex-1">
-                    {/* Car Name and Type */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">
-                      {car.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-2">
-                      {car.vehicle_type?.name || "Premium Vehicle"}
-                    </p>
-                    
-                    {/* Additional car details if available */}
-                    {car.description && (
-                      <p className="text-gray-700 text-sm mb-3 line-clamp-2">
-                        {car.description}
+        {searchResults
+          .filter(car => car.status === "approved") // Add this filter
+          .map((car, index) => (
+            <div key={car.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
+              {/* Rest of your car listing UI remains exactly the same */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="w-full md:w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={car.images?.[0]?.image ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${car.images[0].image}` : "/placeholder.svg"}
+                    alt={car.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        {car.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-2">
+                        {car.vehicle_type?.name || "Premium Vehicle"}
                       </p>
-                    )}
-                  </div>
-                  
-                  {/* Price and Action */}
-                  <div className="flex flex-col items-end gap-2 md:text-right">
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-[#ea580c]">
-                        ${car.price} <span className="text-sm text-gray-600">/ day</span>
-                      </div>
+                      
+                      {car.description && (
+                        <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+                          {car.description}
+                        </p>
+                      )}
                     </div>
                     
-                    <button 
-                      onClick={() => router.push(`/cardetails?id=${car.id}`)}
-                      className="bg-[#ea580c] hover:bg-orange-600 text-white px-6 py-2 rounded-md font-semibold transition-colors duration-200 whitespace-nowrap"
-                    >
-                      View Details
-                    </button>
+                    <div className="flex flex-col items-end gap-2 md:text-right">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-[#ea580c]">
+                          ${car.price} <span className="text-sm text-gray-600">/ day</span>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        onClick={() => router.push(`/cardetails?id=${car.id}`)}
+                        className="bg-[#ea580c] hover:bg-orange-600 text-white px-6 py-2 rounded-md font-semibold transition-colors duration-200 whitespace-nowrap"
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   </div>
@@ -491,10 +471,10 @@ useEffect(() => {
       </div>
     </section> */}
 
-      {/* Popular Cars Section */}
-    <section className="py-8 md:py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+{/* Popular Cars Section */}
+<section className="py-8 md:py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
   <div className="max-w-7xl mx-auto">
-    {/* Header Section */}
+    {/* Header Section - Keeping your original UI */}
     <div className="text-center mb-8">
       <h2
         style={{ fontFamily: "var(--font-space-grotesk)" }}
@@ -516,103 +496,99 @@ useEffect(() => {
       </div>
     ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cars.map((car) => (
-          <div 
-            key={car.id} 
-            className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col h-full group cursor-pointer"
-          >
-            {/* Image Section */}
-            <div className="relative overflow-hidden">
-              <img
-                src={` ${process.env. NEXT_PUBLIC_API_BASE_URL}${car.images?.[1]?.image || car.images?.[0]?.image || ""}`}
-                alt={car.vehicle_model || "Car"}
-                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-              />
-              <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm hover:shadow-lg hover:scale-110 transition-all duration-300 hover:bg-red-50 group">
-                <svg className="w-4 h-4 text-gray-600 group-hover:text-red-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-              </button>
-              {/* Overlay gradient that appears on hover */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-
-            {/* Content Section - Flex grow to fill available space */}
-            <div className="p-5 flex flex-col flex-grow">
-              {/* Car Name - Top */}
-              <div className="mb-4">
-                <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors duration-300">
-                  {car.name || "Unknown Model"}
-                </h3>
-                <p className="text-sm text-gray-600">2023 Model</p>
+        {cars
+          .filter(car => car.status === "approved") // Only this line changed
+          .map((car) => (
+            <div 
+              key={car.id} 
+              className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col h-full group cursor-pointer"
+            >
+              {/* Image Section - Original UI */}
+              <div className="relative overflow-hidden">
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${car.images?.[1]?.image || car.images?.[0]?.image || ""}`}
+                  alt={car.vehicle_model || "Car"}
+                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                />
+                <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm hover:shadow-lg hover:scale-110 transition-all duration-300 hover:bg-red-50 group">
+                  <svg className="w-4 h-4 text-gray-600 group-hover:text-red-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                </button>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
 
-              {/* Car Features - Middle */}
-              <div className="flex flex-col gap-2 mb-4 flex-grow">
-                <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300">
-                  <svg className="w-4 h-4 text-gray-600 flex-shrink-0 group-hover:text-blue-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span className="text-sm text-gray-700">{car.vehicle_seat?.capacity || "5"} seats</span>
+              {/* Content Section - Original UI */}
+              <div className="p-5 flex flex-col flex-grow">
+                <div className="mb-4">
+                  <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors duration-300">
+                    {car.name || "Unknown Model"}
+                  </h3>
+                  <p className="text-sm text-gray-600">2023 Model</p>
                 </div>
-                
-                <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300 delay-75">
-                  <svg className="w-4 h-4 text-gray-600 flex-shrink-0 group-hover:text-blue-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-sm text-gray-700">{car.fuel || "Petrol"}</span>
-                </div>
-                
-                <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300 delay-150">
-                  <svg className="w-4 h-4 text-gray-600 flex-shrink-0 group-hover:text-blue-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                  <span className="text-sm text-gray-700">{car.gear_box || "Auto"}</span>
-                </div>
-              </div>
 
-              {/* Price and Button Section - Always at bottom */}
-              <div className="border-t border-gray-100 pt-4 mt-auto">
-                <div className="flex justify-between items-center">
-                  {/* Price Section */}
-                  <div className="group-hover:scale-105 transition-transform duration-300">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors duration-300">${car.price || "N/A"}</span>
-                      <span className="text-sm text-gray-500">/day</span>
-                    </div>
-                    <p className="text-xs text-gray-500">Per day (inc. tax)</p>
+                <div className="flex flex-col gap-2 mb-4 flex-grow">
+                  <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300">
+                    <svg className="w-4 h-4 text-gray-600 flex-shrink-0 group-hover:text-blue-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span className="text-sm text-gray-700">{car.vehicle_seat?.capacity || "5"} seats</span>
                   </div>
+                  
+                  <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300 delay-75">
+                    <svg className="w-4 h-4 text-gray-600 flex-shrink-0 group-hover:text-blue-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm text-gray-700">{car.fuel || "Petrol"}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300 delay-150">
+                    <svg className="w-4 h-4 text-gray-600 flex-shrink-0 group-hover:text-blue-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    <span className="text-sm text-gray-700">{car.gear_box || "Auto"}</span>
+                  </div>
+                </div>
 
-                  {/* Book Button */}
-                  <button
-                    onClick={() => handleClick(car.id)}
-                    className="bg-gray-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 text-sm whitespace-nowrap transform hover:scale-105 hover:shadow-lg active:scale-95"
-                  >
-                    Book Now
-                  </button>
+                <div className="border-t border-gray-100 pt-4 mt-auto">
+                  <div className="flex justify-between items-center">
+                    <div className="group-hover:scale-105 transition-transform duration-300">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors duration-300">${car.price || "N/A"}</span>
+                        <span className="text-sm text-gray-500">/day</span>
+                      </div>
+                      <p className="text-xs text-gray-500">Per day (inc. tax)</p>
+                    </div>
+
+                    <button
+                      onClick={() => handleClick(car.id)}
+                      className="bg-gray-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 text-sm whitespace-nowrap transform hover:scale-105 hover:shadow-lg active:scale-95"
+                    >
+                      Book Now
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+
+        {/* See All Button - Original UI */}
+        <div className="flex justify-center mt-8 col-span-full">
+          <button
+            onClick={handleClick1}
+            className="flex items-center gap-2 px-6 py-3 bg-white text-orange-600 font-semibold rounded-full shadow-sm hover:shadow-lg border border-gray-200 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:bg-orange-50 group"
+          >
+            <span>See All</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+          </button>
+        </div>
       </div>
     )}
-
-    {/* See All Button */}
-    <div className="flex justify-center mt-8">
-      <button
-        onClick={handleClick1}
-        className="flex items-center gap-2 px-6 py-3 bg-white text-orange-600 font-semibold rounded-full shadow-sm hover:shadow-lg border border-gray-200 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:bg-orange-50 group"
-      >
-        <span>See All</span>
-        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-      </button>
-    </div>
   </div>
 </section>
 

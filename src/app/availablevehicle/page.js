@@ -30,7 +30,7 @@ export default function Home() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(`${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/`);
+        const response = await fetch(`${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?status=approved`);
         const json = await response.json();
         const data = json.data || [];
 
@@ -83,7 +83,9 @@ export default function Home() {
 
   const getBrands = () => ["All", ...new Set(vehicles.map(v => v.vehicle_model).filter(Boolean))];
 
-  const filteredVehicles = vehicles.filter(vehicle => {
+const filteredVehicles = vehicles.filter(vehicle => {
+    // Ensure vehicle is approved (not pending or rejected)
+    const isApproved = vehicle.status === "approved";
     const type = vehicle.vehicle_type?.name;
     const model = vehicle.vehicle_model;
     const price = parseInt(vehicle.price);
@@ -95,8 +97,10 @@ export default function Home() {
     const capacityMatch = capacityFilters[`${capacity} Person`] === true;
     const typeFilterMatch = typeFilters[type] === true;
 
-    return typeMatch && brandMatch && priceMatch && capacityMatch && typeFilterMatch;
-  });
+    return isApproved && typeMatch && brandMatch && priceMatch && capacityMatch && typeFilterMatch;
+});
+
+
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
