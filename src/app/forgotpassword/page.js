@@ -128,7 +128,7 @@ export default function ForgotPasswordModal({ show, onClose }) {
                   type="email"
                   id="email"
                   placeholder="Enter your email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+                  className="w-full px-4 py-3 text-gray-700 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -144,7 +144,7 @@ export default function ForgotPasswordModal({ show, onClose }) {
                     type="password"
                     id="newPassword"
                     placeholder="Enter new password"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+                    className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
@@ -159,7 +159,7 @@ export default function ForgotPasswordModal({ show, onClose }) {
                     type="password"
                     id="confirmPassword"
                     placeholder="Confirm new password"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+                    className="w-full px-4 py-3 borde text-gray-700 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required

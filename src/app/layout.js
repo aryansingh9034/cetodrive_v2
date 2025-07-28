@@ -33,7 +33,7 @@ export const metadata = {
   title: "CatoDrive",
   description: "CatoDrive - Your Ultimate Car Rental Experience",
   icons: {
-    icon: '/favicon.svg',
+    icon: '/favicon.png',
   },
 };
 

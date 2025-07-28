@@ -130,7 +130,7 @@ const TestimonialsPage = () => {
     setTimeout(() => setIsAnimating(false), 400);
   };
 
-  const getCardStyle = (index) => {
+const getCardStyle = (index) => {
     const diff = (index - activeIndex + testimonials.length) % testimonials.length;
     const center = 0;
     
@@ -176,10 +176,21 @@ const TestimonialsPage = () => {
       }
     }
 
+        let zIndex;
+    if (diff === center) {
+      zIndex = 1000; // Highest for center card
+    } else if (diff === 1 || diff === testimonials.length - 1) {
+      zIndex = 999; // Slightly lower for immediate adjacent cards
+    } else if (diff === 2 || diff === testimonials.length - 2) {
+      zIndex = 998; // Even lower for next set
+    } else {
+      zIndex = 997; // Lowest for farthest cards
+    }
+
     return {
       transform: `translateX(${translateX}px) translateZ(${translateZ}px) scale(${scale})`,
       opacity,
-      zIndex: 1000 - Math.abs(diff),
+      zIndex,
       transition: 'all 0.4s ease-out',
       cursor
     };

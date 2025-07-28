@@ -138,7 +138,7 @@ export default function ServicesPage() {
           <div className="bg-gray-100 rounded-2xl  h-full">
             <div className=" relative h-full w-full">
               <Image 
-                src="/rent.jpeg"
+                src="/services.jpg"
                 alt="Service coverage map"
                 fill
                 className="object-cover rounded-lg"

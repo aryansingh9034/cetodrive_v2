@@ -7,13 +7,9 @@ import Link from "next/link";
 import { Phone, Mail, Apple, PlayCircle, Heart, Star } from "lucide-react";
 import { ArrowRight, Check, Menu, X, Fuel, Settings, Users, ChevronDown } from "lucide-react";
 import { useState } from "react";
-import "react-datepicker/dist/react-datepicker.css";
-import background from "../../../public/View.png";
-import Img from "../../../public/ImgKe.png";
-import Profile from "../../../public/Profill.png";
 import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   
@@ -33,6 +29,51 @@ export default function LoginPage() {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+const handleGoogleAuth = () => {
+  try {
+    const state = Math.random().toString(36).substring(2, 15) + 
+                  Math.random().toString(36).substring(2, 15);
+    
+    sessionStorage.setItem('oauth_state', state);
+    
+    const callbackUrl = `${window.location.origin}/auth/callback`;
+    // const authUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/google/login/`;
+
+    const width = 500;
+        const height = 600;
+        const left = window.screenX + (window.innerWidth - width) / 2;
+        const top = window.screenY + (window.innerHeight - height) / 2;
+
+        const authWindow = window.open(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/google/login/`,
+            'GoogleLogin',
+            `width=${width},height=${height},top=${top},left=${left}`
+        );
+
+    conaole.log('Opening Google auth window:', authWindow);
+    console.log('event ',event)
+    // window.location.href = authUrl;ß
+      const receiveMessage = (event) => {
+            // ✅ check origin — this will be the backend (3000)
+            console.log('Received message:', event.data);
+            if (event.origin !== 'http://localhost:3000') return;
+
+            if (event.data === 'authenticated') {
+                console.log('User authenticated via Google');
+                dispatch(fetchUser());
+                console.log('User data updated in context');
+                onClose(); // close modal
+                console.log('Closing login modal'); // SPA navigation
+            }
+        };
+
+  } catch (error) {
+    console.error('Google auth error:', error);
+    setError('Failed to initiate Google sign-in. Please try again.');
+  }
+};
+
+   
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -49,7 +90,6 @@ export default function LoginPage() {
     }));
   };
 
-  // Final registration submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -57,25 +97,20 @@ export default function LoginPage() {
 
     const passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/;
   
-  if (!passwordRegex.test(formData.password)) {
-    alert('Password must contain at least 8 characters, one uppercase letter, one number, and one special character');
-    return;
-  }
-  
-  if (formData.password !== formData.re_password) {
-    alert('Passwords do not match');
-    return;
-  }
-  
-
+    if (!passwordRegex.test(formData.password)) {
+      setError('Password must contain at least 8 characters, one uppercase letter, one number, and one special character');
+      setIsLoading(false);
+      return;
+    }
+    
     if (formData.password !== formData.re_password) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}api/customer/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +126,6 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (response.ok) {
-        // Show OTP modal after successful registration
         setShowOtpModal(true);
       } else {
         setError(data.message || "Already have an account. Please login.");
@@ -105,70 +139,124 @@ export default function LoginPage() {
     }
   };
 
-  // Send OTP to email
 const sendOtp = async () => {
   setIsLoading(true);
   setError("");
   
   try {
-    const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/customer/otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        is_registration: true
-      }),
-    });
-
-    const data = await response.json();
-    
-    if (response.ok) {
-      setOtpSent(true); // Set OTP as sent
-    } else {
-      setError(data.message || "Failed to send OTP");
-    }
-  } catch (error) {
-    setError("Network error. Please try again.");
-    console.error("Network error:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  // Verify OTP
-  const verifyOtp = async () => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/customer/verifyotp`, {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/otp`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email,
-          otp: otp,
+          is_registration: true,
         }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setIsVerified(true);
-        setShowOtpModal(false);
-        router.push('/login');
-      } else {
-        setError(data.message || "Invalid OTP");
       }
-    } catch (error) {
-      setError("Network error. Please try again.");
-      console.error("Network error:", error);
-    } finally {
-      setIsLoading(false);
+    );
+
+    // Special case: If we get 500 but OTP is sent
+    if (response.status === 500) {
+      console.warn("Backend returned 500 but OTP was sent");
+      setOtpSent(true);
+      setError("");
+      return;
     }
-  };
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || 
+        `OTP request failed (Status ${response.status})`
+      );
+    }
+
+    const data = await response.json();
+    setOtpSent(true);
+    setError("");
+    
+  } catch (error) {
+    setError(error.message || "Failed to send OTP");
+    console.error("OTP send error:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+const verifyOtp = async () => {
+  setIsLoading(true);
+  setError("");
+
+  try {
+    // Debug log before sending
+    console.log("Verifying OTP:", {
+      email: formData.email,
+      otp: otp,
+      trimmedOTP: otp.trim()
+    });
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/verifyotp`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          otp: otp.trim(), // Ensure whitespace is trimmed
+        }),
+      }
+    );
+
+    // Debug raw response
+    const responseText = await response.text();
+    console.log("Raw verification response:", responseText);
+
+    try {
+      const data = JSON.parse(responseText);
+      
+      if (!response.ok) {
+        throw new Error(
+          data.detail || 
+          data.message || 
+          data.error || 
+          `Verification failed (Status ${response.status})`
+        );
+      }
+
+      // Success case
+      setIsVerified(true);
+      setShowOtpModal(false);
+      router.push('/login');
+      
+    } catch (jsonError) {
+      throw new Error(
+        responseText.includes("<!DOCTYPE html>") 
+          ? "Server returned HTML instead of JSON" 
+          : `Invalid response format: ${responseText.substring(0, 100)}`
+      );
+    }
+
+  } catch (error) {
+    // Special handling for common cases
+    let errorMessage = error.message;
+    
+    if (error.message.includes("400")) {
+      errorMessage = "Invalid OTP. Please check the code and try again.";
+    } else if (error.message.includes("NetworkError")) {
+      errorMessage = "Network issues. Please check your connection.";
+    }
+    
+    setError(errorMessage);
+    console.error("Full verification error:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="w-full min-h-screen bg-white">
@@ -194,15 +282,19 @@ const sendOtp = async () => {
               Create New Account
             </h1>
 
-            {/* Google Login Placeholder */}
-            <button className="w-full border rounded-xl border-gray-300 py-3 flex items-center justify-center gap-2 mb-6 hover:bg-gray-50 transition-colors">
+            {/* Google Signup Button */}
+            <button 
+              onClick={handleGoogleAuth}
+              className="w-full border rounded-xl border-gray-300 py-3 flex items-center justify-center gap-2 mb-6 hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
+            >
               <svg width="18" height="18" viewBox="0 0 48 48">
-                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8..." />
-                <path fill="#FF3D00" d="M6.306,14.691l6.571..." />
-                <path fill="#4CAF50" d="M24,44c5.166,0..." />
-                <path fill="#1976D2" d="M43.611,20.083H42..." />
+                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20c0-1.341-0.138-2.65-0.389-3.917H43.611z" />
+                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
               </svg>
-              <span className="text-md font-medium text-gray-700">Log in with Google</span>
+              <span className="text-md font-medium text-gray-700">Sign up with Google</span>
             </button>
 
             <div className="flex items-center justify-center mb-4">
@@ -222,6 +314,7 @@ const sendOtp = async () => {
                   placeholder="Enter your username"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -237,48 +330,51 @@ const sendOtp = async () => {
                   placeholder="Enter your email"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
-           <div>
-  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-    Password
-  </label>
-  <input
-    type="password"
-    id="password"
-    value={formData.password}
-    onChange={handleChange}
-    placeholder="Enter your password (min 8 chars, 1 uppercase, 1 number, 1 special char)"
-    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-    required
-  />
-  {formData.password && !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/.test(formData.password) && (
-    <p className="mt-1 text-sm text-red-600">
-      Password must contain at least 8 characters, one uppercase letter, one number, and one special character
-    </p>
-  )}
-</div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password (min 8 chars, 1 uppercase, 1 number, 1 special char)"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+                  required
+                  disabled={isLoading}
+                />
+                {formData.password && !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/.test(formData.password) && (
+                  <p className="mt-1 text-sm text-red-600">
+                    Password must contain at least 8 characters, one uppercase letter, one number, and one special character
+                  </p>
+                )}
+              </div>
 
-<div>
-  <label htmlFor="re_password" className="block text-sm font-medium text-gray-700 mb-1">
-    Re-enter Password
-  </label>
-  <input
-    type="password"
-    id="re_password"
-    value={formData.re_password}
-    onChange={handleChange}
-    placeholder="Re-enter your password"
-    className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
-    required
-  />
-  {formData.password && formData.re_password && formData.password !== formData.re_password && (
-    <p className="mt-1 text-sm text-red-600">
-      Passwords do not match
-    </p>
-  )}
-</div>
+              <div>
+                <label htmlFor="re_password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Re-enter Password
+                </label>
+                <input
+                  type="password"
+                  id="re_password"
+                  value={formData.re_password}
+                  onChange={handleChange}
+                  placeholder="Re-enter your password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
+                  required
+                  disabled={isLoading}
+                />
+                {formData.password && formData.re_password && formData.password !== formData.re_password && (
+                  <p className="mt-1 text-sm text-red-600">
+                    Passwords do not match
+                  </p>
+                )}
+              </div>
 
               <div>
                 <label htmlFor="vehicle_types" className="block text-sm font-medium text-gray-700 mb-1">
@@ -291,10 +387,10 @@ const sendOtp = async () => {
                     onChange={handleChange}
                     className="appearance-none w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
                     required
+                    disabled={isLoading}
                   >
                     <option value="" disabled>Choose your vehicle type</option>
                     <option value="Driver">Driver</option>
-                    {/* <option value="Owner">Car Owner</option> */}
                   </select>
                   <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-gray-500 pointer-events-none" />
                 </div>
@@ -306,17 +402,27 @@ const sendOtp = async () => {
 
               <button
                 type="submit"
-                className="w-full bg-[#FF7A30] text-white py-3 rounded-xl hover:bg-[#e86e29] transition-colors font-medium"
+                className={`w-full bg-[#FF7A30] text-white py-3 rounded-xl hover:bg-[#e86e29] transition-colors font-medium ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 disabled={isLoading}
               >
-                {isLoading ? "Registering..." : "Register"}
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Registering...
+                  </span>
+                ) : 'Register'}
               </button>
             </form>
 
             <div className="text-center mt-6">
               <p className="text-md text-[#FF7A30]">
                 Already have an account?
-                <a href="#" onClick={handleLogin} className="text-black hover:underline ml-1">Login</a>
+                <button onClick={handleLogin} className="text-black hover:underline ml-1">
+                  Login
+                </button>
               </p>
             </div>
           </div>
@@ -332,6 +438,7 @@ const sendOtp = async () => {
               <button 
                 onClick={() => setShowOtpModal(false)} 
                 className="text-gray-500 hover:text-gray-700"
+                disabled={isLoading}
               >
                 <X size={24} />
               </button>
@@ -355,6 +462,7 @@ const sendOtp = async () => {
                   placeholder="Enter 6-digit OTP"
                   className="w-full px-4 py-3 border text-black border-gray-300 rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7A30] focus:border-transparent"
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -365,14 +473,14 @@ const sendOtp = async () => {
               <div className="flex gap-2">
                 <button
                   onClick={sendOtp}
-                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+                  className={`flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-300 transition-colors font-medium ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                   disabled={isLoading}
                 >
                   {isLoading ? "Sending..." : (otpSent ? "Resend OTP" : "Send OTP")}
                 </button>
                 <button
                   onClick={verifyOtp}
-                  className="flex-1 bg-[#FF7A30] text-white py-3 rounded-xl hover:bg-[#e86e29] transition-colors font-medium"
+                  className={`flex-1 bg-[#FF7A30] text-white py-3 rounded-xl hover:bg-[#e86e29] transition-colors font-medium ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                   disabled={isLoading}
                 >
                   {isLoading ? "Verifying..." : "Verify"}

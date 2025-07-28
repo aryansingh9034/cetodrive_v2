@@ -5,6 +5,8 @@ import login from "../../../public/Group 1(4).png";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import ForgotPasswordModal from "../forgotpassword/page";
+import { Phone, Mail, Apple, PlayCircle, Heart, Star } from "lucide-react";
+import { ArrowRight, Check, Menu, X, Fuel, Settings, Users, ChevronDown } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,68 +17,80 @@ export default function LoginPage() {
   
   const router = useRouter();
 
-  const handlesignup = () => {
+  const handleSignup = () => {
     router.push('/signup');
   };
- 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setIsLoading(true);
 
-  // Client-side validation
-  if (!email || !password) {
-    setError("Please fill in all fields");
-    setIsLoading(false);
-    return;
-  }
-
-  if (!/\S+@\S+\.\S+/.test(email)) {
-    setError("Please enter a valid email address");
-    setIsLoading(false);
-    return;
-  }
-
-  try {
-    const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/customer/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const responseData = await response.json();
-
-    // Check if login failed
-    if (responseData.status === 'failure') {
-      setError(responseData.msg || "Invalid credentials. Please check your email and password.");
-      setIsLoading(false);
-      return;
-    }
-
-    // Check if login succeeded but missing required data
-    if (!responseData.data || !responseData.data.id) {
-      setError("Login successful but missing user data. Please contact support.");
-      setIsLoading(false);
-      return;
-    }
-
-    // Successful login with valid data
-    localStorage.setItem('userData', JSON.stringify(responseData.data));
-    localStorage.setItem('customerId', responseData.data.id);
-    router.push('/profile');
-    
-  } catch (error) {
-    console.error("Login error:", error);
-    setError(
-      error instanceof TypeError && error.message === "Failed to fetch"
-        ? "Network error. Please check your connection"
-        : "An unexpected error occurred"
-    );
-    setIsLoading(false);
-  }
+const handleGoogleAuth = () => {
+  // Generate a unique state parameter for CSRF protection
+  const state = Math.random().toString(36).substring(2, 15) + 
+                Math.random().toString(36).substring(2, 15);
+  
+  // Store state in session storage
+  sessionStorage.setItem('oauth_state', state);
+  
+  // Construct the OAuth URL
+  const callbackUrl = `${window.location.origin}/auth/callback`;
+  const authUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/google/login/?redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
+  
+  // Redirect to Google auth
+  window.location.href = authUrl;
 };
+ 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError("Please enter a valid email address");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.status === 'failure') {
+        setError(responseData.msg || "Invalid credentials. Please check your email and password.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!responseData.data || !responseData.data.id) {
+        setError("Login successful but missing user data. Please contact support.");
+        setIsLoading(false);
+        return;
+      }
+
+      localStorage.setItem('userData', JSON.stringify(responseData.data));
+      localStorage.setItem('customerId', responseData.data.id);
+      router.push('/profile');
+      
+    } catch (error) {
+      console.error("Login error:", error);
+      setError(
+        error instanceof TypeError && error.message === "Failed to fetch"
+          ? "Network error. Please check your connection"
+          : "An unexpected error occurred"
+      );
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-white py-16">
@@ -100,7 +114,25 @@ const handleSubmit = async (e) => {
               Welcome back
             </h1>
             
-            {/* Error message display */}
+            {/* Google Login Button */}
+            <button 
+              onClick={handleGoogleAuth}
+              className="w-full border rounded-xl border-gray-300 py-3 flex items-center justify-center gap-2 mb-6 hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
+            >
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20c0-1.341-0.138-2.65-0.389-3.917H43.611z" />
+                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+              </svg>
+              <span className="text-md font-medium text-gray-700">Continue with Google</span>
+            </button>
+
+            <div className="flex items-center justify-center mb-4">
+              <span className="text-sm text-gray-400">or</span>
+            </div>
+
             {error && (
               <div className={`mb-4 p-3 rounded-lg text-sm ${
                 error.includes("not registered") ? 
@@ -110,7 +142,7 @@ const handleSubmit = async (e) => {
                 {error}
                 {error.includes("not registered") && (
                   <button 
-                    onClick={handlesignup}
+                    onClick={handleSignup}
                     className="ml-2 font-semibold hover:underline"
                   >
                     Sign up now
@@ -197,9 +229,9 @@ const handleSubmit = async (e) => {
 
             <div className="text-center mt-6">
               <p className="text-md text-gray-600">
-                Dont have an account yet?
+                Don&apos;t have an account yet?
                 <button 
-                  onClick={handlesignup} 
+                  onClick={handleSignup} 
                   className="text-[#FF7A30] hover:underline ml-1"
                   disabled={isLoading}
                 >

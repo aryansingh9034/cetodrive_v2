@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import background from "../../../public/3.jpg"
+import background from "../../../public/3.jpeg"
 
 export default function TermsPage() {
   return (
