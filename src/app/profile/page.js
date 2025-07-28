@@ -14,44 +14,56 @@ export default function ModernProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null); 
 
-useEffect(() => {
-  // Simulating user data for demo (remove this in production)
-  const mockUser = {
-    username: "John Doe",
-    email: "john.doe@example.com",
-    re_password: "••••••••",
-    vehcile_types: "Premium User",
-    address: "",
-    phone: ""
+    useEffect(() => {
+  const checkAuth = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+    }
   };
-  
-  // Try to get user data from localStorage
-  try {
-    const storedUser = localStorage.getItem('userData');
-    
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
+  checkAuth();
+}, [router]);
+
+useEffect(() => {
+  const fetchUserData = async () => {
+    try {
+      // First check localStorage
+      const storedUser = localStorage.getItem('userData');
+      const token = localStorage.getItem('token');
       
-      // Validate the parsed data has minimum required fields
-      if (userData && typeof userData === 'object' && userData.email) {
+      if (storedUser && token) {
+        const userData = JSON.parse(storedUser);
         setUser(userData);
         setEditedUser({...userData});
-      } else {
-        // If invalid data, fall back to mock data
-        setUser(mockUser);
-        setEditedUser({...mockUser});
+        return;
       }
-    } else {
-      // If no stored user, use mock data
-      setUser(mockUser);
-      setEditedUser({...mockUser});
+
+      // If no stored user but has token, fetch from API
+      if (token) {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+          setEditedUser({...data});
+          localStorage.setItem('userData', JSON.stringify(data));
+        } else {
+          throw new Error('Failed to fetch user data');
+        }
+      } else {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      router.push('/login');
     }
-  } catch (error) {
-    console.error("Error parsing user data:", error);
-    // Fall back to mock data if parsing fails
-    setUser(mockUser);
-    setEditedUser({...mockUser});
-  }
+  };
+
+  fetchUserData();
 }, []);
 
 // In your ModernProfilePage component, update the handleEditClick function:

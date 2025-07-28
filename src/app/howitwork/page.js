@@ -330,13 +330,20 @@ export default function HowItWorksPage() {
               </div>
 
               <div className="flex gap-4">
-                <button className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+                <Link href="/comingsoon" className="flex items-center gap-2 text-sm hover:text-gray-300">
+                   
+                    <button className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
                   Download for iOS
                 </button>
-                <button className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                  </Link>
+                                 <Link href="/comingsoon" className="flex items-center gap-2 text-sm hover:text-gray-300">
+                   
+                    <button className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
                   Download for Android
                 </button>
+                  </Link>
               </div>
+
             </div>
 
             <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl p-8 h-96 flex items-center justify-center">

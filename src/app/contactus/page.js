@@ -71,11 +71,11 @@ export default function ContactSupport() {
             <div className="bg-blue-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-6">
               <MessageSquare className="w-8 h-8 text-blue-600" />
             </div>
-            <h3 className="text-xl font-bold mb-3">Live Chat</h3>
+            <h3 className="text-xl text-gray-900 font-bold mb-3">Live Chat</h3>
             <p className="text-gray-600 mb-4">Get instant help from our support team with our 24/7 live chat service.</p>
-            <button className="text-blue-600 font-semibold flex items-center">
+            {/* <button className="text-blue-600 font-semibold flex items-center">
               Start Chat <ArrowRight className="ml-2 w-4 h-4" />
-            </button>
+            </button> */}
           </div>
 
           {/* FAQ Center */}
@@ -83,11 +83,11 @@ export default function ContactSupport() {
             <div className="bg-orange-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-6">
               <HelpCircle className="w-8 h-8 text-orange-600" />
             </div>
-            <h3 className="text-xl font-bold mb-3">FAQ Center</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">FAQ Center</h3>
             <p className="text-gray-600 mb-4">Find quick answers to common questions in our comprehensive knowledge base.</p>
-            <Link href="/faq" className="text-orange-600 font-semibold flex items-center">
+            {/* <Link href="/faq" className="text-orange-600 font-semibold flex items-center">
               Browse FAQs <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
+            </Link> */}
           </div>
 
           {/* Phone Support */}
@@ -95,11 +95,11 @@ export default function ContactSupport() {
             <div className="bg-green-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-6">
               <Headphones className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold mb-3">Phone Support</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Phone Support</h3>
             <p className="text-gray-600 mb-4">Speak directly with our customer service representatives for personalized assistance.</p>
-            <button className="text-green-600 font-semibold flex items-center">
+            {/* <button className="text-green-600 font-semibold flex items-center">
               Call Now <ArrowRight className="ml-2 w-4 h-4" />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

@@ -171,7 +171,7 @@ export default function GetInTouchPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    className="w-full px-4 py-4 border-2 border-gray-200 text-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                     placeholder="John Doe"
                     required
                   />
@@ -187,7 +187,7 @@ export default function GetInTouchPage() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    className="w-full px-4 py-4 border-2 border-gray-200 text-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                     placeholder="john@example.com"
                     required
                   />
@@ -205,7 +205,7 @@ export default function GetInTouchPage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    className="w-full px-4 py-4 border-2 border-gray-200 text-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -219,7 +219,7 @@ export default function GetInTouchPage() {
                     name="preferredContact"
                     value={formData.preferredContact}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    className="w-full px-4 py-4 border-2 border-gray-200 text-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                   >
                     <option value="email">Email</option>
                     <option value="phone">Phone</option>
@@ -238,7 +238,7 @@ export default function GetInTouchPage() {
                   name="subject"
                   value={formData.subject}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                  className="w-full px-4 py-4 border-2 border-gray-200 text-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                   placeholder="How can we help you?"
                   required
                 />
@@ -254,7 +254,7 @@ export default function GetInTouchPage() {
                   rows={6}
                   value={formData.message}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
+                  className="w-full px-4 py-4 border-2 text-gray-600 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
                   placeholder="Tell us more about your inquiry..."
                   required
                 ></textarea>
@@ -306,11 +306,11 @@ export default function GetInTouchPage() {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="font-medium">Monday - Friday</span>
+                  <span className="font-medium text-gray-900">Monday - Friday</span>
                   <span className="text-gray-600">6:00 AM - 10:00 PM</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium">Saturday - Sunday</span>
+                  <span className="font-medium text-gray-900">Saturday - Sunday</span>
                   <span className="text-gray-600">8:00 AM - 8:00 PM</span>
                 </div>
                 <div className="mt-4 p-3 bg-blue-100 rounded-lg">

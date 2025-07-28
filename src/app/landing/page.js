@@ -10,7 +10,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { useRouter } from 'next/navigation';
 import background from "../../../public/backgorund.jpg"
 import { Search, ChevronRight } from 'lucide-react';
-import Steps from "@/app/steps/page"
+import Steps from "../steps/page"
 import axios from "axios"
 import { Car, Award, Users, Shield, RefreshCw, Monitor, Settings, Fuel } from "lucide-react";
 import TestimonialsPage from "../testimonial/page"

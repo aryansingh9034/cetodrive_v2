@@ -29,135 +29,144 @@ export default function Home() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false)
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) return
 
     // Fetch vehicle details
-    axios
-      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/${id}`)
-      .then((response) => {
-        const vehicleData = response.data.data;
-        localStorage.removeItem("vehicle");
-        localStorage.setItem("vehicle", JSON.stringify(vehicleData));
-        setVehicle(vehicleData);
-        setLoading(false);
-        
-        // Fetch reviews for this vehicle after vehicle data is loaded
-        fetchVehicleReviews(vehicleData.id);
-        
-        // Fetch similar vehicles based on vehicle type
-        if (vehicleData.vehicle_type?.id) {
-          fetchSimilarVehicles(vehicleData.vehicle_type.id, vehicleData.id);
-        }
-      })
-      .catch((error) => {
-        console.error("Vehicle API Error:", error);
-        setLoading(false);
-      });
-  }, [id]);
+    fetchVehicleDetails(id)
+  }, [id])
 
-  const fetchVehicleReviews = (vehicleId) => {
-    setReviewsLoading(true);
-    axios
-      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/?vehicle=${vehicleId}`)
-      .then((response) => {
-        const formattedReviews = response.data.data.map((item) => ({
-          id: item.id,
-          name: item.title || "Anonymous",
-          username: item.user_name || "Anonymous",
-          date: new Date(item.created_at).toLocaleDateString("en-US", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }),
-          rating: item.rating,
-          avatar: "/placeholder.svg?height=40&width=40",
-          text: item.context,
-        }));
-        setReviews(formattedReviews);
-        setReviewsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Review Fetch Error:", error);
-        setReviewsLoading(false);
-      });
-  };
+  const fetchVehicleDetails = async (vehicleId) => {
+    try {
+      setLoading(true)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/${vehicleId}`)
+      const vehicleData = response.data.data
+      
+      localStorage.removeItem("vehicle")
+      localStorage.setItem("vehicle", JSON.stringify(vehicleData))
+      setVehicle(vehicleData)
+      
+      // Fetch reviews and similar vehicles in parallel
+      await Promise.all([
+        fetchVehicleReviews(vehicleId),
+        vehicleData.vehicle_type?.id && fetchSimilarVehicles(vehicleData.vehicle_type.id, vehicleId)
+      ])
+      
+      setLoading(false)
+    } catch (error) {
+      console.error("Vehicle API Error:", error)
+      setLoading(false)
+    }
+  }
 
-  const fetchSimilarVehicles = (vehicleTypeId, currentVehicleId) => {
-    setSimilarLoading(true);
-    axios
-      .get(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?vehicle_type=${vehicleTypeId}`)
-      .then((response) => {
-        // Filter out the current vehicle and limit to 3 similar vehicles
-        const similar = response.data.data
-          .filter(vehicle => vehicle.id !== currentVehicleId)
-          .slice(0, 3)
-          .map(vehicle => ({
-            id: vehicle.id,
-            name: vehicle.name,
-            type: vehicle.vehicle_type?.name || "N/A",
-            capacity: vehicle.vehicle_seat?.capacity || "N/A",
-            transmission: vehicle.gear_box,
-            fuel: vehicle.fuel,
-            price: vehicle.price,
-            image: vehicle.images?.[0]?.image ? ` ${process.env. NEXT_PUBLIC_API_BASE_URL}${vehicle.images[0].image}` : "/placeholder.svg",
-          }));
-        setSimilarVehicles(similar);
-        setSimilarLoading(false);
-      })
-      .catch((error) => {
-        console.error("Similar Vehicles Fetch Error:", error);
-        setSimilarLoading(false);
-      });
-  };
-
-  const handleReviewSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+const fetchVehicleReviews = async (vehicleId) => {
+  setReviewsLoading(true);
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`
+    );
     
-    const reviewData = {
-      title: reviewForm.title,
-      rating: reviewForm.rating,
-      context: reviewForm.context,
-      vehicle: id,
-      // You might want to add user information here if your API requires it
-    };
+    // Filter reviews by vehicle ID on the client side
+    const vehicleReviews = response.data.data.filter(
+      (review) => review.vehicle.id === parseInt(vehicleId)
+    );
+    
+    const formattedReviews = vehicleReviews.map((item) => ({
+      id: item.id,
+      name: item.title || "Anonymous",
+      username: item.user_name || "Anonymous",
+      date: new Date(item.created_at).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+      rating: item.rating,
+      avatar: "/man.png",
+      text: item.context,
+    }));
+    
+    setReviews(formattedReviews);
+  } catch (error) {
+    console.error("Review Fetch Error:", error);
+  } finally {
+    setReviewsLoading(false);
+  }
+};
 
-    axios
-      .post(`${process.env. NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`, reviewData)
-      .then((response) => {
-        setSubmitSuccess(true);
-        setReviewForm({ title: "", rating: 0, context: "" });
-        // Refresh reviews after submission
-        fetchVehicleReviews(id);
-      })
-      .catch((error) => {
-        console.error("Review Submission Error:", error);
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-        setTimeout(() => setSubmitSuccess(false), 3000);
-      });
-  };
+  const fetchSimilarVehicles = async (vehicleTypeId, currentVehicleId) => {
+    try {
+      setSimilarLoading(true)
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?vehicle_type=${vehicleTypeId}&status=approved`
+      )
+      
+      const similar = response.data.data
+        .filter(vehicle => vehicle.id !== currentVehicleId && vehicle.status === "approved")
+        .slice(0, 3)
+        .map(vehicle => ({
+          id: vehicle.id,
+          name: vehicle.name,
+          type: vehicle.vehicle_type?.name || "N/A",
+          capacity: vehicle.vehicle_seat?.capacity || "N/A",
+          transmission: vehicle.gear_box,
+          fuel: vehicle.fuel,
+          price: vehicle.price,
+          image: vehicle.images?.[0]?.image 
+            ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${vehicle.images[0].image}` 
+            : "/placeholder.svg",
+        }))
+      
+      setSimilarVehicles(similar)
+      setSimilarLoading(false)
+    } catch (error) {
+      console.error("Similar Vehicles Fetch Error:", error)
+      setSimilarLoading(false)
+    }
+  }
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    
+    try {
+      const reviewData = {
+        title: reviewForm.title,
+        rating: reviewForm.rating,
+        context: reviewForm.context,
+        vehicle: id,
+      }
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`, 
+        reviewData
+      )
+      
+      setSubmitSuccess(true)
+      setReviewForm({ title: "", rating: 0, context: "" })
+      fetchVehicleReviews(id) // Refresh reviews
+    } catch (error) {
+      console.error("Review Submission Error:", error)
+    } finally {
+      setIsSubmitting(false)
+      setTimeout(() => setSubmitSuccess(false), 3000)
+    }
+  }
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setReviewForm(prev => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setReviewForm(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleStarClick = (rating) => {
-    setReviewForm(prev => ({ ...prev, rating }));
-  };
+    setReviewForm(prev => ({ ...prev, rating }))
+  }
 
   const handleClick1 = () => router.push("/billing")
   const handleRentNow = () => console.log("Rent now clicked")
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
   const toggleReviewForm = () => setShowReviewForm(!showReviewForm)
-
-  const images = vehicle?.images?.map((img) => ` ${process.env. NEXT_PUBLIC_API_BASE_URL}${img.image}`) || []
-  const currentImage = images[selectedImg] || "/placeholder.svg?height=350&width=690"
 
   const StarRating = ({ rating, interactive = false, onRate = () => {} }) => {
     return (
@@ -190,6 +199,9 @@ export default function Home() {
     )
   }
 
+  const images = vehicle?.images?.map((img) => `${process.env.NEXT_PUBLIC_API_BASE_URL}${img.image}`) || []
+  const currentImage = images[selectedImg] || "/placeholder.svg?height=350&width=690"
+
   return (
     <div className="min-h-screen bg-gray-50 py-20">
       {/* Main Content */}
@@ -201,7 +213,7 @@ export default function Home() {
             <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 shadow-sm">
               <img
                 src={currentImage}
-                alt="Selected Car"
+                alt={vehicle?.name || "Vehicle image"}
                 className="w-full h-full object-cover transition-opacity duration-300"
                 onError={(e) => {
                   e.target.src = "/placeholder.svg?height=350&width=690"
@@ -210,8 +222,8 @@ export default function Home() {
               <button 
                 className="absolute top-4 right-4 p-2 bg-white/80 rounded-full backdrop-blur-sm hover:bg-white transition-colors"
                 onClick={() => {
-                  const newFav = !vehicle.isFavorite;
-                  setVehicle({...vehicle, isFavorite: newFav});
+                  const newFav = !vehicle.isFavorite
+                  setVehicle({...vehicle, isFavorite: newFav})
                 }}
               >
                 <Heart className={`w-5 h-5 ${vehicle.isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'}`} />
@@ -251,10 +263,14 @@ export default function Home() {
           {/* Vehicle Details */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2">{vehicle?.name || "N/A"}</h1>
+              <h1 className="text-4xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2">
+                {vehicle?.name || "N/A"}
+              </h1>
               <div className="flex items-center gap-2 mt-2">
                 <StarRating rating={4} />
-                <span className="text-gray-500 text-sm">{reviews.length} reviews</span>
+                <span className="text-gray-500 text-sm">
+                  {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+                </span>
               </div>
             </div>
 
@@ -285,8 +301,10 @@ export default function Home() {
 
             <div className="flex items-center justify-between pt-2">
               <div>
-                <p className="text-2xl font-bold text-gray-900">${vehicle?.price || "0"}<span className="text-gray-500 text-lg font-normal">/day</span></p>
-                {/* <p className="text-gray-400 text-sm">${Number.parseInt(vehicle?.price || "0") + 200}</p> */}
+                <p className="text-2xl font-bold text-gray-900">
+                  ${vehicle?.price || "0"}
+                  <span className="text-gray-500 text-lg font-normal">/day</span>
+                </p>
               </div>
               <button
                 onClick={handleClick1}
@@ -299,159 +317,158 @@ export default function Home() {
         </div>
 
         {/* Reviews Section */}
-<section className="mt-12 px-4">
-  {/* Header */}
-  <div className="flex items-end justify-between mb-6">
-    <div>
-      <h2 className="text-xl font-medium text-gray-900">Reviews</h2>
-      <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 mt-1"></div>
-    </div>
-    <div className="flex items-center gap-2">
-      {reviews.length > 0 && (
-        <button 
-          onClick={() => setShowAllReviews(!showAllReviews)}
-          className="text-gray-500 hover:text-gray-900 text-xs transition-colors underline decoration-dotted underline-offset-4"
-        >
-          {showAllReviews ? "Less" : `All ${reviews.length}`}
-        </button>
-      )}
-      <button 
-        onClick={toggleReviewForm}
-        className="group bg-black text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:scale-105"
-      >
-        <span className="relative z-10">
-          {showReviewForm ? "×" : "Write Review"}
-        </span>
-      </button>
-    </div>
-  </div>
+        <section className="mt-12 px-4">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-medium text-gray-900">Reviews</h2>
+              <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 mt-1"></div>
+            </div>
+            <div className="flex items-center gap-2">
+              {reviews.length > 0 && (
+                <button 
+                  onClick={() => setShowAllReviews(!showAllReviews)}
+                  className="text-gray-500 hover:text-gray-900 text-xs transition-colors underline decoration-dotted underline-offset-4"
+                >
+                  {showAllReviews ? "Show less" : `Show all (${reviews.length})`}
+                </button>
+              )}
+              <button 
+                onClick={toggleReviewForm}
+                className="group bg-black text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:scale-105"
+              >
+                <span className="relative z-10">
+                  {showReviewForm ? "Cancel" : "Write Review"}
+                </span>
+              </button>
+            </div>
+          </div>
 
-  {/* Review Form */}
-  {showReviewForm && (
-    <div className="relative mb-8">
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-xs">✍</span>
-          </div>
-          <h3 className="text-base font-medium text-gray-900">Write Review</h3>
-        </div>
-        
-        {submitSuccess && (
-          <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-lg border border-green-100">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-green-500">✓</span>
-              Review submitted
-            </div>
-          </div>
-        )}
-        
-        <form onSubmit={handleReviewSubmit} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={reviewForm.title}
-              onChange={handleInputChange}
-              placeholder="Review title"
-              className="w-full px-0 py-2 border-0 border-b border-gray-200 focus:border-blue-500 focus:outline-none text-sm placeholder-gray-400 bg-transparent transition-colors"
-              required
-            />
-          </div>
-          
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-gray-600">Rating</span>
-              <StarRating 
-                rating={reviewForm.rating} 
-                interactive={true} 
-                onRate={handleStarClick} 
-              />
-            </div>
-          </div>
-          
-          <div>
-            <textarea
-              id="context"
-              name="context"
-              value={reviewForm.context}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder="Your experience..."
-              className="w-full px-0 py-2 border-0 border-b border-gray-200 focus:border-blue-500 focus:outline-none resize-none text-sm placeholder-gray-400 bg-transparent transition-colors"
-              required
-            ></textarea>
-          </div>
-          
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? "Sending..." : "Submit"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )}
-
-  {/* Reviews Display */}
-  {reviewsLoading ? (
-    <div className="flex justify-center py-8">
-      <div className="flex items-center gap-1 text-gray-400">
-        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
-        <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-      </div>
-    </div>
-  ) : reviews.length > 0 ? (
-    <div className="space-y-4">
-      {(showAllReviews ? reviews : reviews.slice(0, 2)).map((review, index) => (
-        <div 
-          key={review.id} 
-          className="bg-white p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
-        >
-          <div className="flex gap-3">
-            <div className="flex-shrink-0">
-              <Image
-                width={40}
-                height={40}
-                src="/man.png"
-                alt={review.name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-medium text-gray-900 text-sm">{review.name}</h4>
-                  <p className="text-gray-500 text-xs">@{review.username}</p>
+          {/* Review Form */}
+          {showReviewForm && (
+            <div className="relative mb-8">
+              <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✍</span>
+                  </div>
+                  <h3 className="text-base font-medium text-gray-900">Write Review</h3>
                 </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-xs mb-1">{review.date}</p>
-                  <StarRating rating={review.rating} />
-                </div>
+                
+                {submitSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-lg border border-green-100">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-green-500">✓</span>
+                      Review submitted successfully!
+                    </div>
+                  </div>
+                )}
+                
+                <form onSubmit={handleReviewSubmit} className="space-y-4">
+                  <div>
+                    <input
+                      type="text"
+                      id="title"
+                      name="title"
+                      value={reviewForm.title}
+                      onChange={handleInputChange}
+                      placeholder="Review title"
+                      className="w-full px-0 py-2 text-gray-700 border-0 border-b border-gray-200 focus:border-blue-500 focus:outline-none text-sm placeholder-gray-400 bg-transparent transition-colors"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-gray-600">Rating</span>
+                      <StarRating 
+                        rating={reviewForm.rating} 
+                        interactive={true} 
+                        onRate={handleStarClick} 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <textarea
+                      id="context"
+                      name="context"
+                      value={reviewForm.context}
+                      onChange={handleInputChange}
+                      rows={3}
+                      placeholder="Share your experience with this vehicle..."
+                      className="w-full px-0 text-gray-700 py-2 border-0 border-b border-gray-200 focus:border-blue-500 focus:outline-none resize-none text-sm placeholder-gray-400 bg-transparent transition-colors"
+                      required
+                    ></textarea>
+                  </div>
+                  
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </div>
+                </form>
               </div>
-              
-              <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
             </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <div className="text-center py-8">
-      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-        <span className="text-lg">💭</span>
-      </div>
-      <p className="text-gray-500 text-sm">No reviews yet. Be the first!</p>
-    </div>
-  )}
-</section>
+          )}
+
+          {/* Reviews Display */}
+          {reviewsLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="flex items-center gap-1 text-gray-400">
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              </div>
+            </div>
+          ) : reviews.length > 0 ? (
+            <div className="space-y-4">
+              {(showAllReviews ? reviews : reviews.slice(0, 2)).map((review) => (
+                <div 
+                  key={review.id} 
+                  className="bg-white p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
+                >
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0">
+                      <Image
+                        width={40}
+                        height={40}
+                        src={review.avatar}
+                        alt={review.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-medium text-gray-900 text-sm">{review.name}</h4>
+                          <p className="text-gray-500 text-xs">@{review.username}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-gray-400 text-xs mb-1">{review.date}</p>
+                          <StarRating rating={review.rating} />
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-lg">💭</span>
+              </div>
+              <p className="text-gray-500 text-sm">No reviews yet. Be the first to review this vehicle!</p>
+            </div>
+          )}
+        </section>
 
         {/* Similar Vehicles */}
         <section className="mt-16">
@@ -490,7 +507,7 @@ export default function Home() {
                       alt={vehicle.name}
                       className="object-contain w-full h-full p-6"
                       onError={(e) => {
-                        e.target.src = "/placeholder.svg";
+                        e.target.src = "/placeholder.svg"
                       }}
                     />
                   </div>

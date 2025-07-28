@@ -146,11 +146,11 @@ export default function Footer() {
                       About Us
                     </Link>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link href="/blog" className="hover:text-gray-300">
                       Blog
                     </Link>
-                  </li>
+                  </li> */}
                   <li>
                     <Link href="/services" className="hover:text-gray-300">
                       Services
@@ -184,9 +184,7 @@ export default function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/helpcenter" className="hover:text-gray-300">
-                      Help center
-                    </Link>
+                   
                   </li>
                   {/* <li>
                     <Link href="/livechat" className="hover:text-gray-300">
@@ -294,14 +292,14 @@ export default function Footer() {
               <div>
                 <h3 className="font-bold mb-4">Our Mobile App</h3>
                 <div className="space-y-3">
-                  <Link href="#" className="flex items-center gap-2 text-sm hover:text-gray-300">
+                  <Link href="/comingsoon" className="flex items-center gap-2 text-sm hover:text-gray-300">
                     <Apple size={20} />
                     <div>
                       <div className="text-xs">Download on the</div>
                       <div className="font-medium">Apple Store</div>
                     </div>
                   </Link>
-                  <Link href="#" className="flex items-center gap-2 text-sm hover:text-gray-300">
+                  <Link href="/comingsoon" className="flex items-center gap-2 text-sm hover:text-gray-300">
                     <PlayCircle size={20} />
                     <div>
                       <div className="text-xs">Get it on</div>

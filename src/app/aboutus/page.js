@@ -2,7 +2,7 @@
 
 import { Phone, Mail, MapPin, Clock } from "lucide-react"
 import Image from "next/image"
-import background from "../../../public/car6.avif"
+import background from "../../../public/car6.png"
 
 export default function AboutPage() {
   return (
