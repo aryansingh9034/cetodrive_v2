@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import login from "../../../public/Group 1(4).png";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
-import ForgotPasswordModal from "../forgotpassword/page";
+import ForgotPasswordModal from "../components/forgotpassword";
 import { Phone, Mail, Apple, PlayCircle, Heart, Star } from "lucide-react";
 import { ArrowRight, Check, Menu, X, Fuel, Settings, Users, ChevronDown } from "lucide-react";
 
