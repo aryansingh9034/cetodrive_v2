@@ -6,7 +6,7 @@ import axios from "axios"
 import { Phone, Mail, Star } from "lucide-react"
 import Modal from 'react-modal'
 import { useSession } from "next-auth/react" 
-import LoginModal from '@/app/loginmodal/page'
+import LoginModal from '../components/loginmodal'
 
 // Add these styles for the modal
 const customStyles = {
@@ -87,6 +87,7 @@ export default function CarRentalForm() {
   const [customerId, setCustomerId] = useState(
     typeof window !== 'undefined' ? localStorage.getItem('customerId') : null
   )
+  
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [pendingBookingData, setPendingBookingData] = useState(null)
   const [isFetchingLocation, setIsFetchingLocation] = useState(false)
@@ -312,22 +313,26 @@ useEffect(() => {
   }
 }, [currentStep])
 
-  const handleLoginSuccess = () => {
-    const storedCustomerId = localStorage.getItem('customerId')
-    setCustomerId(storedCustomerId)
+const handleLoginSuccess = async () => {
+  const storedCustomerId = localStorage.getItem('customerId');
+  
+  // Update state in a batch to avoid partial renders
+  setCustomerId(storedCustomerId);
+  
+  if (pendingBookingData) {
+    // Set all booking data at once
+    setBillingData(pendingBookingData.billingData);
+    setRentalData(pendingBookingData.rentalData);
+    setVehicle(pendingBookingData.vehicle);
     
-    if (pendingBookingData) {
-      setBillingData(pendingBookingData.billingData)
-      setRentalData(pendingBookingData.rentalData)
-      setVehicle(pendingBookingData.vehicle)
-      
-      setTimeout(() => {
-        handleSubmit()
-      }, 100)
-    }
+    // Wait for state updates before submission
+    await new Promise(resolve => setTimeout(resolve, 0));
     
-    setPendingBookingData(null)
+    handleSubmit(); // Now all states should be updated
   }
+  
+  setPendingBookingData(null);
+};
 
   // Update available locations when city changes
   useEffect(() => {

@@ -9,49 +9,41 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const [error, setError] = useState("");
   const router = useRouter();
 
- const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setIsLoading(true);
 
-    try {
-      const response = await fetch(` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/customer/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok || data.status === 'failure') {
-        throw new Error(data.msg || "Login failed");
-      }
-
-      if (!data.data?.id) {
-        throw new Error("Invalid user data received");
-      }
-
-      // Store auth data
-      localStorage.setItem('userData', JSON.stringify(data.data));
-      localStorage.setItem('customerId', data.data.id);
-
-      // FIRST: Close the modal
-      onClose();
-      
-      // THEN: Trigger success callback
-      // Use setTimeout to ensure modal is closed before parent state updates
-      setTimeout(() => {
-        onLoginSuccess(data.data.id);
-      }, 100);
-
-    } catch (error) {
-      setError(error.message || "Login failed");
-    } finally {
-      setIsLoading(false);
+    if (!response.ok || data.status === 'failure') {
+      throw new Error(data.msg || "Login failed");
     }
-  };
+
+    if (!data.data?.id) {
+      throw new Error("Invalid user data received");
+    }
+
+    // Store auth data
+    localStorage.setItem('userData', JSON.stringify(data.data));
+    localStorage.setItem('customerId', data.data.id);
+
+    // Close modal and trigger success in one go
+    onLoginSuccess(data.data.id); // Update parent state first
+    onClose(); // Then close the modal
+  } catch (error) {
+    setError(error.message || "Login failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   if (!show) return null;
 
