@@ -28,6 +28,19 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Prevent body scrolling when menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   const isBilling = pathname.includes('/billing');
   const isProfile = pathname.includes('/profile');
 
@@ -44,7 +57,7 @@ export default function Header() {
 
   return (
     <>
-           <header className="fixed top-0 z-10000 left-0 right-0  transition-all duration-500 bg-black/80 backdrop-blur-xl border-b border-orange-500/20 shadow-2xl shadow-orange-500/10">
+      <header className="fixed top-0 z-10000 left-0 right-0 transition-all duration-500 bg-black/80 backdrop-blur-xl border-b border-orange-500/20 shadow-2xl shadow-orange-500/10">
         <div className="flex items-center justify-between w-full px-6 py-4 lg:px-12">
           {/* Logo - left side */}
           <Link href="/" className="group flex items-center space-x-3">
@@ -61,24 +74,7 @@ export default function Header() {
 
           {/* Right side container */}
           <div className="flex items-center gap-4">
-            {/* Login/Signup buttons (only on car detail page) */}
-            {/* {isCarDetailsClient && (
-              <div className="flex items-center gap-4">
-                <Link 
-                  href="/login" 
-                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400  transition-colors duration-300"
-                >
-                  Login
-                </Link>
-                <Link 
-                  href="/signup" 
-                  className="px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )} */}
-             {isBilling && !isLoggedIn && (
+            {isBilling && !isLoggedIn && (
               <div className="hidden md:flex items-center gap-4">
                 <Link 
                   href="/login" 
@@ -94,24 +90,6 @@ export default function Header() {
                 </Link>
               </div>
             )}
-             {/* {isBilling && isLoggedIn && (
-              <div className="hidden md:flex items-center gap-4">
-                <Link 
-                  href="/profile" 
-                  className="flex items-center gap-2 px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
-                >
-                  <User size={18} />
-                  Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
-                >
-                  <LogOut size={18} />
-                  Logout
-                </button>
-              </div>
-            )} */}
 
             {isLoggedIn && (
               <div className="hidden md:flex items-center gap-4">
@@ -125,28 +103,6 @@ export default function Header() {
               </div>
             )}
 
-            
-          
-            {/* {isProfile && isLoggedIn && (
-              <div className="hidden md:flex items-center gap-4">
-                <Link 
-                  href="/profile" 
-                  className="flex items-center gap-2 px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
-                >
-                  <User size={18} />
-                  Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
-                >
-                  <LogOut size={18} />
-                  Logout
-                </button>
-              </div>
-            )} */}
-
-            {/* Show "Rent Your Car" only on profile page */}
             {isProfile && (
               <div className="hidden md:flex items-center gap-4">
                 <Link 
@@ -170,7 +126,7 @@ export default function Header() {
       </header>
 
       {/* Enhanced Full-Screen Menu Overlay */}
-      <div className={`fixed inset-0  transition-all duration-700 z-10000 ${
+      <div className={`fixed inset-0 transition-all duration-700 z-10000 ${
         mobileMenuOpen 
           ? 'opacity-100 pointer-events-auto' 
           : 'opacity-0 pointer-events-none'
@@ -180,22 +136,6 @@ export default function Header() {
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900"></div>
           
-          {/* Animated Particles */}
-          {/* <div className="absolute inset-0 overflow-hidden">
-            {[...Array(20)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-orange-500/30 rounded-full animate-pulse"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${2 + Math.random() * 2}s`
-                }}
-              ></div>
-            ))}
-          </div> */}
-
           {/* Geometric Patterns */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-orange-500 to-red-500 rounded-full blur-3xl animate-float"></div>
@@ -204,8 +144,8 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Menu Content */}
-        <div className={`relative h-full flex flex-col transition-transform duration-700 ${
+        {/* Scrollable Menu Content */}
+        <div className={`relative h-full flex flex-col transition-transform duration-700 overflow-y-auto ${
           mobileMenuOpen ? 'translate-y-0' : 'translate-y-full'
         }`}>
           
@@ -242,84 +182,84 @@ export default function Header() {
             </div>
 
             {/* Navigation Grid */}
-             <nav className="grid gap-4 max-w-md mx-auto w-full">
-      {[
-        { href: "/", label: "Home", delay: 0 },
-        { href: "/WhyChooseUs", label: "Why Choose Us", delay: 100 },
-        { href: "/contactus", label: "Contact", delay: 200 },
-        { href: "/availablevehicle", label: "Available Vehicle", delay: 300 },
-        ...(isLoggedIn
-          ? [
-              { href: "/profile", label: "Profile", delay: 400 },
-              { 
-                label: "Logout", 
-                delay: 500,
-                action: handleLogout,
-                icon: <LogOut className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />
-              }
-            ]
-          : [
-              { href: "/login", label: "Login", delay: 400 },
-              { href: "/signup", label: "Sign Up", delay: 500 }
-            ]
-        )
-      ].map((item, index) => (
-        item.href ? (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`group block transition-all duration-500 ${
-              mobileMenuOpen 
-                ? 'opacity-100 translate-x-0' 
-                : 'opacity-0 translate-x-8'
-            }`}
-            style={{ transitionDelay: `${item.delay + 200}ms` }}
-            onClick={toggleMobileMenu}
-          >
-            <div className="relative overflow-hidden">
-              <div className="flex items-center justify-between py-4 px-8 mx-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/30 group-hover:border-orange-500/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-orange-500/10">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <span className="relative text-xl font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
-                  {item.label}
-                </span>
-                <div className="relative flex items-center">
-                  <ArrowRight className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />
-                </div>
-              </div>
-            </div>
-          </Link>
-        ) : (
-          <button
-            key={item.label}
-            className={`group block transition-all duration-500 ${
-              mobileMenuOpen 
-                ? 'opacity-100 translate-x-0' 
-                : 'opacity-0 translate-x-8'
-            }`}
-            style={{ transitionDelay: `${item.delay + 200}ms` }}
-            onClick={() => {
-              item.action();
-              toggleMobileMenu();
-            }}
-          >
-            <div className="relative overflow-hidden">
-              <div className="flex items-center justify-between py-4 px-8 mx-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/30 group-hover:border-orange-500/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-orange-500/10">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <span className="relative text-xl font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
-                  {item.label}
-                </span>
-                <div className="relative flex items-center">
-                  {item.icon || <ArrowRight className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />}
-                </div>
-              </div>
-            </div>
-          </button>
-        )
-      ))}
-    </nav>
+            <nav className="grid gap-4 max-w-md mx-auto w-full">
+              {[
+                { href: "/", label: "Home", delay: 0 },
+                { href: "/WhyChooseUs", label: "Why Choose Us", delay: 100 },
+                { href: "/contactus", label: "Contact", delay: 200 },
+                { href: "/availablevehicle", label: "Available Vehicle", delay: 300 },
+                ...(isLoggedIn
+                  ? [
+                      { href: "/profile", label: "Profile", delay: 400 },
+                      { 
+                        label: "Logout", 
+                        delay: 500,
+                        action: handleLogout,
+                        icon: <LogOut className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />
+                      }
+                    ]
+                  : [
+                      { href: "/login", label: "Login", delay: 400 },
+                      { href: "/signup", label: "Sign Up", delay: 500 }
+                    ]
+                )
+              ].map((item, index) => (
+                item.href ? (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`group block transition-all duration-500 ${
+                      mobileMenuOpen 
+                        ? 'opacity-100 translate-x-0' 
+                        : 'opacity-0 translate-x-8'
+                    }`}
+                    style={{ transitionDelay: `${item.delay + 200}ms` }}
+                    onClick={toggleMobileMenu}
+                  >
+                    <div className="relative overflow-hidden">
+                      <div className="flex items-center justify-between py-4 px-8 mx-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/30 group-hover:border-orange-500/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-orange-500/10">
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span className="relative text-xl font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                          {item.label}
+                        </span>
+                        <div className="relative flex items-center">
+                          <ArrowRight className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <button
+                    key={item.label}
+                    className={`group block transition-all duration-500 ${
+                      mobileMenuOpen 
+                        ? 'opacity-100 translate-x-0' 
+                        : 'opacity-0 translate-x-8'
+                    }`}
+                    style={{ transitionDelay: `${item.delay + 200}ms` }}
+                    onClick={() => {
+                      item.action();
+                      toggleMobileMenu();
+                    }}
+                  >
+                    <div className="relative overflow-hidden">
+                      <div className="flex items-center justify-between py-4 px-8 mx-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/30 group-hover:border-orange-500/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-orange-500/10">
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span className="relative text-xl font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                          {item.label}
+                        </span>
+                        <div className="relative flex items-center">
+                          {item.icon || <ArrowRight className="w-5 h-5 text-orange-500/70 group-hover:text-orange-400 group-hover:translate-x-1 transition-all duration-300" />}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                )
+              ))}
+            </nav>
 
             {/* Footer Section */}
-            <div className={`text-center mt-12 transition-all duration-1000 delay-700 ${
+            <div className={`text-center mt-12 pb-8 transition-all duration-1000 delay-700 ${
               mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}>
               <p className="text-gray-500 text-sm">Experience Premium Car Rentals</p>

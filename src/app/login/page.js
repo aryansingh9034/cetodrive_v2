@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import login from "../../../public/Group 1(4).png";
 import Image from "next/image";
+import { useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import ForgotPasswordModal from "../components/forgotpassword";
 import { Phone, Mail, Apple, PlayCircle, Heart, Star } from "lucide-react";
@@ -21,76 +22,125 @@ export default function LoginPage() {
     router.push('/signup');
   };
 
-const handleGoogleAuth = () => {
-  // Generate a unique state parameter for CSRF protection
-  const state = Math.random().toString(36).substring(2, 15) + 
-                Math.random().toString(36).substring(2, 15);
-  
-  // Store state in session storage
-  sessionStorage.setItem('oauth_state', state);
-  
-  // Construct the OAuth URL
-  const callbackUrl = `${window.location.origin}/auth/callback`;
-  const authUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/google/login/?redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
-  
-  // Redirect to Google auth
-  window.location.href = authUrl;
+    useEffect(() => {
+    const token = localStorage.getItem('token');
+    const customerId = localStorage.getItem('customerId');
+    
+    if (token && customerId) {
+      router.push('/profile');
+    }
+  }, [router]);
+
+const handleGoogleAuth = async () => {
+  try {
+    setIsLoading(true);
+    setError("");
+    
+    // 1. Generate state token
+    const state = crypto.randomUUID();
+    sessionStorage.setItem('oauth_state', state);
+    
+    // 2. Prepare callback URL
+    const callbackUrl = `${window.location.origin}/api/auth/callback`;
+    
+    // 3. Construct backend auth URL
+    const authUrl = `https://backend.catodrive.com/accounts/google/login/?
+      state=${encodeURIComponent(state)}&
+      next=${encodeURIComponent(callbackUrl)}`;
+    
+    // 4. Open popup
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
+    
+    const popup = window.open(
+      authUrl,
+      'GoogleAuthPopup',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+    
+    if (!popup) {
+      throw new Error('Popup blocked. Please allow popups for this site.');
+    }
+
+    // 5. Listen for messages from callback
+    const messageListener = (event) => {
+      if (event.origin !== window.location.origin) return;
+      
+      switch (event.data.type) {
+        case 'oauth-success':
+          localStorage.setItem('token', event.data.token);
+          localStorage.setItem('userData', JSON.stringify(event.data.user));
+          localStorage.setItem('customerId', event.data.customerId);
+          router.push('/profile');
+          break;
+          
+        case 'oauth-error':
+          setError(event.data.message || 'Google login failed');
+          break;
+      }
+      
+      window.removeEventListener('message', messageListener);
+    };
+
+    window.addEventListener('message', messageListener);
+
+    // 6. Check for popup closure
+    const popupChecker = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(popupChecker);
+        if (!localStorage.getItem('token')) {
+          setError('Login cancelled or failed');
+        }
+      }
+    }, 500);
+
+  } catch (error) {
+    console.error('Google auth error:', error);
+    setError(error.message || 'Failed to initiate Google login');
+    setIsLoading(false);
+  }
 };
  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setIsLoading(true);
 
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      setIsLoading(false);
-      return;
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `Login failed (HTTP ${response.status})`);
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Please enter a valid email address");
-      setIsLoading(false);
-      return;
-    }
+    const responseData = await response.json();
+    console.log("Login success data:", responseData);
 
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const responseData = await response.json();
-
-      if (responseData.status === 'failure') {
-        setError(responseData.msg || "Invalid credentials. Please check your email and password.");
-        setIsLoading(false);
-        return;
-      }
-
-      if (!responseData.data || !responseData.data.id) {
-        setError("Login successful but missing user data. Please contact support.");
-        setIsLoading(false);
-        return;
-      }
-
-      localStorage.setItem('userData', JSON.stringify(responseData.data));
-      localStorage.setItem('customerId', responseData.data.id);
-      router.push('/profile');
-      
-    } catch (error) {
-      console.error("Login error:", error);
-      setError(
-        error instanceof TypeError && error.message === "Failed to fetch"
-          ? "Network error. Please check your connection"
-          : "An unexpected error occurred"
-      );
-      setIsLoading(false);
-    }
-  };
+    // Store tokens and user data
+    localStorage.setItem('token', responseData.access_token);
+    localStorage.setItem('refresh_token', responseData.refresh_token);
+    localStorage.setItem('userData', JSON.stringify(responseData.data));
+    localStorage.setItem('customerId', responseData.data.id);
+    
+    // Force a hard redirect to ensure all auth state is properly loaded
+    window.location.href = '/profile';
+    
+  } catch (error) {
+    console.error("Login error:", error);
+    setError(error.message || "An unexpected error occurred");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="w-full min-h-screen bg-white py-16">

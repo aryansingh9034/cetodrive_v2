@@ -5,6 +5,7 @@ import Header from "./components/Header.js";
 import Footer from "./components/Footer";
 import { Providers } from './provider'
 
+
 // Font configurations (keep your existing font setup)
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,7 @@ export default function RootLayout({ children }) {
   return (
      <html lang="en">
       <body id="root">
-        <Providers>
+      <Providers>
           <Header />
           <main>{children}</main>
           <Footer />

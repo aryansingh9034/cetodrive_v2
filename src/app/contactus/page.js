@@ -71,7 +71,7 @@ export default function ContactSupport() {
             <div className="bg-blue-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-6">
               <MessageSquare className="w-8 h-8 text-blue-600" />
             </div>
-            <h3 className="text-xl text-gray-900 font-bold mb-3">Live Chat</h3>
+            <h3 className="text-xl text-gray-900 font-bold mb-3">Support Team</h3>
             <p className="text-gray-600 mb-4">Get instant help from our support team with our 24/7 live chat service.</p>
             {/* <button className="text-blue-600 font-semibold flex items-center">
               Start Chat <ArrowRight className="ml-2 w-4 h-4" />
