@@ -17,6 +17,10 @@ export default function GetInTouchPage() {
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState({
+  success: false,
+  message: ''
+})
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -26,15 +30,49 @@ export default function GetInTouchPage() {
     }))
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    console.log('Form submitted:', formData)
-    setIsSubmitting(false)
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  
+  // Basic validation
+  if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+    setSubmitStatus({
+      success: false,
+      message: 'Please fill all required fields'
+    })
+    return
+  }
+
+  setIsSubmitting(true)
+  setSubmitStatus({ success: false, message: '' })
+  
+  try {
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      mobile: formData.phone || '', // Fallback to empty string if not provided
+      pre_mobile: formData.phone || '', // Using same phone number as pre_mobile
+      subject: formData.subject,
+      message: formData.message
+    }
+
+    const response = await fetch(`${process.env. NEXT_PUBLIC_API_BASE_URL}/api/contact/contact/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to send message')
+    }
+
+    setSubmitStatus({
+      success: true,
+      message: 'Your message has been sent successfully! We will get back to you soon.'
+    })
     
     // Reset form
     setFormData({
@@ -46,8 +84,16 @@ export default function GetInTouchPage() {
       preferredContact: 'email'
     })
     
-   
+  } catch (error) {
+    console.error('Error submitting form:', error)
+    setSubmitStatus({
+      success: false,
+      message: error.message || 'There was an error sending your message. Please try again later.'
+    })
+  } finally {
+    setIsSubmitting(false)
   }
+}
 
   const contactMethods = [
     {
@@ -260,23 +306,35 @@ export default function GetInTouchPage() {
                 ></textarea>
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-[#ea580c] hover:bg-orange-700 disabled:bg-gray-400 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-3"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    Send Message
-                    <Send className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+              <div className="space-y-4">
+  <button
+    type="submit"
+    disabled={isSubmitting}
+    className="w-full bg-[#ea580c] hover:bg-orange-700 disabled:bg-gray-400 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-3"
+  >
+    {isSubmitting ? (
+      <>
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+        Sending...
+      </>
+    ) : (
+      <>
+        Send Message
+        <Send className="w-5 h-5" />
+      </>
+    )}
+  </button>
+
+  {submitStatus.message && (
+    <div className={`mt-4 p-4 rounded-xl ${
+      submitStatus.success 
+        ? 'bg-green-50 text-green-800' 
+        : 'bg-red-50 text-red-800'
+    }`}>
+      {submitStatus.message}
+    </div>
+  )}
+</div>
             </form>
           </div>
 

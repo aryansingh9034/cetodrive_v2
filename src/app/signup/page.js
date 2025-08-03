@@ -29,47 +29,75 @@ export default function SignupPage() {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-const handleGoogleAuth = () => {
+const handleGoogleAuth = async () => {
   try {
-    const state = Math.random().toString(36).substring(2, 15) + 
-                  Math.random().toString(36).substring(2, 15);
+    setIsLoading(true);
+    setError("");
     
+    // 1. Generate state token
+    const state = crypto.randomUUID();
     sessionStorage.setItem('oauth_state', state);
     
-    const callbackUrl = `${window.location.origin}/auth/callback`;
-    // const authUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/google/login/`;
-
+    // 2. Prepare callback URL
+    const callbackUrl = `${window.location.origin}/api/auth/callback`;
+    
+    // 3. Construct backend auth URL
+    const authUrl = `https://backend.catodrive.com/accounts/google/login/?
+      state=${encodeURIComponent(state)}&
+      next=${encodeURIComponent(callbackUrl)}`;
+    
+    // 4. Open popup
     const width = 500;
-        const height = 600;
-        const left = window.screenX + (window.innerWidth - width) / 2;
-        const top = window.screenY + (window.innerHeight - height) / 2;
+    const height = 600;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
+    
+    const popup = window.open(
+      authUrl,
+      'GoogleAuthPopup',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+    
+    if (!popup) {
+      throw new Error('Popup blocked. Please allow popups for this site.');
+    }
 
-        const authWindow = window.open(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/google/login/`,
-            'GoogleLogin',
-            `width=${width},height=${height},top=${top},left=${left}`
-        );
+    // 5. Listen for messages from callback
+    const messageListener = (event) => {
+      if (event.origin !== window.location.origin) return;
+      
+      switch (event.data.type) {
+        case 'oauth-success':
+          localStorage.setItem('token', event.data.token);
+          localStorage.setItem('userData', JSON.stringify(event.data.user));
+          localStorage.setItem('customerId', event.data.customerId);
+          router.push('/profile');
+          break;
+          
+        case 'oauth-error':
+          setError(event.data.message || 'Google login failed');
+          break;
+      }
+      
+      window.removeEventListener('message', messageListener);
+    };
 
-    conaole.log('Opening Google auth window:', authWindow);
-    console.log('event ',event)
-    // window.location.href = authUrl;ß
-      const receiveMessage = (event) => {
-            // ✅ check origin — this will be the backend (3000)
-            console.log('Received message:', event.data);
-            if (event.origin !== 'http://localhost:3000') return;
+    window.addEventListener('message', messageListener);
 
-            if (event.data === 'authenticated') {
-                console.log('User authenticated via Google');
-                dispatch(fetchUser());
-                console.log('User data updated in context');
-                onClose(); // close modal
-                console.log('Closing login modal'); // SPA navigation
-            }
-        };
+    // 6. Check for popup closure
+    const popupChecker = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(popupChecker);
+        if (!localStorage.getItem('token')) {
+          setError('Login cancelled or failed');
+        }
+      }
+    }, 500);
 
   } catch (error) {
     console.error('Google auth error:', error);
-    setError('Failed to initiate Google sign-in. Please try again.');
+    setError(error.message || 'Failed to initiate Google login');
+    setIsLoading(false);
   }
 };
 
@@ -191,13 +219,6 @@ const verifyOtp = async () => {
   setError("");
 
   try {
-    // Debug log before sending
-    console.log("Verifying OTP:", {
-      email: formData.email,
-      otp: otp,
-      trimmedOTP: otp.trim()
-    });
-
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/verifyotp`,
       {
@@ -207,52 +228,37 @@ const verifyOtp = async () => {
         },
         body: JSON.stringify({
           email: formData.email,
-          otp: otp.trim(), // Ensure whitespace is trimmed
+          otp: otp.trim(),
         }),
       }
     );
 
-    // Debug raw response
-    const responseText = await response.text();
-    console.log("Raw verification response:", responseText);
-
-    try {
-      const data = JSON.parse(responseText);
+    const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(
-          data.detail || 
-          data.message || 
-          data.error || 
-          `Verification failed (Status ${response.status})`
-        );
-      }
+    if (!response.ok) {
+      throw new Error(data.detail || data.message || `Verification failed (Status ${response.status})`);
+    }
 
-      // Success case
-      setIsVerified(true);
-      setShowOtpModal(false);
+    // Store token if received
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('customerId', data.customerId);
+      localStorage.setItem('userData', JSON.stringify(data.user));
+    }
+
+    setIsVerified(true);
+    setShowOtpModal(false);
+    
+    // Redirect to profile if token exists, otherwise to login
+    if (data.token) {
+      router.push('/profile');
+    } else {
       router.push('/login');
-      
-    } catch (jsonError) {
-      throw new Error(
-        responseText.includes("<!DOCTYPE html>") 
-          ? "Server returned HTML instead of JSON" 
-          : `Invalid response format: ${responseText.substring(0, 100)}`
-      );
     }
-
+    
   } catch (error) {
-    // Special handling for common cases
-    let errorMessage = error.message;
-    
-    if (error.message.includes("400")) {
-      errorMessage = "Invalid OTP. Please check the code and try again.";
-    } else if (error.message.includes("NetworkError")) {
-      errorMessage = "Network issues. Please check your connection.";
-    }
-    
-    setError(errorMessage);
-    console.error("Full verification error:", error);
+    setError(error.message || "Verification failed");
+    console.error("Verification error:", error);
   } finally {
     setIsLoading(false);
   }
