@@ -118,10 +118,10 @@ const handleGoogleAuth = async () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError("");
 
     const passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/;
   
@@ -137,35 +137,50 @@ const handleGoogleAuth = async () => {
       return;
     }
 
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-          re_password: formData.re_password,
-          vehcile_types: formData.vehicle_types,
-        }),
-      });
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        username: formData.username,
+        re_password: formData.re_password,
+        vehicle_types: formData.vehicle_types, // Fixed typo
+      }),
+    });
 
-      const data = await response.json();
-      if (response.ok) {
+    // Handle both JSON and HTML responses
+    const text = await response.text();
+    let data;
+    
+    try {
+      data = JSON.parse(text); // Try to parse as JSON
+    } catch {
+      // If not JSON, check if it's an HTML error page
+      if (text.includes('SMTPAuthenticationError')) {
+        // Special case: Registration succeeded but email failed
+        console.warn('Registration succeeded but email failed');
         setShowOtpModal(true);
-      } else {
-        setError(data.message || "Already have an account. Please login.");
-        console.error(data);
+        return;
       }
-    } catch (error) {
-      setError("Network error. Please try again.");
-      console.error("Network error:", error);
-    } finally {
-      setIsLoading(false);
+      throw new Error('Server error occurred');
     }
-  };
+
+    if (response.ok) {
+      setShowOtpModal(true);
+    } else {
+      setError(data.message || data.detail || 'Registration failed');
+    }
+  } catch (error) {
+    setError(error.message || 'Network error. Please try again.');
+    console.error('Registration error:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
 const sendOtp = async () => {
   setIsLoading(true);
@@ -175,7 +190,7 @@ const sendOtp = async () => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/otp`,
       {
-        method: "POST",
+        method: "POST", // Ensure this is POST
         headers: {
           "Content-Type": "application/json",
         },
@@ -196,19 +211,12 @@ const sendOtp = async () => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || 
-        `OTP request failed (Status ${response.status})`
-      );
+      throw new Error(errorData.detail || errorData.message || 'Failed to send OTP');
     }
 
-    const data = await response.json();
     setOtpSent(true);
-    setError("");
-    
   } catch (error) {
-    setError(error.message || "Failed to send OTP");
-    console.error("OTP send error:", error);
+    setError(error.message);
   } finally {
     setIsLoading(false);
   }
@@ -233,32 +241,17 @@ const verifyOtp = async () => {
       }
     );
 
-    const data = await response.json();
-      
     if (!response.ok) {
-      throw new Error(data.detail || data.message || `Verification failed (Status ${response.status})`);
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Invalid OTP');
     }
 
-    // Store token if received
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('customerId', data.customerId);
-      localStorage.setItem('userData', JSON.stringify(data.user));
-    }
-
-    setIsVerified(true);
-    setShowOtpModal(false);
-    
-    // Redirect to profile if token exists, otherwise to login
-    if (data.token) {
-      router.push('/profile');
-    } else {
-      router.push('/login');
-    }
-    
+    const data = await response.json();
+    // Store tokens and redirect
+    localStorage.setItem('token', data.token);
+    router.push('/profile');
   } catch (error) {
-    setError(error.message || "Verification failed");
-    console.error("Verification error:", error);
+    setError(error.message);
   } finally {
     setIsLoading(false);
   }
@@ -440,7 +433,9 @@ const verifyOtp = async () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-[#FF7A30]">Verify Your Email</h2>
+              <h2 className="text-2xl font-bold text-[#FF7A30]">
+          {error.includes('couldn\'t send') ? 'Email Failed' : 'Verify Your Email'}
+        </h2>
               <button 
                 onClick={() => setShowOtpModal(false)} 
                 className="text-gray-500 hover:text-gray-700"
