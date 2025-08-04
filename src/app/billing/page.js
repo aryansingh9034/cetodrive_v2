@@ -84,6 +84,7 @@ export default function CarRentalForm() {
   const [isThankYouOpen, setIsThankYouOpen] = useState(false)
   const [uploadedDocs, setUploadedDocs] = useState(null)
   const [availableLocations, setAvailableLocations] = useState([])
+  const [reviews, setReviews] = useState([])
   const [customerId, setCustomerId] = useState(
     typeof window !== 'undefined' ? localStorage.getItem('customerId') : null
   )
@@ -361,6 +362,8 @@ const handleLoginSuccess = async () => {
     }
   }, [session])
 
+  
+
   // Handle form field changes
   const handleBillingChange = (field, value) => {
     setBillingData(prev => ({ ...prev, [field]: value }))
@@ -580,6 +583,61 @@ const handleLoginSuccess = async () => {
     }
     
     return isFutureDate(dateString)
+  }
+  const fetchVehicleReviews = async (vehicleId) => {
+    setReviewsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`
+      );
+      
+      // Filter reviews by vehicle ID on the client side
+      const vehicleReviews = response.data.data.filter(
+        (review) => review.vehicle.id === parseInt(vehicleId)
+      );
+      
+      const formattedReviews = vehicleReviews.map((item) => ({
+        id: item.id,
+        name: item.title || "Anonymous",
+        username: item.user_name || "Anonymous",
+        date: new Date(item.created_at).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+        rating: item.rating,
+        avatar: "/man.png",
+        text: item.context,
+      }));
+      
+      setReviews(formattedReviews);
+    } catch (error) {
+      console.error("Review Fetch Error:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+   const StarRating = ({ rating, interactive = false, onRate = () => {} }) => {
+    return (
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type={interactive ? "button" : undefined}
+            onClick={interactive ? () => onRate(star) : undefined}
+            className={interactive ? "focus:outline-none" : ""}
+            disabled={!interactive}
+          >
+            <svg
+              className={`w-6 h-6 ${star <= rating ? "text-orange-400 fill-current" : "text-gray-300"}`}
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </button>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -1181,14 +1239,13 @@ const handleLoginSuccess = async () => {
                   <div>
                     <h4 className="font-semibold text-gray-900">{vehicle.name}</h4>
                     <div className="flex items-center mt-1">
-                      <div className="flex text-yellow-400">
-                        <Star className="w-4 h-4 fill-current" />
-                        <Star className="w-4 h-4 fill-current" />
-                        <Star className="w-4 h-4 fill-current" />
-                        <Star className="w-4 h-4 fill-current" />
-                        <Star className="w-4 h-4 fill-current text-gray-300" />
-                      </div>
-                      <span className="text-sm text-gray-500 ml-2">440+ Reviews</span>
+                   
+                      <div className="flex items-center gap-2 mt-2">
+                <StarRating rating={4} />
+                <span className="text-gray-500 text-sm">
+                  {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+                </span>
+              </div>
                     </div>
                   </div>
                 </div>

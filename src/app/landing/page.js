@@ -150,6 +150,8 @@ useEffect(() => {
 
       {/* Pickup Date */}
 {/* Pickup Date */}
+{/* Pickup Date */}
+{/* Pickup Date */}
 <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
   <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
   <div className="w-full">
@@ -157,22 +159,24 @@ useEffect(() => {
     <DatePicker
       selected={pickupDate}
       onChange={(date) => {
+        if (!date) return;
         setPickupDate(date);
-        // Set return date to at least 24 hours after pickup
-        const newReturnDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-        setReturnDate(newReturnDate);
+        
+        // If return date is now invalid, adjust it
+        if (returnDate.getTime() < date.getTime() + 3600000) {
+          const newReturnDate = new Date(date.getTime() + 3600000);
+          setReturnDate(newReturnDate);
+        }
       }}
       minDate={new Date()}
-      minTime={new Date().getDate() === pickupDate.getDate() ? 
-               new Date() : // If today, only allow future times
-               new Date().setHours(0, 0, 0, 0)} // If future date, allow all times
-      maxTime={new Date().setHours(23, 59, 59, 999)}
       showTimeSelect
       timeFormat="HH:mm"
       timeIntervals={15}
       dateFormat="EEE, MMM d, HH:mm"
       className="w-full outline-none text-gray-700 cursor-pointer text-sm"
-      customInput={<div className="cursor-pointer">{formatDate(pickupDate)}</div>}
+      selectsStart
+      startDate={pickupDate}
+      endDate={returnDate}
     />
   </div>
 </div>
@@ -184,24 +188,38 @@ useEffect(() => {
     <div className="text-xs font-bold text-gray-800">Return date</div>
     <DatePicker
       selected={returnDate}
-      onChange={(date) => setReturnDate(date)}
-      minDate={new Date(pickupDate.getTime() + 24 * 60 * 60 * 1000)} // 24 hours after pickup
-      minTime={
-        // If return date is same calendar day as pickup date + 1 day
-        returnDate.getDate() === new Date(pickupDate.getTime() + 24 * 60 * 60 * 1000).getDate()
-          ? new Date(pickupDate.getTime() + 24 * 60 * 60 * 1000) // Exactly 24 hours after pickup
-          : new Date().setHours(0, 0, 0, 0) // Start of day
-      }
-      maxTime={new Date().setHours(23, 59, 59, 999)}
+      onChange={(date) => {
+        if (!date) return;
+        const minReturnTime = pickupDate.getTime() + 3600000; // 1 hour in ms
+        setReturnDate(date.getTime() < minReturnTime ? new Date(minReturnTime) : date);
+      }}
+      minDate={pickupDate}
+      minTime={(() => {
+        if (returnDate.getDate() === pickupDate.getDate() && 
+            returnDate.getMonth() === pickupDate.getMonth() && 
+            returnDate.getFullYear() === pickupDate.getFullYear()) {
+          const minTime = new Date(pickupDate);
+          minTime.setHours(minTime.getHours() + 1);
+          return minTime;
+        }
+        return new Date(0); // Midnight
+      })()}
+      maxTime={new Date(0, 0, 0, 23, 59, 59)}
       showTimeSelect
       timeFormat="HH:mm"
       timeIntervals={15}
       dateFormat="EEE, MMM d, HH:mm"
       className="w-full outline-none text-gray-700 cursor-pointer text-sm"
-      customInput={<div className="cursor-pointer">{formatDate(returnDate)}</div>}
+      selectsEnd
+      startDate={pickupDate}
+      endDate={returnDate}
       filterTime={(time) => {
-        // Disable any times that are less than 24 hours after pickup
-        return time.getTime() >= pickupDate.getTime() + 24 * 60 * 60 * 1000;
+        if (time.getDate() === pickupDate.getDate() && 
+            time.getMonth() === pickupDate.getMonth() && 
+            time.getFullYear() === pickupDate.getFullYear()) {
+          return time.getTime() >= pickupDate.getTime() + 3600000;
+        }
+        return true;
       }}
     />
   </div>
