@@ -314,25 +314,28 @@ useEffect(() => {
   }
 }, [currentStep])
 
+// In your billing page component
+const [loginStateUpdated, setLoginStateUpdated] = useState(false);
 const handleLoginSuccess = async () => {
   const storedCustomerId = localStorage.getItem('customerId');
+  const storedUserData = localStorage.getItem('userData');
   
-  // Update state in a batch to avoid partial renders
+  // Update state
   setCustomerId(storedCustomerId);
   
+  // Force header to update by changing a state that will re-render the component
+  setLoginStateUpdated(prev => !prev);
+
   if (pendingBookingData) {
-    // Set all booking data at once
+    // Restore the form data
     setBillingData(pendingBookingData.billingData);
     setRentalData(pendingBookingData.rentalData);
     setVehicle(pendingBookingData.vehicle);
-    
-    // Wait for state updates before submission
-    await new Promise(resolve => setTimeout(resolve, 0));
-    
-    handleSubmit(); // Now all states should be updated
+    setCurrentStep(pendingBookingData.currentStep || 1);
+    setPendingBookingData(null);
   }
   
-  setPendingBookingData(null);
+  setShowLoginModal(false);
 };
 
   // Update available locations when city changes
@@ -399,7 +402,8 @@ const handleLoginSuccess = async () => {
       setPendingBookingData({
         billingData,
         rentalData,
-        vehicle
+        vehicle,
+        currentStep
       })
       setShowLoginModal(true)
       return
@@ -584,61 +588,78 @@ const handleLoginSuccess = async () => {
     
     return isFutureDate(dateString)
   }
-  const fetchVehicleReviews = async (vehicleId) => {
-    setReviewsLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`
-      );
+
+useEffect(() => {
+  const fetchData = async () => {
+    const storedVehicle = localStorage.getItem("vehicle");
+    if (storedVehicle) {
+      const vehicleData = JSON.parse(storedVehicle);
+      setVehicle(vehicleData);
       
-      // Filter reviews by vehicle ID on the client side
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`
+        );
+        
+        // Filter reviews for this specific vehicle on the frontend
+        const vehicleReviews = response.data.data.filter(
+          review => review.vehicle.id === vehicleData.id
+        );
+        
+        setReviews(vehicleReviews);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+        setReviews([]); // Set empty array on error
+      }
+    }
+  };
+
+  fetchData();
+}, []);
+const fetchVehicleReviews = async (vehicleId) => {
+  try {
+    setReviewsLoading(true);
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/reviews/`
+    );
+    
+    if (response.data && response.data.data) {
       const vehicleReviews = response.data.data.filter(
         (review) => review.vehicle.id === parseInt(vehicleId)
       );
-      
-      const formattedReviews = vehicleReviews.map((item) => ({
-        id: item.id,
-        name: item.title || "Anonymous",
-        username: item.user_name || "Anonymous",
-        date: new Date(item.created_at).toLocaleDateString("en-US", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
-        rating: item.rating,
-        avatar: "/man.png",
-        text: item.context,
-      }));
-      
-      setReviews(formattedReviews);
-    } catch (error) {
-      console.error("Review Fetch Error:", error);
-    } finally {
-      setReviewsLoading(false);
+      setReviews(vehicleReviews);
+    } else {
+      setReviews([]);
     }
-  };
-   const StarRating = ({ rating, interactive = false, onRate = () => {} }) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type={interactive ? "button" : undefined}
-            onClick={interactive ? () => onRate(star) : undefined}
-            className={interactive ? "focus:outline-none" : ""}
-            disabled={!interactive}
-          >
-            <svg
-              className={`w-6 h-6 ${star <= rating ? "text-orange-400 fill-current" : "text-gray-300"}`}
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          </button>
-        ))}
-      </div>
-    )
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    setReviews([]);
+  } finally {
+    setReviewsLoading(false);
   }
+};
+ const StarRating = ({ rating, interactive = false, onRate = () => {} }) => {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type={interactive ? "button" : undefined}
+          onClick={interactive ? () => onRate(star) : undefined}
+          className={interactive ? "focus:outline-none" : ""}
+          disabled={!interactive}
+        >
+          <svg
+            className={`w-4 h-4 ${star <= rating ? "text-orange-400 fill-current" : "text-gray-300"}`}
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        </button>
+      ))}
+    </div>
+  )
+}
 
   return (
     <div className="min-h-screen bg-gray-50 py-24" id="root">
@@ -850,7 +871,7 @@ const handleLoginSuccess = async () => {
                                 handleRentalChange("pickupTime", e.target.value)
                                 
                                 const pickupDateTime = new Date(`${rentalData.pickupDate}T${e.target.value}`)
-                                const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
+                                const minDropoffDateTime = new Date(pickupDateTime.getTime() + 3 * 60 * 60 * 1000)
                                 const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
                                 const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
                                 
@@ -934,7 +955,7 @@ const handleLoginSuccess = async () => {
                         {rentalData.dropoffDate && 
                         ((rentalData.pickupDate && rentalData.pickupTime && 
                           new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime || '00:00'}`) < 
-                          new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000)) && (
+                          new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 3 * 60 * 60 * 1000)) && (
                           <p className="text-xs text-red-500 mt-1">
                             {!isFutureDate(rentalData.dropoffDate) 
                               ? "Please select a future date" 
@@ -980,7 +1001,7 @@ const handleLoginSuccess = async () => {
                         />
                         {rentalData.dropoffTime && rentalData.dropoffDate && rentalData.pickupDate && rentalData.pickupTime && 
                         new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) < 
-                        new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 24 * 60 * 60 * 1000) && (
+                        new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 3 * 60 * 60 * 1000) && (
                           <p className="text-xs text-red-500 mt-1">
                             Dropoff must be at least 24 hours after pickup
                           </p>
@@ -1240,12 +1261,12 @@ const handleLoginSuccess = async () => {
                     <h4 className="font-semibold text-gray-900">{vehicle.name}</h4>
                     <div className="flex items-center mt-1">
                    
-                      <div className="flex items-center gap-2 mt-2">
-                <StarRating rating={4} />
-                <span className="text-gray-500 text-sm">
-                  {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
-                </span>
-              </div>
+                     <div className="flex items-center gap-2 mt-2">
+        <StarRating rating={vehicle.average_rating || 0} />
+        <span className="text-gray-500 text-sm">
+          {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+        </span>
+      </div>
                     </div>
                   </div>
                 </div>

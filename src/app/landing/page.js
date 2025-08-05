@@ -132,8 +132,7 @@ useEffect(() => {
   {/* Search Form */}
   <div className="bg-white rounded-xl rounded-b-none shadow-md p-4 flex flex-col w-full max-w-[1050px] mx-auto">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {/* Location Input */}
-      {/* Location Input */}
+ 
 <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
   <MapPin className="text-gray-400 w-6 h-6 flex-shrink-0" />
   <div className="w-full">
@@ -148,10 +147,6 @@ useEffect(() => {
   </div>
 </div>
 
-      {/* Pickup Date */}
-{/* Pickup Date */}
-{/* Pickup Date */}
-{/* Pickup Date */}
 <div className="flex items-center gap-2 border-b md:border-b-0 md:border-r border-gray-300 p-2">
   <Calendar className="text-gray-400 w-6 h-6 flex-shrink-0" />
   <div className="w-full">
@@ -162,9 +157,9 @@ useEffect(() => {
         if (!date) return;
         setPickupDate(date);
         
-        // If return date is now invalid, adjust it
-        if (returnDate.getTime() < date.getTime() + 3600000) {
-          const newReturnDate = new Date(date.getTime() + 3600000);
+        // If return date is now invalid, adjust it (3 hours = 10,800,000 milliseconds)
+        if (returnDate.getTime() < date.getTime() + 10800000) {
+          const newReturnDate = new Date(date.getTime() + 10800000);
           setReturnDate(newReturnDate);
         }
       }}

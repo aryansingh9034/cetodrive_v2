@@ -30,9 +30,9 @@ export default function VehicleForm() {
     gear_box: "Automatic",
     fuel: "Petrol",
     air_conditioner: "Yes",
-    vehicle_seat: 2,
+    vehicle_seat: 7,
     distance: "",
-    vehicle_type: 1,
+    vehicle_type: 5,
     equipment: [],
     price: "",
     status: "pending"
@@ -123,9 +123,9 @@ export default function VehicleForm() {
       gear_box: "Automatic",
       fuel: "Petrol",
       air_conditioner: "Yes",
-      vehicle_seat: 2,
+      vehicle_seat: 7,
       distance: "",
-      vehicle_type: 1,
+      vehicle_type: 5,
       equipment: [],
       price: "",
       status: "pending"
@@ -301,6 +301,7 @@ export default function VehicleForm() {
                     <option value={3}>Hatchback</option>
                     
                     <option value={4}>Coupe</option>
+                    <option value={5}>Mid-size 4x4 SUV</option>
                   </select>
                 </div>
 

@@ -15,9 +15,13 @@ import Jeep from "../../../public/Logo(3).png"
 import BMW from "../../../public/Logo(4).png"
 import Audi from "../../../public/Logo(5).png"
 import { useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation";
+
 
 export default function Home() {
   const router = useRouter();
+const searchParams = useSearchParams();
+  const [urlFilterApplied, setUrlFilterApplied] = useState(false);
 
   const [vehicles, setVehicles] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState(null);
@@ -27,16 +31,18 @@ export default function Home() {
   const [capacityFilters, setCapacityFilters] = useState({});
   const [selectedBrand, setSelectedBrand] = useState("All");
 
-  useEffect(() => {
+
+
+    useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(`${process.env. NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?status=approved`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?status=approved`);
         const json = await response.json();
         const data = json.data || [];
 
         setVehicles(data);
 
-        const types = [...new Set(data.map(v => v.vehicle_type?.name).filter(Boolean))];
+           const types = [...new Set(data.map(v => v.vehicle_type?.name).filter(Boolean))];
         const capacities = [...new Set(data.map(v => v.vehicle_seat?.capacity).filter(Boolean))];
 
         const initialTypeFilters = {};
@@ -52,13 +58,25 @@ export default function Home() {
 
         setTypeFilters(initialTypeFilters);
         setCapacityFilters(initialCapacityFilters);
+
+        // Check for URL parameter on initial load
+        const typeFromUrl = searchParams.get('type');
+        if (typeFromUrl && types.includes(typeFromUrl)) {
+          setSelectedVehicleType(typeFromUrl);
+          // Set only this type to be selected in filters
+          const updatedTypeFilters = {...initialTypeFilters};
+          Object.keys(updatedTypeFilters).forEach(key => {
+            updatedTypeFilters[key] = key === typeFromUrl;
+          });
+          setTypeFilters(updatedTypeFilters);
+        }
       } catch (err) {
         console.error("Failed to load vehicles:", err);
       }
     };
 
     fetchVehicles();
-  }, []);
+  }, [searchParams]); 
 
   const handleViewDetails = (id) => {
     console.log(id)
@@ -84,21 +102,28 @@ export default function Home() {
   const getBrands = () => ["All", ...new Set(vehicles.map(v => v.vehicle_model).filter(Boolean))];
 
 const filteredVehicles = vehicles.filter(vehicle => {
-    // Ensure vehicle is approved (not pending or rejected)
     const isApproved = vehicle.status === "approved";
     const type = vehicle.vehicle_type?.name;
     const model = vehicle.vehicle_model;
     const price = parseInt(vehicle.price);
     const capacity = vehicle.vehicle_seat?.capacity;
 
-    const typeMatch = selectedVehicleType === "All vehicles" || selectedVehicleType === type;
+    // Get type from URL if it exists
+    const urlType = searchParams.get('type');
+    
+    // If URL has a type parameter, only match that type
+    const typeMatch = urlType 
+      ? type === urlType
+      : selectedVehicleType === "All vehicles" || selectedVehicleType === type;
+
     const brandMatch = selectedBrand === "All" || selectedBrand === model;
     const priceMatch = price <= priceRange;
     const capacityMatch = capacityFilters[`${capacity} Person`] === true;
     const typeFilterMatch = typeFilters[type] === true;
 
     return isApproved && typeMatch && brandMatch && priceMatch && capacityMatch && typeFilterMatch;
-});
+  });
+
 
 
 
@@ -186,8 +211,11 @@ const filteredVehicles = vehicles.filter(vehicle => {
               >
                 {type}
               </button>
+              
             ))}
+            
           </div>
+
         </div>
 
         <div className="flex flex-col xl:flex-row gap-8">
@@ -238,7 +266,10 @@ const filteredVehicles = vehicles.filter(vehicle => {
                         </label>
                       ))}
                     </div>
+                    
                   </div>
+                  
+
 
                   {/* Capacity Filter */}
                   <div>
