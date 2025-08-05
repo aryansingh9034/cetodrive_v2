@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Phone, Mail, Apple, PlayCircle } from "lucide-react"
 import Image from "next/image"
 import { ArrowRight, Check, Menu, X, ChevronDown, MapPin, Clock, Fuel, Users, Settings } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import "react-datepicker/dist/react-datepicker.css"
 import background from "../../../public/image(5).jpeg"
 import Img from "../../../public/ImgKe.png"
@@ -17,10 +17,9 @@ import Audi from "../../../public/Logo(5).png"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation";
 
-
-export default function Home() {
+function AvailableVehiclesContent() {
   const router = useRouter();
-const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const [urlFilterApplied, setUrlFilterApplied] = useState(false);
 
   const [vehicles, setVehicles] = useState([]);
@@ -31,9 +30,7 @@ const searchParams = useSearchParams();
   const [capacityFilters, setCapacityFilters] = useState({});
   const [selectedBrand, setSelectedBrand] = useState("All");
 
-
-
-    useEffect(() => {
+  useEffect(() => {
     const fetchVehicles = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?status=approved`);
@@ -42,7 +39,7 @@ const searchParams = useSearchParams();
 
         setVehicles(data);
 
-           const types = [...new Set(data.map(v => v.vehicle_type?.name).filter(Boolean))];
+        const types = [...new Set(data.map(v => v.vehicle_type?.name).filter(Boolean))];
         const capacities = [...new Set(data.map(v => v.vehicle_seat?.capacity).filter(Boolean))];
 
         const initialTypeFilters = {};
@@ -101,7 +98,7 @@ const searchParams = useSearchParams();
 
   const getBrands = () => ["All", ...new Set(vehicles.map(v => v.vehicle_model).filter(Boolean))];
 
-const filteredVehicles = vehicles.filter(vehicle => {
+  const filteredVehicles = vehicles.filter(vehicle => {
     const isApproved = vehicle.status === "approved";
     const type = vehicle.vehicle_type?.name;
     const model = vehicle.vehicle_model;
@@ -123,9 +120,6 @@ const filteredVehicles = vehicles.filter(vehicle => {
 
     return isApproved && typeMatch && brandMatch && priceMatch && capacityMatch && typeFilterMatch;
   });
-
-
-
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
@@ -211,11 +205,8 @@ const filteredVehicles = vehicles.filter(vehicle => {
               >
                 {type}
               </button>
-              
             ))}
-            
           </div>
-
         </div>
 
         <div className="flex flex-col xl:flex-row gap-8">
@@ -266,10 +257,7 @@ const filteredVehicles = vehicles.filter(vehicle => {
                         </label>
                       ))}
                     </div>
-                    
                   </div>
-                  
-
 
                   {/* Capacity Filter */}
                   <div>
@@ -338,8 +326,10 @@ const filteredVehicles = vehicles.filter(vehicle => {
                   {/* Image Container */}
                   <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex-shrink-0">
                     <img
-                      src={` ${process.env. NEXT_PUBLIC_API_BASE_URL}${vehicle.images?.[1]?.image || vehicle.images?.[0]?.image}`}
+                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${vehicle.images?.[1]?.image || vehicle.images?.[0]?.image}`}
                       alt={vehicle.vehicle_model || "Vehicle"}
+                      width={400}
+                      height={300}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     {/* Overlay */}
@@ -417,29 +407,14 @@ const filteredVehicles = vehicles.filter(vehicle => {
           </div>
         </div>
       </div>
-
-      {/* Custom Styles */}
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-          cursor: pointer;
-          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
-        }
-        
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
-        }
-      `}</style>
     </div>
-  )
+  );
+}
+
+export default function AvailableVehicles() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AvailableVehiclesContent />
+    </Suspense>
+  );
 }
