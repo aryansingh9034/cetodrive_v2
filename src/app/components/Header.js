@@ -1,5 +1,5 @@
 // components/Header.js
-'use client'; // Needed for interactivity
+'use client';
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -10,16 +10,49 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+  const [userData, setUserData] = useState(null);
 
-  // Check if user is logged in
+  // Check authentication status
   useEffect(() => {
-    const userData = localStorage.getItem('userData');
-    setIsLoggedIn(!!userData);
-  }, [pathname]); // Re-run when path changes
+    const checkAuthStatus = () => {
+      setIsLoading(true);
+    try {
+        const storedUserData = localStorage.getItem('userData');
+        const customerId = localStorage.getItem('customerId');
+        
+        if (storedUserData) {
+          const parsedData = JSON.parse(storedUserData);
+          setUserData(parsedData);
+        }
+        setIsLoggedIn(!!storedUserData || !!customerId);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Handle scroll effect for header background
+    // Initial check
+    checkAuthStatus();
+
+    // Listen for storage events (for cross-tab updates)
+    const handleStorageChange = (e) => {
+      if (e.key === 'userData' || e.key === 'customerId') {
+        checkAuthStatus();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [pathname]);
+
+  // Handle scroll effect for header
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -28,21 +61,17 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Prevent body scrolling when menu is open
+  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
-    
     return () => {
       document.body.style.overflow = '';
     };
   }, [mobileMenuOpen]);
-
-  const isBilling = pathname.includes('/billing');
-  const isProfile = pathname.includes('/profile');
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -53,13 +82,18 @@ export default function Header() {
     localStorage.removeItem('customerId');
     setIsLoggedIn(false);
     router.push('/');
+    if (mobileMenuOpen) setMobileMenuOpen(false);
   };
+
+  const isBilling = pathname.includes('/billing');
+  const isProfile = pathname.includes('/profile');
 
   return (
     <>
-      <header className="fixed top-0 z-10000 left-0 right-0 transition-all duration-500 bg-black/80 backdrop-blur-xl border-b border-orange-500/20 shadow-2xl shadow-orange-500/10">
+      {/* Main Header */}
+      <header className={`fixed top-0 z-10000 left-0 right-0 transition-all duration-500 ${scrolled ? 'bg-black/90 backdrop-blur-lg' : 'bg-black/80 backdrop-blur-xl'} border-b border-orange-500/20 shadow-2xl shadow-orange-500/10`}>
         <div className="flex items-center justify-between w-full px-6 py-4 lg:px-12">
-          {/* Logo - left side */}
+          {/* Logo */}
           <Link href="/" className="group flex items-center space-x-3">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -72,60 +106,104 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Right side container */}
+          {/* Right Side Navigation */}
           <div className="flex items-center gap-4">
-            {isBilling && !isLoggedIn && (
-              <div className="hidden md:flex items-center gap-4">
-                <Link 
-                  href="/login" 
-                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
-                >
-                  Login
-                </Link>
-                <Link 
-                  href="/signup" 
-                  className="px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
-                >
-                  Sign Up
-                </Link>
-              </div>
+            {/* Desktop Navigation - Conditionally rendered based on auth status */}
+            {!isLoading && (
+              <>
+                {!isLoggedIn && (
+                  <div className="hidden md:flex items-center gap-4">
+                    {isBilling && (
+                      <>
+                        <Link 
+                          href="/login" 
+                          className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 hover:bg-gray-200 transition-colors duration-300"
+                        >
+                          Login
+                        </Link>
+                        <Link 
+                          href="/signup" 
+                          className="px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                        >
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+
+              {isLoggedIn && (
+  <div className="hidden md:flex items-center gap-4">
+    {isProfile && (
+      <Link 
+        href="/vehicleform" 
+        className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 hover:bg-gray-200 transition-colors duration-300"
+      >
+        Rent Your Car
+      </Link>
+    )}
+    
+    {/* Updated Profile Section */}
+    <div className="group relative">
+      <div className="flex items-center gap-3 cursor-pointer">
+        {/* User Info */}
+        {userData && (
+          <div className="text-right">
+            <div className="text-sm font-medium text-white truncate max-w-[160px]">
+              {userData.username || 'User'}
+            </div>
+            <div className="text-xs text-gray-400 truncate max-w-[160px]">
+              {userData.email || ''}
+            </div>
+          </div>
+        )}
+        
+        {/* Profile Icon */}
+        <div className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-300 relative group-hover:ring-2 group-hover:ring-orange-500/50">
+          <User className="w-5 h-5 text-orange-400" />
+        </div>
+      </div>
+      
+      {/* Dropdown Menu */}
+      <div className="absolute right-0 top-full mt-2 w-48 bg-gray-900 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-top-right transform scale-95 group-hover:scale-100 border border-gray-700/50 overflow-hidden">
+        <Link 
+          href="/profile" 
+          className="block px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors duration-200"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          My Profile
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors duration-200 flex items-center gap-2 border-t border-gray-800"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+              </>
             )}
 
-            {isLoggedIn && (
-              <div className="hidden md:flex items-center gap-4">
-                <Link 
-                  href="/profile" 
-                  className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-300"
-                  title="Profile"
-                >
-                  <User className="w-5 h-5 text-orange-400" />
-                </Link>
-              </div>
-            )}
-
-            {isProfile && (
-              <div className="hidden md:flex items-center gap-4">
-                <Link 
-                  href="/vehicleform" 
-                  className="px-4 py-2 text-sm rounded-md font-medium bg-gray-100 text-orange-400 transition-colors duration-300"
-                >
-                  Rent Your Car
-                </Link>
-              </div>
-            )}
-
-            {/* Hamburger Menu Button */}
+            {/* Mobile Menu Button */}
             <button 
               className="group relative p-3 rounded-2xl bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25" 
               onClick={toggleMobileMenu}
+              aria-label="Toggle menu"
             >
-              <Menu className="relative w-6 h-6 text-orange-500" />
+              {mobileMenuOpen ? (
+                <X className="relative w-6 h-6 text-orange-500" />
+              ) : (
+                <Menu className="relative w-6 h-6 text-orange-500" />
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Enhanced Full-Screen Menu Overlay */}
+      {/* Mobile Menu Overlay */}
       <div className={`fixed inset-0 transition-all duration-700 z-10000 ${
         mobileMenuOpen 
           ? 'opacity-100 pointer-events-auto' 
@@ -133,10 +211,7 @@ export default function Header() {
       }`}>
         {/* Animated Background */}
         <div className="absolute inset-0 bg-black">
-          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900"></div>
-          
-          {/* Geometric Patterns */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-orange-500 to-red-500 rounded-full blur-3xl animate-float"></div>
             <div className="absolute bottom-32 right-16 w-40 h-40 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-3xl animate-float-delayed"></div>
@@ -148,8 +223,7 @@ export default function Header() {
         <div className={`relative h-full flex flex-col transition-transform duration-700 overflow-y-auto ${
           mobileMenuOpen ? 'translate-y-0' : 'translate-y-full'
         }`}>
-          
-          {/* Header with Enhanced Close Button */}
+          {/* Menu Header */}
           <div className="flex justify-between items-center p-6 border-b border-gray-800/50">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl">
@@ -161,6 +235,7 @@ export default function Header() {
             <button
               className="group relative w-14 h-14 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:scale-110 hover:rotate-3"
               onClick={toggleMobileMenu}
+              aria-label="Close menu"
             >
               <X className="w-6 h-6 text-orange-500 group-hover:text-orange-400 group-hover:rotate-90 transition-all duration-300" />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -169,7 +244,6 @@ export default function Header() {
 
           {/* Main Menu Content */}
           <div className="flex-1 flex flex-col justify-center px-6 py-8">
-            
             {/* Brand Section */}
             <div className={`text-center mb-12 transition-all duration-1000 delay-300 ${
               mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -181,16 +255,18 @@ export default function Header() {
               <div className="w-20 h-0.5 bg-gradient-to-r from-transparent via-orange-500 to-transparent mx-auto mt-4"></div>
             </div>
 
-            {/* Navigation Grid */}
+            {/* Navigation Links */}
             <nav className="grid gap-4 max-w-md mx-auto w-full">
               {[
                 { href: "/", label: "Home", delay: 0 },
                 { href: "/WhyChooseUs", label: "Why Choose Us", delay: 100 },
                 { href: "/contactus", label: "Contact", delay: 200 },
-                { href: "/availablevehicle", label: "Available Vehicle", delay: 300 },
+                { href: "/availablevehicle", label: "Available Vehicles", delay: 300 },
                 ...(isLoggedIn
                   ? [
-                      { href: "/profile", label: "Profile", delay: 400 },
+                      { href: "/profile", label: "My Profile", delay: 400 },
+                      { href: "/vehicleform", label: "Rent Your Car", delay: 450 },
+
                       { 
                         label: "Logout", 
                         delay: 500,
@@ -268,7 +344,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Custom Animations */}
+      {/* Animation Styles */}
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
