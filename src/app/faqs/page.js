@@ -118,9 +118,9 @@ export default function FAQPage() {
               <Link href="/contactus" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors">
                 Contact Us
               </Link>
-              <button className="border border-blue-600 text-blue-600 font-medium px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors">
+              {/* <button className="border border-blue-600 text-blue-600 font-medium px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors">
                 Call Now
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

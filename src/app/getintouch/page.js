@@ -121,7 +121,7 @@ const handleSubmit = async (e) => {
       icon: <Users className="w-8 h-8" />,
       title: "Join Our Community",
       description: "Connect with us on social media",
-      details: "Follow @carrental for updates",
+      details: "Follow @catodrive for updates",
       color: "bg-pink-50 text-pink-600 border-pink-200"
     }
   ]
