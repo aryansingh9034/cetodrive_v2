@@ -128,7 +128,7 @@ export default function ContactSupport() {
             </div>
             <h3 className="text-lg font-semibold text-black mb-2">Email</h3>
             <p className="text-base text-gray-700 mb-2">General Inquiries</p>
-            <p className="text-lg font-medium text-blue-600">support@premiumtravel.com</p>
+            <p className="text-lg font-medium text-blue-600">support@catodrive.com</p>
           </div>
 
           {/* Location */}

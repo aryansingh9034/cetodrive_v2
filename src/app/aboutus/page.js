@@ -119,7 +119,7 @@ export default function AboutPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-black">Email</p>
-              <p className="text-base text-gray-700">info@premiumrentals.com</p>
+              <p className="text-base text-gray-700">info@catodrive.com</p>
             </div>
           </div>
 

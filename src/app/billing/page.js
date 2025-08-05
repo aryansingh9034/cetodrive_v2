@@ -1258,15 +1258,15 @@ const fetchVehicleReviews = async (vehicleId) => {
                     )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">{vehicle.name}</h4>
+                    <h4 className="font-bold text-2xl text-gray-900">{vehicle.name}</h4>
                     <div className="flex items-center mt-1">
                    
-                     <div className="flex items-center gap-2 mt-2">
+                     {/* <div className="flex items-center gap-2 mt-2">
         <StarRating rating={vehicle.average_rating || 0} />
         <span className="text-gray-500 text-sm">
           {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
         </span>
-      </div>
+      </div> */}
                     </div>
                   </div>
                 </div>
