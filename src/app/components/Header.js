@@ -16,10 +16,10 @@ export default function Header() {
   const [userData, setUserData] = useState(null);
 
   // Check authentication status
-  useEffect(() => {
+ useEffect(() => {
     const checkAuthStatus = () => {
       setIsLoading(true);
-    try {
+      try {
         const storedUserData = localStorage.getItem('userData');
         const customerId = localStorage.getItem('customerId');
         
@@ -38,19 +38,20 @@ export default function Header() {
     // Initial check
     checkAuthStatus();
 
-    // Listen for storage events (for cross-tab updates)
-    const handleStorageChange = (e) => {
-      if (e.key === 'userData' || e.key === 'customerId') {
-        checkAuthStatus();
-      }
+    // Create a custom event listener for auth changes
+    const handleAuthChange = () => {
+      checkAuthStatus();
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    // Listen for both storage events and custom auth events
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener('authChange', handleAuthChange);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener('authChange', handleAuthChange);
     };
-  }, [pathname]);
+  }, []);
 
   // Handle scroll effect for header
   useEffect(() => {
@@ -152,9 +153,9 @@ export default function Header() {
             <div className="text-sm font-medium text-white truncate max-w-[160px]">
               {userData.username || 'User'}
             </div>
-            <div className="text-xs text-gray-400 truncate max-w-[160px]">
+            {/* <div className="text-xs text-gray-400 truncate max-w-[160px]">
               {userData.email || ''}
-            </div>
+            </div> */}
           </div>
         )}
         
