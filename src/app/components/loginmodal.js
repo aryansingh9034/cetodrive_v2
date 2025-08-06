@@ -9,6 +9,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const [error, setError] = useState("");
   const router = useRouter();
 
+// components/LoginModal.js
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
@@ -35,9 +36,12 @@ const handleSubmit = async (e) => {
     localStorage.setItem('userData', JSON.stringify(data.data));
     localStorage.setItem('customerId', data.data.id);
 
-    // Close modal and trigger success in one go
-    onLoginSuccess(data.data.id); // Update parent state first
-    onClose(); // Then close the modal
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('authChange'));
+
+    // Close modal and trigger success
+    onLoginSuccess(data.data.id);
+    onClose();
   } catch (error) {
     setError(error.message || "Login failed");
   } finally {

@@ -505,7 +505,7 @@ const fetchVehicleReviews = async (vehicleId) => {
                     <img
                       src={vehicle.image}
                       alt={vehicle.name}
-                      className="object-contain w-full h-full p-6"
+                      className="obejct-cover w-full h-full p-6"
                       onError={(e) => {
                         e.target.src = "/placeholder.svg"
                       }}

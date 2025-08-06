@@ -898,118 +898,104 @@ const fetchVehicleReviews = async (vehicleId) => {
                 )}
 
                 {/* Dropoff Section */}
-                {rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
-                  <div className="mb-8 fade-in">
-                    <div className="flex items-center mb-4">
-                      <label className="text-lg font-bold text-gray-900">Drop - Off</label>
-                    </div>
+                {/* Dropoff Section */}
+{rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
+  <div className="mb-8 fade-in">
+    <div className="flex items-center mb-4">
+      <label className="text-lg font-bold text-gray-900">Drop - Off</label>
+    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Dropoff Location */}
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-                        <select
-                          value={rentalData.dropoffLocation}
-                          onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select dropoff location</option>
-                          {availableDropoffLocations.map(location => (
-                            <option key={location} value={location}>{location}</option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      {/* Dropoff Date */}
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-                        <input
-                          type="date"
-                          value={rentalData.dropoffDate}
-                          onChange={(e) => {
-                            const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
-                            const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
-                            const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
-                            
-                            if (e.target.value >= formattedMinDate) {
-                              handleRentalChange("dropoffDate", e.target.value)
-                              
-                              if (e.target.value === formattedMinDate) {
-                                const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
-                                if (rentalData.dropoffTime < formattedMinTime) {
-                                  handleRentalChange("dropoffTime", formattedMinTime)
-                                }
-                              }
-                            }
-                          }}
-                          min={(() => {
-                            if (rentalData.pickupDate && rentalData.pickupTime) {
-                              const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
-                              const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
-                              return minDropoffDateTime.toISOString().split('T')[0]
-                            }
-                            return rentalData.pickupDate || new Date().toISOString().split('T')[0]
-                          })()}
-                          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {rentalData.dropoffDate && 
-                        ((rentalData.pickupDate && rentalData.pickupTime && 
-                          new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime || '00:00'}`) < 
-                          new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 3 * 60 * 60 * 1000)) && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {!isFutureDate(rentalData.dropoffDate) 
-                              ? "Please select a future date" 
-                              : "Dropoff must be after pickup"}
-                          </p>
-                        ))}
-                      </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Dropoff Location */}
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+        <select
+          value={rentalData.dropoffLocation}
+          onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select dropoff location</option>
+          {availableDropoffLocations.map(location => (
+            <option key={location} value={location}>{location}</option>
+          ))}
+        </select>
+      </div>
+      
+      {/* Dropoff Date - Fixed */}
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+        <input
+          type="date"
+          value={rentalData.dropoffDate}
+          onChange={(e) => {
+            const pickupDate = new Date(rentalData.pickupDate);
+            const selectedDropoffDate = new Date(e.target.value);
+            
+            // Ensure dropoff is at least same day as pickup
+            if (selectedDropoffDate >= pickupDate) {
+              handleRentalChange("dropoffDate", e.target.value);
+              
+              // If selecting same day, validate time
+              if (selectedDropoffDate.toDateString() === pickupDate.toDateString() && rentalData.dropoffTime) {
+                const pickupTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+                const dropoffTime = new Date(`${e.target.value}T${rentalData.dropoffTime}`);
+                
+                if (dropoffTime <= pickupTime) {
+                  // Reset time if invalid
+                  handleRentalChange("dropoffTime", "");
+                }
+              }
+            }
+          }}
+          min={rentalData.pickupDate}
+          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {rentalData.dropoffDate && new Date(rentalData.dropoffDate) < new Date(rentalData.pickupDate) && (
+          <p className="text-xs text-red-500 mt-1">
+            Dropoff date cannot be before pickup date
+          </p>
+        )}
+      </div>
 
-                      {/* Dropoff Time */}
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-                        <input
-                          type="time"
-                          value={rentalData.dropoffTime}
-                          onChange={(e) => {
-                            if (rentalData.dropoffDate) {
-                              const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
-                              const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
-                              const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
-                              const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
-                              
-                              if (rentalData.dropoffDate > formattedMinDate || 
-                                  (rentalData.dropoffDate === formattedMinDate && e.target.value >= formattedMinTime)) {
-                                handleRentalChange("dropoffTime", e.target.value)
-                              }
-                            } else {
-                              handleRentalChange("dropoffTime", e.target.value)
-                            }
-                          }}
-                          min={(() => {
-                            if (rentalData.pickupDate && rentalData.pickupTime && rentalData.dropoffDate) {
-                              const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`)
-                              const minDropoffDateTime = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
-                              const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
-                              
-                              if (rentalData.dropoffDate === formattedMinDate) {
-                                return minDropoffDateTime.toTimeString().substring(0, 5)
-                              }
-                            }
-                            return '00:00'
-                          })()}
-                          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {rentalData.dropoffTime && rentalData.dropoffDate && rentalData.pickupDate && rentalData.pickupTime && 
-                        new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) < 
-                        new Date(new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`).getTime() + 3 * 60 * 60 * 1000) && (
-                          <p className="text-xs text-red-500 mt-1">
-                            Dropoff must be at least 24 hours after pickup
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+      {/* Dropoff Time - Fixed */}
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+        <input
+          type="time"
+          value={rentalData.dropoffTime}
+          onChange={(e) => {
+            if (!rentalData.dropoffDate) {
+              handleRentalChange("dropoffTime", e.target.value);
+              return;
+            }
+            
+            const isSameDay = rentalData.dropoffDate === rentalData.pickupDate;
+            const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+            const selectedDropoffDateTime = new Date(`${rentalData.dropoffDate}T${e.target.value}`);
+            
+            if (!isSameDay || selectedDropoffDateTime > pickupDateTime) {
+              handleRentalChange("dropoffTime", e.target.value);
+            }
+          }}
+          min={
+            rentalData.dropoffDate === rentalData.pickupDate 
+              ? rentalData.pickupTime 
+              : undefined
+          }
+          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {rentalData.dropoffTime && 
+         rentalData.dropoffDate === rentalData.pickupDate && 
+         new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) <= 
+         new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`) && (
+          <p className="text-xs text-red-500 mt-1">
+            Dropoff time must be after pickup time for same-day returns
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
                 {/* Flight Number (Optional) */}
                 <div className="mb-6">
