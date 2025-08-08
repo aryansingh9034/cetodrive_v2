@@ -472,7 +472,8 @@ const handleLoginSuccess = async () => {
   //     setCurrentStep(currentStep + 1)
   //   }
   // }
-  const handleSubmit = async () => {
+// Update the handleSubmit function
+const handleSubmit = async () => {
   if (!customerId) {
     setPendingBookingData({
       billingData,
@@ -491,20 +492,21 @@ const handleLoginSuccess = async () => {
 
   if (currentStep === 2 && !validateStep2()) {
     setSubmitMessage("Please fill all rental information");
-     try {
-      const isAvailable = await checkVehicleAvailability();
-      if (!isAvailable) {
-        setIsSubmitting(false);
-        return;
-      }
-    } catch (error) {
-      console.error("Availability check error:", error);
-    }
+    return;
   }
 
   if (currentStep === 2) {
+    // Just move to payment step without creating booking
+    setCurrentStep(3);
+    //setSubmitMessage("Proceed to payment");
+  } else if (currentStep === 3) {
+    // Now handle payment and booking creation together
     setIsSubmitting(true);
     try {
+      // First process payment (simulated here)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Only after payment success, create the booking
       const formData = new FormData();
       formData.append("customer", customerId);
       formData.append("vehicle", vehicle?.id || "");
@@ -528,19 +530,11 @@ const handleLoginSuccess = async () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       
-      // Check if the vehicle is already booked
-      if (response.data.status === "success" && 
-          response.data.message === "This vehicle is already booked for the selected time range.") {
-        setSubmitMessage(response.data.message);
-        return;
-      }
-      
-      // If booking is successful
       if (response.data.status === "success" && response.data.data?.id) {
         setBookingId(response.data.data.id);
         setAmount(response.data.data.total_payment);
-        setCurrentStep(3);
-        setSubmitMessage("Form submitted successfully! Proceed to payment.");
+        setCurrentStep(4);
+        setSubmitMessage("Payment successful! Complete your rental.");
       } else {
         setSubmitMessage("Booking failed. Please try again.");
       }
@@ -554,20 +548,9 @@ const handleLoginSuccess = async () => {
     } finally {
       setIsSubmitting(false);
     }
-  } else if (currentStep === 3) {
-      setIsSubmitting(true)
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        setCurrentStep(4)
-        setSubmitMessage("Payment successful! Complete your rental.")
-      } catch (error) {
-        setSubmitMessage("Payment failed. Please try again.")
-      } finally {
-        setIsSubmitting(false)
-      }
-    } else {
-      setCurrentStep(currentStep + 1)
-    }
+  } else {
+    setCurrentStep(currentStep + 1);
+  }
 };
 
   const checkVehicleAvailability = async () => {
@@ -639,6 +622,7 @@ const [bookedDates, setBookedDates] = useState([]);
 
 const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hoveredDate, setHoveredDate] = useState(null);
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -651,7 +635,11 @@ const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
     const isBooked = isDateBooked(dateStr);
     
     return (
-      <div className="relative">
+      <div 
+        className="relative"
+        onMouseEnter={() => setHoveredDate(dateStr)}
+        onMouseLeave={() => setHoveredDate(null)}
+      >
         <span>{day}</span>
         {isBooked && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -668,6 +656,18 @@ const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
             </svg>
           </div>
         )}
+      </div>
+    );
+  };
+
+  // Tooltip for booked dates
+  const renderBookedDateTooltip = () => {
+    if (!hoveredDate || !isDateBooked(hoveredDate)) return null;
+    
+    return (
+      <div className="absolute z-50 bg-gray-900 text-white text-xs rounded py-1 px-2 bottom-full mb-1 left-1/2 transform -translate-x-1/2">
+        Vehicle already booked for this date
+        <div className="absolute top-full left-1/2 w-2 h-2 bg-gray-900 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
       </div>
     );
   };
@@ -717,6 +717,7 @@ const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
                 : undefined
             }
           />
+          {renderBookedDateTooltip()}
         </div>
       )}
     </div>
