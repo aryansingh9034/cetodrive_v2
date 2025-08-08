@@ -118,7 +118,7 @@ export default function ContactSupport() {
             </div>
             <h3 className="text-lg font-semibold text-black mb-2">Phone</h3>
             <p className="text-base text-gray-700 mb-2">24/7 Support Line</p>
-            <p className="text-lg font-medium text-blue-600">+1 (800) 123-4567</p>
+            <p className="text-lg font-medium text-blue-600">+1(979)-997-95556</p>
           </div>
 
           {/* Email */}
@@ -137,9 +137,10 @@ export default function ContactSupport() {
               <MapPin className="w-7 h-7 text-blue-600" />
             </div>
             <h3 className="text-lg font-semibold text-black mb-2">Headquarters</h3>
-            <p className="text-base text-gray-700">123 Premium Avenue</p>
-            <p className="text-base text-gray-700">Suite 100</p>
-            <p className="text-base text-gray-700">New York, NY 10001</p>
+            <p className="text-base text-gray-700">12534 Central drv,  </p>
+            <p className="text-base text-gray-700">apt 126 
+Bedford,</p>
+            <p className="text-base text-gray-700">Dallas, Tx 76021</p>
           </div>
 
           {/* Working Hours */}
@@ -148,9 +149,9 @@ export default function ContactSupport() {
               <Clock className="w-7 h-7 text-blue-600" />
             </div>
             <h3 className="text-lg font-semibold text-black mb-2">Working Hours</h3>
-            <p className="text-base text-gray-700 mb-1">Monday-Friday: 8am - 8pm</p>
-            <p className="text-base text-gray-700 mb-1">Saturday: 9am - 6pm</p>
-            <p className="text-base text-gray-700">Sunday: 10am - 4pm</p>
+            <p className="text-base text-gray-700 mb-1">Monday-Friday: 7am - 7pm</p>
+            <p className="text-base text-gray-700 mb-1">Saturday: 7am - 7pm</p>
+            <p className="text-base text-gray-700">Sunday: 7am - 7pm</p>
           </div>
         </div>
       </div>
@@ -168,7 +169,7 @@ export default function ContactSupport() {
             </div>
           </div>
           <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-            Call Now: +1 (800) 987-6543
+            Call Now: +1 (469) 480-7805
           </button>
         </div>
       </div>

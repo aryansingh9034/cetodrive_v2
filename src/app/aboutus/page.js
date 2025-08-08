@@ -109,7 +109,7 @@ export default function AboutPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-black">Phone</p>
-              <p className="text-base text-gray-700">+1234-567-8900</p>
+              <p className="text-base text-gray-700">+1(979)-997-95556</p>
             </div>
           </div>
 
@@ -129,7 +129,8 @@ export default function AboutPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-black">Headquarters</p>
-              <p className="text-base text-gray-700">123 Premium Ave, Miami</p>
+              <p className="text-base text-gray-700">12534 Central drv, apt 126 
+Bedford, Dallas, Tx 76021</p>
             </div>
           </div>
 
@@ -139,7 +140,7 @@ export default function AboutPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-black">Working Hours</p>
-              <p className="text-base text-gray-700">Mon–Sun: 24/7 Support</p>
+              <p className="text-base text-gray-700">Mon-Sun: 7am-7pm</p>
             </div>
           </div>
         </div>

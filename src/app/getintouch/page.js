@@ -107,14 +107,14 @@ const handleSubmit = async (e) => {
       icon: <Phone className="w-8 h-8" />,
       title: "Call Us Direct",
       description: "Speak with our friendly team right away",
-      details: "+1 (555) 123-4567",
+      details: "+1(979)-997-95556",
       color: "bg-green-50 text-green-600 border-green-200"
     },
     {
       icon: <MapPin className="w-8 h-8" />,
       title: "Visit Our Office",
       description: "Come say hello at our headquarters",
-      details: "123 Main Street, Downtown Area, City 12345",
+      details: "12534 Central drv, apt 126 Bedford, Dallas, Tx 76021",
       color: "bg-purple-50 text-purple-600 border-purple-200"
     },
     {
@@ -365,11 +365,11 @@ const handleSubmit = async (e) => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-900">Monday - Friday</span>
-                  <span className="text-gray-600">6:00 AM - 10:00 PM</span>
+                  <span className="text-gray-600">7:00 AM - 7:00 PM</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-900">Saturday - Sunday</span>
-                  <span className="text-gray-600">8:00 AM - 8:00 PM</span>
+                  <span className="text-gray-600">7:00 AM - 7:00 PM</span>
                 </div>
                 <div className="mt-4 p-3 bg-blue-100 rounded-lg">
                   <p className="text-sm text-blue-800">
@@ -393,7 +393,7 @@ const handleSubmit = async (e) => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="bg-[#ea580c] hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105">
-              Emergency Support: +1 (555) 911-HELP
+              Emergency Support: +1(979)-997-95556
             </button>
             <Link href="/availablevehicle" className="border-2 border-white text-white hover:bg-white hover:text-slate-900 font-semibold px-8 py-4 rounded-full transition-all duration-300">
               Browse Our Fleet
