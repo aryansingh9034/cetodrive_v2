@@ -1,12 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { Phone, Mail, Star } from "lucide-react"
 import Modal from 'react-modal'
 import { useSession } from "next-auth/react" 
 import LoginModal from '../components/loginmodal'
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // Add these styles for the modal
 const customStyles = {
@@ -397,65 +399,162 @@ const handleLoginSuccess = async () => {
   }
 
   // Form submission
-  const handleSubmit = async () => {
-    if (!customerId) {
-      setPendingBookingData({
-        billingData,
-        rentalData,
-        vehicle,
-        currentStep
-      })
-      setShowLoginModal(true)
-      return
-    }
+  // const handleSubmit = async () => {
+  //   if (!customerId) {
+  //     setPendingBookingData({
+  //       billingData,
+  //       rentalData,
+  //       vehicle,
+  //       currentStep
+  //     })
+  //     setShowLoginModal(true)
+  //     return
+  //   }
 
-    if (currentStep === 1 && !validateStep1()) {
-      setSubmitMessage("Please fill all billing information")
-      return
-    }
+  //   if (currentStep === 1 && !validateStep1()) {
+  //     setSubmitMessage("Please fill all billing information")
+  //     return
+  //   }
 
-    if (currentStep === 2 && !validateStep2()) {
-      setSubmitMessage("Please fill all rental information")
-      return
-    }
+  //   if (currentStep === 2 && !validateStep2()) {
+  //     setSubmitMessage("Please fill all rental information")
+  //     return
+  //   }
 
-    if (currentStep === 2) {
-      setIsSubmitting(true)
-      try {
-        const formData = new FormData()
-        formData.append("customer", customerId)
-        formData.append("vehicle", vehicle?.id || "")
-        formData.append("total_payment", calculateTotalPrice().toString())
-        formData.append("name", billingData.name)
-        formData.append("email", billingData.email)
-        formData.append("Phone_number", billingData.phone)
-        formData.append("Address", billingData.address)
-        formData.append("Town", billingData.city)
-        formData.append("pick_up_location", rentalData.pickupLocation)
-        formData.append("pick_up_Date", rentalData.pickupDate)
-        formData.append("pick_up_time", rentalData.pickupTime)
-        formData.append("Drop_off_location", rentalData.dropoffLocation)
-        formData.append("drop_of_Date", rentalData.dropoffDate)
-        formData.append("drop_of_time", rentalData.dropoffTime)
-        formData.append("flight_number", rentalData.flightNumber)
+  //   if (currentStep === 2) {
+  //     setIsSubmitting(true)
+  //     try {
+  //       const formData = new FormData()
+  //       formData.append("customer", customerId)
+  //       formData.append("vehicle", vehicle?.id || "")
+  //       formData.append("total_payment", calculateTotalPrice().toString())
+  //       formData.append("name", billingData.name)
+  //       formData.append("email", billingData.email)
+  //       formData.append("Phone_number", billingData.phone)
+  //       formData.append("Address", billingData.address)
+  //       formData.append("Town", billingData.city)
+  //       formData.append("pick_up_location", rentalData.pickupLocation)
+  //       formData.append("pick_up_Date", rentalData.pickupDate)
+  //       formData.append("pick_up_time", rentalData.pickupTime)
+  //       formData.append("Drop_off_location", rentalData.dropoffLocation)
+  //       formData.append("drop_of_Date", rentalData.dropoffDate)
+  //       formData.append("drop_of_time", rentalData.dropoffTime)
+  //       formData.append("flight_number", rentalData.flightNumber)
 
-        const response = await axios.post(
-          ` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`, 
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        )
+  //       const response = await axios.post(
+  //         ` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`, 
+  //         formData,
+  //         { headers: { "Content-Type": "multipart/form-data" } }
+  //       )
         
-        setBookingId(response.data?.data?.id)
-        setAmount(response.data?.data?.total_payment)
-        setCurrentStep(3)
-        setSubmitMessage("Form submitted successfully! Proceed to payment.")
-      } catch (error) {
-        console.error("Submission error:", error)
-        setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."))
-      } finally {
-        setIsSubmitting(false)
+  //       setBookingId(response.data?.data?.id)
+  //       setAmount(response.data?.data?.total_payment)
+  //       setCurrentStep(3)
+  //       setSubmitMessage("Form submitted successfully! Proceed to payment.")
+  //     } catch (error) {
+  //       console.error("Submission error:", error)
+  //       setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."))
+  //     } finally {
+  //       setIsSubmitting(false)
+  //     }
+  //   } else if (currentStep === 3) {
+  //     setIsSubmitting(true)
+  //     try {
+  //       await new Promise(resolve => setTimeout(resolve, 1500))
+  //       setCurrentStep(4)
+  //       setSubmitMessage("Payment successful! Complete your rental.")
+  //     } catch (error) {
+  //       setSubmitMessage("Payment failed. Please try again.")
+  //     } finally {
+  //       setIsSubmitting(false)
+  //     }
+  //   } else {
+  //     setCurrentStep(currentStep + 1)
+  //   }
+  // }
+  const handleSubmit = async () => {
+  if (!customerId) {
+    setPendingBookingData({
+      billingData,
+      rentalData,
+      vehicle,
+      currentStep
+    });
+    setShowLoginModal(true);
+    return;
+  }
+
+  if (currentStep === 1 && !validateStep1()) {
+    setSubmitMessage("Please fill all billing information");
+    return;
+  }
+
+  if (currentStep === 2 && !validateStep2()) {
+    setSubmitMessage("Please fill all rental information");
+     try {
+      const isAvailable = await checkVehicleAvailability();
+      if (!isAvailable) {
+        setIsSubmitting(false);
+        return;
       }
-    } else if (currentStep === 3) {
+    } catch (error) {
+      console.error("Availability check error:", error);
+    }
+  }
+
+  if (currentStep === 2) {
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("customer", customerId);
+      formData.append("vehicle", vehicle?.id || "");
+      formData.append("total_payment", calculateTotalPrice().toString());
+      formData.append("name", billingData.name);
+      formData.append("email", billingData.email);
+      formData.append("Phone_number", billingData.phone);
+      formData.append("Address", billingData.address);
+      formData.append("Town", billingData.city);
+      formData.append("pick_up_location", rentalData.pickupLocation);
+      formData.append("pick_up_Date", rentalData.pickupDate);
+      formData.append("pick_up_time", rentalData.pickupTime);
+      formData.append("Drop_off_location", rentalData.dropoffLocation);
+      formData.append("drop_of_Date", rentalData.dropoffDate);
+      formData.append("drop_of_time", rentalData.dropoffTime);
+      formData.append("flight_number", rentalData.flightNumber);
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`, 
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      
+      // Check if the vehicle is already booked
+      if (response.data.status === "success" && 
+          response.data.message === "This vehicle is already booked for the selected time range.") {
+        setSubmitMessage(response.data.message);
+        return;
+      }
+      
+      // If booking is successful
+      if (response.data.status === "success" && response.data.data?.id) {
+        setBookingId(response.data.data.id);
+        setAmount(response.data.data.total_payment);
+        setCurrentStep(3);
+        setSubmitMessage("Form submitted successfully! Proceed to payment.");
+      } else {
+        setSubmitMessage("Booking failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      if (error.response?.data?.message) {
+        setSubmitMessage(error.response.data.message);
+      } else {
+        setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  } else if (currentStep === 3) {
       setIsSubmitting(true)
       try {
         await new Promise(resolve => setTimeout(resolve, 1500))
@@ -469,7 +568,161 @@ const handleLoginSuccess = async () => {
     } else {
       setCurrentStep(currentStep + 1)
     }
+};
+
+  const checkVehicleAvailability = async () => {
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`,
+      {
+        params: {
+          vehicle: vehicle?.id,
+          pick_up_Date: rentalData.pickupDate,
+          drop_of_Date: rentalData.dropoffDate,
+          status: 'approved' // Only check approved bookings
+        }
+      }
+    );
+
+    if (response.data.data && response.data.data.length > 0) {
+      // Vehicle is already booked for these dates
+      setSubmitMessage("This vehicle is already booked for the selected dates.");
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Error checking availability:", error);
+    return true; // Assume available if check fails
   }
+};
+
+const [bookedDates, setBookedDates] = useState([]);
+
+  const fetchBookedDates = async (vehicleId) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`,
+        {
+          params: {
+            vehicle: vehicleId,
+            status: 'approved'
+          }
+        }
+      );
+      
+      if (response.data.data) {
+        const dates = response.data.data.flatMap(booking => {
+          const start = new Date(booking.pick_up_Date);
+          const end = new Date(booking.drop_of_Date);
+          const datesInRange = [];
+          
+          for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+            datesInRange.push(new Date(date).toISOString().split('T')[0]);
+          }
+          return datesInRange;
+        });
+        
+        setBookedDates([...new Set(dates)]);
+      }
+    } catch (error) {
+      console.error("Error fetching booked dates:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (vehicle?.id) {
+      fetchBookedDates(vehicle.id);
+    }
+  }, [vehicle?.id]);
+
+
+
+const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const isDateBooked = (dateStr) => {
+    return bookedDates.includes(dateStr);
+  };
+
+  const renderCustomDayContents = (day, date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const isBooked = isDateBooked(dateStr);
+    
+    return (
+      <div className="relative">
+        <span>{day}</span>
+        {isBooked && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg 
+              className="w-4 h-4 text-red-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path 
+                fillRule="evenodd" 
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
+                clipRule="evenodd" 
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target) && 
+          inputRef.current && !inputRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <input
+        type="date"
+        ref={inputRef}
+        value={value}
+        onChange={() => {}} // Make it read-only
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+        readOnly
+      />
+      
+      {isOpen && (
+        <div className="absolute z-50 mt-1 bg-white shadow-lg rounded-md p-2">
+          <DatePicker
+            selected={value ? new Date(value) : null}
+            onChange={(date) => {
+              onChange({ target: { value: date.toISOString().split('T')[0] } });
+              setIsOpen(false);
+            }}
+            minDate={new Date(minDate)}
+            filterDate={(date) => !isDateBooked(date.toISOString().split('T')[0])}
+            inline
+            renderDayContents={renderCustomDayContents}
+            dayClassName={(date) => 
+              isDateBooked(date.toISOString().split('T')[0]) 
+                ? 'text-red-500 line-through' 
+                : undefined
+            }
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
 
   // Navigation
   const goToPreviousStep = () => {
@@ -808,194 +1061,190 @@ const fetchVehicleReviews = async (vehicleId) => {
                   </select>
                 </div>
 
-                {/* Pickup Section */}
-                {rentalData.city && (
-                  <div className="mb-8">
-                    <div className="flex items-center mb-4">
-                      <label className="text-lg font-bold text-gray-900">Pick - Up</label>
-                    </div>
+<div>
+      {/* Pickup Section */}
+      {rentalData.city && (
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <label className="text-lg font-bold text-gray-900">Pick - Up</label>
+          </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Pickup Location */}
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-                        <select
-                          value={rentalData.pickupLocation}
-                          onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select pickup location</option>
-                          {availablePickupLocations.map(location => (
-                            <option key={location} value={location}>{location}</option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      {/* Pickup Date */}
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-                        <input
-                          type="date"
-                          value={rentalData.pickupDate}
-                          onChange={(e) => {
-                            if (isFutureDate(e.target.value)) {
-                              handleRentalChange("pickupDate", e.target.value)
-                              if (rentalData.pickupTime) {
-                                const pickupDateTime = new Date(`${e.target.value}T${rentalData.pickupTime}`)
-                                const minDropoffDate = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000)
-                                const formattedMinDate = minDropoffDate.toISOString().split('T')[0]
-                                
-                                if (!rentalData.dropoffDate || rentalData.dropoffDate < formattedMinDate) {
-                                  handleRentalChange("dropoffDate", formattedMinDate)
-                                }
-                              }
-                            }
-                          }}
-                          min={new Date().toISOString().split('T')[0]}
-                          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
-                          <p className="text-xs text-red-500 mt-1">Please select a future date</p>
-                        )}
-                      </div>
-
-                      {/* Pickup Time */}
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-                        <input
-                          type="time"
-                          value={rentalData.pickupTime}
-                          onChange={(e) => {
-                            if (rentalData.pickupDate) {
-                              if (isFutureDateTime(rentalData.pickupDate, e.target.value)) {
-                                handleRentalChange("pickupTime", e.target.value)
-                                
-                                const pickupDateTime = new Date(`${rentalData.pickupDate}T${e.target.value}`)
-                                const minDropoffDateTime = new Date(pickupDateTime.getTime() + 3 * 60 * 60 * 1000)
-                                const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
-                                const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
-                                
-                                if (!rentalData.dropoffDate || 
-                                    rentalData.dropoffDate < formattedMinDate || 
-                                    (rentalData.dropoffDate === formattedMinDate && rentalData.dropoffTime < formattedMinTime)) {
-                                  handleRentalChange("dropoffDate", formattedMinDate)
-                                  handleRentalChange("dropoffTime", formattedMinTime)
-                                }
-                              }
-                            } else {
-                              handleRentalChange("pickupTime", e.target.value)
-                            }
-                          }}
-                          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {rentalData.pickupTime && rentalData.pickupDate && 
-                        !isFutureDateTime(rentalData.pickupDate, rentalData.pickupTime) && (
-                          <p className="text-xs text-red-500 mt-1">Please select a future time</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Dropoff Section */}
-                {/* Dropoff Section */}
-{rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
-  <div className="mb-8 fade-in">
-    <div className="flex items-center mb-4">
-      <label className="text-lg font-bold text-gray-900">Drop - Off</label>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Dropoff Location */}
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-        <select
-          value={rentalData.dropoffLocation}
-          onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select dropoff location</option>
-          {availableDropoffLocations.map(location => (
-            <option key={location} value={location}>{location}</option>
-          ))}
-        </select>
-      </div>
-      
-      {/* Dropoff Date - Fixed */}
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-        <input
-          type="date"
-          value={rentalData.dropoffDate}
-          onChange={(e) => {
-            const pickupDate = new Date(rentalData.pickupDate);
-            const selectedDropoffDate = new Date(e.target.value);
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Pickup Location */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+              <select
+                value={rentalData.pickupLocation}
+                onChange={(e) => handleRentalChange("pickupLocation", e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select pickup location</option>
+                {availablePickupLocations.map(location => (
+                  <option key={location} value={location}>{location}</option>
+                ))}
+              </select>
+            </div>
             
-            // Ensure dropoff is at least same day as pickup
-            if (selectedDropoffDate >= pickupDate) {
-              handleRentalChange("dropoffDate", e.target.value);
-              
-              // If selecting same day, validate time
-              if (selectedDropoffDate.toDateString() === pickupDate.toDateString() && rentalData.dropoffTime) {
-                const pickupTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
-                const dropoffTime = new Date(`${e.target.value}T${rentalData.dropoffTime}`);
-                
-                if (dropoffTime <= pickupTime) {
-                  // Reset time if invalid
-                  handleRentalChange("dropoffTime", "");
-                }
-              }
-            }
-          }}
-          min={rentalData.pickupDate}
-          className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        {rentalData.dropoffDate && new Date(rentalData.dropoffDate) < new Date(rentalData.pickupDate) && (
-          <p className="text-xs text-red-500 mt-1">
-            Dropoff date cannot be before pickup date
-          </p>
-        )}
-      </div>
-
-      {/* Dropoff Time - Fixed */}
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-        <input
-          type="time"
-          value={rentalData.dropoffTime}
-          onChange={(e) => {
-            if (!rentalData.dropoffDate) {
-              handleRentalChange("dropoffTime", e.target.value);
-              return;
-            }
-            
-            const isSameDay = rentalData.dropoffDate === rentalData.pickupDate;
-            const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
-            const selectedDropoffDateTime = new Date(`${rentalData.dropoffDate}T${e.target.value}`);
-            
-            if (!isSameDay || selectedDropoffDateTime > pickupDateTime) {
-              handleRentalChange("dropoffTime", e.target.value);
-            }
-          }}
-          min={
-            rentalData.dropoffDate === rentalData.pickupDate 
-              ? rentalData.pickupTime 
-              : undefined
+            {/* Pickup Date */}
+           <div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+  <CustomDateInput
+    value={rentalData.pickupDate}
+    onChange={(e) => {
+      if (isFutureDate(e.target.value)) {
+        handleRentalChange("pickupDate", e.target.value);
+        if (rentalData.pickupTime) {
+          const pickupDateTime = new Date(`${e.target.value}T${rentalData.pickupTime}`);
+          const minDropoffDate = new Date(pickupDateTime.getTime() + 24 * 60 * 60 * 1000);
+          const formattedMinDate = minDropoffDate.toISOString().split('T')[0];
+          
+          if (!rentalData.dropoffDate || rentalData.dropoffDate < formattedMinDate) {
+            handleRentalChange("dropoffDate", formattedMinDate);
           }
-          className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        {rentalData.dropoffTime && 
-         rentalData.dropoffDate === rentalData.pickupDate && 
-         new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) <= 
-         new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`) && (
-          <p className="text-xs text-red-500 mt-1">
-            Dropoff time must be after pickup time for same-day returns
-          </p>
-        )}
-      </div>
+        }
+      }
+    }}
+    minDate={new Date().toISOString().split('T')[0]}
+    bookedDates={bookedDates}
+  />
+  {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
+    <p className="text-xs text-red-500 mt-1">Please select a future date</p>
+  )}
+</div>
+
+            {/* Pickup Time */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+              <input
+                type="time"
+                value={rentalData.pickupTime}
+                onChange={(e) => {
+                  if (rentalData.pickupDate) {
+                    if (isFutureDateTime(rentalData.pickupDate, e.target.value)) {
+                      handleRentalChange("pickupTime", e.target.value)
+                      
+                      const pickupDateTime = new Date(`${rentalData.pickupDate}T${e.target.value}`)
+                      const minDropoffDateTime = new Date(pickupDateTime.getTime() + 3 * 60 * 60 * 1000)
+                      const formattedMinDate = minDropoffDateTime.toISOString().split('T')[0]
+                      const formattedMinTime = minDropoffDateTime.toTimeString().substring(0, 5)
+                      
+                      if (!rentalData.dropoffDate || 
+                          rentalData.dropoffDate < formattedMinDate || 
+                          (rentalData.dropoffDate === formattedMinDate && rentalData.dropoffTime < formattedMinTime)) {
+                        handleRentalChange("dropoffDate", formattedMinDate)
+                        handleRentalChange("dropoffTime", formattedMinTime)
+                      }
+                    }
+                  } else {
+                    handleRentalChange("pickupTime", e.target.value)
+                  }
+                }}
+                className="w-full px-4 py-3 bg-gray-50 border text-black border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {rentalData.pickupTime && rentalData.pickupDate && 
+              !isFutureDateTime(rentalData.pickupDate, rentalData.pickupTime) && (
+                <p className="text-xs text-red-500 mt-1">Please select a future time</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dropoff Section */}
+      {rentalData.pickupLocation && rentalData.pickupDate && rentalData.pickupTime && (
+        <div className="mb-8 fade-in">
+          <div className="flex items-center mb-4">
+            <label className="text-lg font-bold text-gray-900">Drop - Off</label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Dropoff Location */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+              <select
+                value={rentalData.dropoffLocation}
+                onChange={(e) => handleRentalChange("dropoffLocation", e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select dropoff location</option>
+                {availableDropoffLocations.map(location => (
+                  <option key={location} value={location}>{location}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Dropoff Date */}
+           <div>
+  <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
+  <CustomDateInput
+    value={rentalData.dropoffDate}
+    onChange={(e) => {
+      const pickupDate = new Date(rentalData.pickupDate);
+      const selectedDropoffDate = new Date(e.target.value);
+      
+      if (selectedDropoffDate >= pickupDate) {
+        handleRentalChange("dropoffDate", e.target.value);
+        
+        if (selectedDropoffDate.toDateString() === pickupDate.toDateString() && rentalData.dropoffTime) {
+          const pickupTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+          const dropoffTime = new Date(`${e.target.value}T${rentalData.dropoffTime}`);
+          
+          if (dropoffTime <= pickupTime) {
+            handleRentalChange("dropoffTime", "");
+          }
+        }
+      }
+    }}
+    minDate={rentalData.pickupDate || new Date().toISOString().split('T')[0]}
+    bookedDates={bookedDates}
+  />
+  {rentalData.dropoffDate && new Date(rentalData.dropoffDate) < new Date(rentalData.pickupDate) && (
+    <p className="text-xs text-red-500 mt-1">
+      Dropoff date cannot be before pickup date
+    </p>
+  )}
+</div>
+
+            {/* Dropoff Time */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
+              <input
+                type="time"
+                value={rentalData.dropoffTime}
+                onChange={(e) => {
+                  if (!rentalData.dropoffDate) {
+                    handleRentalChange("dropoffTime", e.target.value);
+                    return;
+                  }
+                  
+                  const isSameDay = rentalData.dropoffDate === rentalData.pickupDate;
+                  const pickupDateTime = new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`);
+                  const selectedDropoffDateTime = new Date(`${rentalData.dropoffDate}T${e.target.value}`);
+                  
+                  if (!isSameDay || selectedDropoffDateTime > pickupDateTime) {
+                    handleRentalChange("dropoffTime", e.target.value);
+                  }
+                }}
+                min={
+                  rentalData.dropoffDate === rentalData.pickupDate 
+                    ? rentalData.pickupTime 
+                    : undefined
+                }
+                className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {rentalData.dropoffTime && 
+               rentalData.dropoffDate === rentalData.pickupDate && 
+               new Date(`${rentalData.dropoffDate}T${rentalData.dropoffTime}`) <= 
+               new Date(`${rentalData.pickupDate}T${rentalData.pickupTime}`) && (
+                <p className="text-xs text-red-500 mt-1">
+                  Dropoff time must be after pickup time for same-day returns
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
 
                 {/* Flight Number (Optional) */}
                 <div className="mb-6">
@@ -1184,12 +1433,14 @@ const fetchVehicleReviews = async (vehicleId) => {
             {/* Navigation and Status */}
             <div className="mt-8 flex flex-col space-y-4">
               {submitMessage && (
-                <div className={`p-3 rounded-lg ${
-                  submitMessage.toLowerCase().includes("success") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                }`}>
-                  {submitMessage}
-                </div>
-              )}
+  <div className={`p-3 rounded-lg ${
+    submitMessage.toLowerCase().includes("success") ? "bg-green-100 text-green-700" : 
+    submitMessage.includes("already booked") ? "bg-yellow-100 text-yellow-700" : // Different color for booking conflict
+    "bg-red-100 text-red-700"
+  }`}>
+    {submitMessage}
+  </div>
+)}
 
               <div className="flex justify-between">
                 {currentStep > 1 && (
