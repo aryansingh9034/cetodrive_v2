@@ -78,17 +78,61 @@ export default function Home() {
     return `${dayName} ${day} ${month}, ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
   }
 
-const handleSearch = () => {
-  // Filter for approved cars before setting results
-  setSearchResults(cars.filter(car => car.status === "approved"));
-  setShowResults(true);
-  
-  setTimeout(() => {
-    const resultsSection = document.getElementById("search-results");
-    if (resultsSection) {
-      resultsSection.scrollIntoView({ behavior: "smooth" });
-    }
-  }, 100);
+const handleSearch = async () => {
+  try {
+    // Fetch bookings data
+    const bookingsResponse = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`
+    );
+    
+    // Filter for approved cars
+    const approvedCars = cars.filter(car => car.status === "approved");
+    
+    // Filter out cars that have bookings during the selected period
+    const availableCars = approvedCars.filter(car => {
+      // Find bookings for this car
+      const carBookings = bookingsResponse.data.data.filter(
+        booking => booking.vehicle.id === car.id
+      );
+      
+      // Check if any booking overlaps with our selected dates
+      const isBooked = carBookings.some(booking => {
+        // Create Date objects for booking dates
+        const bookingPickupDate = new Date(`${booking.pick_up_Date}T${booking.pick_up_time}`);
+        const bookingDropoffDate = new Date(`${booking.drop_of_Date}T${booking.drop_of_time}`);
+        
+        // Create Date objects for search dates
+        const searchPickupDate = pickupDate;
+        const searchDropoffDate = returnDate;
+        
+        // Check for overlap (simplified check - you might need more precise logic)
+        return (
+          (searchPickupDate >= bookingPickupDate && searchPickupDate <= bookingDropoffDate) ||
+          (searchDropoffDate >= bookingPickupDate && searchDropoffDate <= bookingDropoffDate) ||
+          (searchPickupDate <= bookingPickupDate && searchDropoffDate >= bookingDropoffDate)
+        );
+      });
+      
+      // Only include if not booked
+      return !isBooked;
+    });
+    
+    setSearchResults(availableCars);
+    setShowResults(true);
+    
+    setTimeout(() => {
+      const resultsSection = document.getElementById("search-results");
+      if (resultsSection) {
+        resultsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+    
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    // Fallback to just showing approved cars if bookings can't be fetched
+    setSearchResults(cars.filter(car => car.status === "approved"));
+    setShowResults(true);
+  }
 };
 const [searchResults, setSearchResults] = useState([]);
   const toggleMobileMenu = () => {

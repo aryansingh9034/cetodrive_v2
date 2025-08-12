@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { Phone, Mail, Star } from "lucide-react"
@@ -95,6 +95,8 @@ export default function CarRentalForm() {
   const [pendingBookingData, setPendingBookingData] = useState(null)
   const [isFetchingLocation, setIsFetchingLocation] = useState(false)
   const { data: session } = useSession()
+
+  const [showPaymentErrorModal, setShowPaymentErrorModal] = useState(false);
 
   useEffect(() => {
     Modal.setAppElement('#root')
@@ -398,81 +400,11 @@ const handleLoginSuccess = async () => {
     return true
   }
 
-  // Form submission
-  // const handleSubmit = async () => {
-  //   if (!customerId) {
-  //     setPendingBookingData({
-  //       billingData,
-  //       rentalData,
-  //       vehicle,
-  //       currentStep
-  //     })
-  //     setShowLoginModal(true)
-  //     return
-  //   }
+  const generateTempPaymentId = () => {
+  // Generate a random 8-digit number
+  return Math.floor(10000000 + Math.random() * 90000000).toString();
+};
 
-  //   if (currentStep === 1 && !validateStep1()) {
-  //     setSubmitMessage("Please fill all billing information")
-  //     return
-  //   }
-
-  //   if (currentStep === 2 && !validateStep2()) {
-  //     setSubmitMessage("Please fill all rental information")
-  //     return
-  //   }
-
-  //   if (currentStep === 2) {
-  //     setIsSubmitting(true)
-  //     try {
-  //       const formData = new FormData()
-  //       formData.append("customer", customerId)
-  //       formData.append("vehicle", vehicle?.id || "")
-  //       formData.append("total_payment", calculateTotalPrice().toString())
-  //       formData.append("name", billingData.name)
-  //       formData.append("email", billingData.email)
-  //       formData.append("Phone_number", billingData.phone)
-  //       formData.append("Address", billingData.address)
-  //       formData.append("Town", billingData.city)
-  //       formData.append("pick_up_location", rentalData.pickupLocation)
-  //       formData.append("pick_up_Date", rentalData.pickupDate)
-  //       formData.append("pick_up_time", rentalData.pickupTime)
-  //       formData.append("Drop_off_location", rentalData.dropoffLocation)
-  //       formData.append("drop_of_Date", rentalData.dropoffDate)
-  //       formData.append("drop_of_time", rentalData.dropoffTime)
-  //       formData.append("flight_number", rentalData.flightNumber)
-
-  //       const response = await axios.post(
-  //         ` ${process.env. NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`, 
-  //         formData,
-  //         { headers: { "Content-Type": "multipart/form-data" } }
-  //       )
-        
-  //       setBookingId(response.data?.data?.id)
-  //       setAmount(response.data?.data?.total_payment)
-  //       setCurrentStep(3)
-  //       setSubmitMessage("Form submitted successfully! Proceed to payment.")
-  //     } catch (error) {
-  //       console.error("Submission error:", error)
-  //       setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."))
-  //     } finally {
-  //       setIsSubmitting(false)
-  //     }
-  //   } else if (currentStep === 3) {
-  //     setIsSubmitting(true)
-  //     try {
-  //       await new Promise(resolve => setTimeout(resolve, 1500))
-  //       setCurrentStep(4)
-  //       setSubmitMessage("Payment successful! Complete your rental.")
-  //     } catch (error) {
-  //       setSubmitMessage("Payment failed. Please try again.")
-  //     } finally {
-  //       setIsSubmitting(false)
-  //     }
-  //   } else {
-  //     setCurrentStep(currentStep + 1)
-  //   }
-  // }
-// Update the handleSubmit function
 const handleSubmit = async () => {
   if (!customerId) {
     setPendingBookingData({
@@ -496,19 +428,39 @@ const handleSubmit = async () => {
   }
 
   if (currentStep === 2) {
-    // Just move to payment step without creating booking
+    console.log('[Submit] Step 2 - Checking availability before proceeding');
+    const isAvailable = await checkVehicleAvailability();
+    console.log('[Submit] Availability result:', isAvailable);
+    
+    if (!isAvailable) {
+      return;
+    }
+    
     setCurrentStep(3);
-    //setSubmitMessage("Proceed to payment");
   } else if (currentStep === 3) {
-    // Now handle payment and booking creation together
+    // MODIFIED: Show error message instead of proceeding
+    console.log('[Submit] Step 3 - Payment step reached (temporary block)');
+     setShowPaymentErrorModal(true);
+    setIsSubmitting(false);
+    return;
+    
+    // Original code commented out:
+    /*
+    console.log('[Submit] Step 3 - Creating booking with TEMP status');
     setIsSubmitting(true);
     try {
-      // First process payment (simulated here)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const isAvailable = await checkVehicleAvailability();
+      console.log('[Submit] Final availability result:', isAvailable);
       
-      // Only after payment success, create the booking
+      if (!isAvailable) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      const tempPaymentId = generateTempPaymentId();
+      
       const formData = new FormData();
-      formData.append("customer", customerId);
+      formData.append("customer", customerId.toString());
       formData.append("vehicle", vehicle?.id || "");
       formData.append("total_payment", calculateTotalPrice().toString());
       formData.append("name", billingData.name);
@@ -523,16 +475,28 @@ const handleSubmit = async () => {
       formData.append("drop_of_Date", rentalData.dropoffDate);
       formData.append("drop_of_time", rentalData.dropoffTime);
       formData.append("flight_number", rentalData.flightNumber);
-
+      formData.append("payment_id", tempPaymentId);
+      
+      // CRITICAL: Create booking with PENDING status initially
+      formData.append("status", "pending"); // Don't block dates yet - use pending status
+      
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`, 
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
+
+      console.log('[Submit] Booking response:', response.data);
       
       if (response.data.status === "success" && response.data.data?.id) {
         setBookingId(response.data.data.id);
         setAmount(response.data.data.total_payment);
+        
+        setPaymentData(prev => ({
+          ...prev,
+          paymentId: tempPaymentId
+        }));
+        
         setCurrentStep(4);
         setSubmitMessage("Payment successful! Complete your rental.");
       } else {
@@ -540,21 +504,24 @@ const handleSubmit = async () => {
       }
     } catch (error) {
       console.error("Submission error:", error);
-      if (error.response?.data?.message) {
-        setSubmitMessage(error.response.data.message);
-      } else {
-        setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."));
-      }
+      setSubmitMessage("Error: " + (error.response?.data?.detail || "Something went wrong."));
     } finally {
       setIsSubmitting(false);
     }
+    */
   } else {
     setCurrentStep(currentStep + 1);
   }
 };
 
-  const checkVehicleAvailability = async () => {
+
+
+
+const checkVehicleAvailability = async () => {
   try {
+    console.log('[Availability Check] Checking for vehicle:', vehicle?.id);
+    console.log('[Availability Check] Dates:', rentalData.pickupDate, 'to', rentalData.dropoffDate);
+
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`,
       {
@@ -562,55 +529,79 @@ const handleSubmit = async () => {
           vehicle: vehicle?.id,
           pick_up_Date: rentalData.pickupDate,
           drop_of_Date: rentalData.dropoffDate,
-          status: 'approved' // Only check approved bookings
+          // CRITICAL: Only check APPROVED bookings for conflicts
+          status: 'approved' // Only approved bookings block dates
         }
       }
     );
 
+    console.log('[Availability Check] Response:', response.data);
+
     if (response.data.data && response.data.data.length > 0) {
-      // Vehicle is already booked for these dates
-      setSubmitMessage("This vehicle is already booked for the selected dates.");
-      return false;
+      const conflictingBookings = response.data.data.filter(b => 
+        b.vehicle.id === vehicle?.id && 
+        // Additional safety check - only approved bookings
+        b.status === 'approved'
+      );
+      
+      console.log('[Availability Check] Conflicting bookings:', conflictingBookings);
+
+      if (conflictingBookings.length > 0) {
+        setSubmitMessage("This vehicle is already booked for the selected dates.");
+        return false;
+      }
     }
     return true;
   } catch (error) {
-    console.error("Error checking availability:", error);
-    return true; // Assume available if check fails
+    console.error("[Availability Check] Error:", error);
+    return true;
   }
 };
 
+
+
 const [bookedDates, setBookedDates] = useState([]);
 
-  const fetchBookedDates = async (vehicleId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`,
-        {
-          params: {
-            vehicle: vehicleId,
-            status: 'approved'
-          }
+const fetchBookedDates = async (vehicleId) => {
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`,
+      {
+        params: {
+          vehicle: vehicleId,
+          // ONLY show APPROVED bookings in calendar
+          status: 'approved' // Only approved bookings appear as blocked
         }
-      );
-      
-      if (response.data.data) {
-        const dates = response.data.data.flatMap(booking => {
-          const start = new Date(booking.pick_up_Date);
-          const end = new Date(booking.drop_of_Date);
-          const datesInRange = [];
-          
-          for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-            datesInRange.push(new Date(date).toISOString().split('T')[0]);
-          }
-          return datesInRange;
-        });
-        
-        setBookedDates([...new Set(dates)]);
       }
-    } catch (error) {
-      console.error("Error fetching booked dates:", error);
+    );
+    
+    if (response.data.data) {
+      const dates = response.data.data.flatMap(booking => {
+        // Additional check: only block dates for approved bookings
+        if (booking.status !== 'approved') {
+          return []; // Don't block dates for incomplete bookings
+        }
+        
+        const start = new Date(booking.pick_up_Date);
+        const end = new Date(booking.drop_of_Date);
+        const datesInRange = [];
+        
+        for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+          datesInRange.push(new Date(date).toISOString().split('T')[0]);
+        }
+        return datesInRange;
+      });
+      
+      return [...new Set(dates)];
     }
-  };
+    return [];
+  } catch (error) {
+    console.error("Error fetching booked dates:", error);
+    return [];
+  }
+};
+
+
 
   useEffect(() => {
     if (vehicle?.id) {
@@ -620,28 +611,88 @@ const [bookedDates, setBookedDates] = useState([]);
 
 
 
-const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
+const CustomDateInput = React.memo(({ value, onChange, minDate, vehicleId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredDate, setHoveredDate] = useState(null);
+  const [bookedDates, setBookedDates] = useState([]);
+  const [loadingDates, setLoadingDates] = useState(false);
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
 
-  const isDateBooked = (dateStr) => {
+  // Fetch booked dates when vehicleId changes or date picker opens
+useEffect(() => {
+    if (isOpen && vehicleId) {
+      const fetchBookedDates = async () => {
+        setLoadingDates(true);
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/`,
+            {
+              params: {
+                vehicle: vehicleId,
+                // CRITICAL: Only show APPROVED bookings
+                status: 'approved'
+              }
+            }
+          );
+
+          console.log('Fetched bookings:', response.data.data);
+
+          if (response.data?.data) {
+            const dates = response.data.data.flatMap(booking => {
+              // UPDATED: Only block dates for APPROVED bookings
+              if (booking.vehicle?.id !== parseInt(vehicleId) || 
+                  booking.status !== 'approved') {
+                return [];
+              }
+              
+              const start = new Date(booking.pick_up_Date);
+              const end = new Date(booking.drop_of_Date);
+              const datesInRange = [];
+              
+              for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                const dateStr = date.toISOString().split('T')[0];
+                datesInRange.push(dateStr);
+              }
+              return datesInRange;
+            });
+
+            const uniqueDates = [...new Set(dates)];
+            console.log('Blocked dates (approved bookings only):', uniqueDates);
+            setBookedDates(uniqueDates);
+          }
+        } catch (error) {
+          console.error('Error fetching booked dates:', error);
+        } finally {
+          setLoadingDates(false);
+        }
+      };
+
+      fetchBookedDates();
+    }
+  }, [isOpen, vehicleId]);
+
+  // Properly compare dates in YYYY-MM-DD format
+  const isDateBooked = (date) => {
+    if (!date) return false;
+    const dateStr = date.toISOString().split('T')[0];
     return bookedDates.includes(dateStr);
   };
 
-  const renderCustomDayContents = (day, date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const isBooked = isDateBooked(dateStr);
-    
+  // Custom day component with clear visual indication
+  const renderDayContents = (day, date) => {
+    const booked = isDateBooked(date);
     return (
       <div 
-        className="relative"
-        onMouseEnter={() => setHoveredDate(dateStr)}
+        className={`relative w-full h-full flex items-center justify-center
+          ${booked ? 'text-gray-400 line-through' : 'text-gray-900'}
+          ${booked ? 'cursor-not-allowed' : 'cursor-pointer'}
+        `}
+        onMouseEnter={() => setHoveredDate(date.toISOString().split('T')[0])}
         onMouseLeave={() => setHoveredDate(null)}
       >
-        <span>{day}</span>
-        {isBooked && (
+        {day}
+        {booked && (
           <div className="absolute inset-0 flex items-center justify-center">
             <svg 
               className="w-4 h-4 text-red-500"
@@ -660,27 +711,21 @@ const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
     );
   };
 
-  // Tooltip for booked dates
-  const renderBookedDateTooltip = () => {
-    if (!hoveredDate || !isDateBooked(hoveredDate)) return null;
-    
-    return (
-      <div className="absolute z-50 bg-gray-900 text-white text-xs rounded py-1 px-2 bottom-full mb-1 left-1/2 transform -translate-x-1/2">
-        Vehicle already booked for this date
-        <div className="absolute top-full left-1/2 w-2 h-2 bg-gray-900 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-      </div>
-    );
+  const handleDateChange = (date) => {
+    if (!isDateBooked(date)) {
+      const dateStr = date.toISOString().split('T')[0];
+      onChange({ target: { value: dateStr } });
+      setIsOpen(false);
+    }
+  };
+  // Close when clicking outside
+  const handleClickOutside = (event) => {
+    if (wrapperRef.current && !wrapperRef.current.contains(event.target) ) {
+      setIsOpen(false);
+    }
   };
 
-  // Close when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target) && 
-          inputRef.current && !inputRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -690,39 +735,74 @@ const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
   return (
     <div className="relative" ref={wrapperRef}>
       <input
-        type="date"
+        type="text"
         ref={inputRef}
         value={value}
-        onChange={() => {}} // Make it read-only
-        onClick={() => setIsOpen(!isOpen)}
+        onChange={() => {}}
+        onClick={() => setIsOpen(true)}
         className="w-full px-4 py-3 bg-gray-50 text-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+        placeholder="Select date"
         readOnly
       />
       
       {isOpen && (
-        <div className="absolute z-50 mt-1 bg-white shadow-lg rounded-md p-2">
-          <DatePicker
-            selected={value ? new Date(value) : null}
-            onChange={(date) => {
-              onChange({ target: { value: date.toISOString().split('T')[0] } });
-              setIsOpen(false);
-            }}
-            minDate={new Date(minDate)}
-            filterDate={(date) => !isDateBooked(date.toISOString().split('T')[0])}
-            inline
-            renderDayContents={renderCustomDayContents}
-            dayClassName={(date) => 
-              isDateBooked(date.toISOString().split('T')[0]) 
-                ? 'text-red-500 line-through' 
-                : undefined
-            }
-          />
-          {renderBookedDateTooltip()}
+        <div className="absolute z-50 mt-1 bg-white shadow-lg rounded-lg p-3 border border-gray-200">
+          {loadingDates ? (
+            <div className="flex justify-center items-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <>
+              <div className="text-sm mb-2 px-2">
+                {bookedDates.length > 0 ? (
+                  <div className="text-red-500 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Red dates are already booked
+                  </div>
+                ) : (
+                  <div className="text-green-500 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    All dates available for booking
+                  </div>
+                )}
+              </div>
+              
+              <DatePicker
+                selected={value ? new Date(value) : null}
+                onChange={handleDateChange}
+                minDate={new Date(minDate)}
+                filterDate={(date) => !isDateBooked(date)}
+                inline
+                renderDayContents={renderDayContents}
+                dayClassName={(date) => {
+                  return isDateBooked(date) ? 
+                    'bg-red-50 hover:bg-red-100 cursor-not-allowed' : 
+                    'hover:bg-blue-50';
+                }}
+                calendarClassName="border-0"
+                disabledKeyboardNavigation
+                excludeDates={bookedDates.map(date => new Date(date))}
+              />
+            </>
+          )}
+          
+          {hoveredDate && bookedDates.includes(hoveredDate) && (
+            <div className="absolute z-50 bg-gray-900 text-white text-xs rounded py-1 px-2 bottom-full mb-2 left-1/2 transform -translate-x-1/2">
+              Vehicle already booked for this date
+              <div className="absolute top-full left-1/2 w-2 h-2 bg-gray-900 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
-};
+});
+
+CustomDateInput.displayName = "CustomDateInput";
 
 
   // Navigation
@@ -735,68 +815,242 @@ const CustomDateInput = ({ value, onChange, minDate, bookedDates }) => {
     setIsDocUploadOpen(true)
   }
 
-  // Handle document upload
-  const handleDocUpload = async () => {
-    if (!uploadedDocs || uploadedDocs.length === 0) {
-      setSubmitMessage("Please upload at least one document")
-      return
+const cleanupPendingBooking = async (bookingId) => {
+  try {
+    await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/${bookingId}/`
+    );
+    console.log("Cleaned up pending booking:", bookingId);
+  } catch (error) {
+    console.error("Failed to cleanup pending booking:", error);
+  }
+};
+
+// Add to window beforeunload or component unmount if needed
+useEffect(() => {
+  const handleBeforeUnload = (e) => {
+    if (bookingId && currentStep < 4) {
+      // User is leaving with incomplete booking
+      // You might want to cleanup here or set a timer for later cleanup
+      console.log("User leaving with incomplete booking:", bookingId);
     }
+  };
 
-    setIsSubmitting(true)
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  return () => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  };
+}, [bookingId, currentStep]);
+
+const handleDocUpload = async () => {
+  if (!uploadedDocs || uploadedDocs.length === 0) {
+    setSubmitMessage("Please upload at least one document");
+    return;
+  }
+
+  if (!customerId || !bookingId || !billingData.email) {
+    setSubmitMessage("Missing booking information. Please restart the process.");
+    return;
+  }
+
+  setIsSubmitting(true);
+  
+  try {
+    const formData = new FormData();
+    formData.append("customer", customerId.toString());
+    formData.append("booking", bookingId.toString());
+    formData.append("customer_email", billingData.email);
+    formData.append("payment", bookingId.toString());
+    
+    Array.from(uploadedDocs).forEach((file) => {
+      formData.append("licence_images", file);
+    });
+
+    // Upload documents first
+    const uploadResponse = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/licence/licence/`, 
+      formData,
+      { 
+        headers: { 
+          "Content-Type": "multipart/form-data",
+        } 
+      }
+    );
+
+    console.log("Document upload successful:", uploadResponse.data);
+    
+    // CRITICAL: Only NOW update booking status to APPROVED/CONFIRMED
+    // This is when dates become blocked for other users
+    const statusUpdateResponse = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/${bookingId}/`,
+      {
+        status: 'approved' // NOW the booking is complete and blocks dates
+      }
+    );
+
+    console.log("Booking status updated to APPROVED:", statusUpdateResponse.data);
+
+    setIsDocUploadOpen(false);
+    setIsThankYouOpen(true);
+    setSubmitMessage("Booking completed successfully!");
+    
+  } catch (error) {
+    console.error("Process failed:", error);
+    
+    // If document upload fails, cleanup the temporary booking
+    if (error.response?.status === 400) {
+      console.log("Cleaning up temporary booking...");
+      try {
+        await axios.delete(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/${bookingId}/`
+        );
+        console.log("Temporary booking cleaned up");
+        setBookingId(null);
+        setCurrentStep(3); // Go back to payment step
+      } catch (deleteError) {
+        console.error("Failed to cleanup temporary booking:", deleteError);
+      }
+    }
+    
+    let errorMessage = "Process failed";
+    if (error.response?.data?.message) {
+      errorMessage = `Failed: ${error.response.data.message}`;
+    }
+    setSubmitMessage(errorMessage);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+
+const cleanupTemporaryBooking = async (bookingId) => {
+  try {
+    await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/booking/booking/${bookingId}/`
+    );
+    console.log("Cleaned up temporary booking:", bookingId);
+  } catch (error) {
+    console.error("Failed to cleanup temporary booking:", error);
+  }
+};
+
+// 7. ADDED: Cleanup on page unload for incomplete bookings
+useEffect(() => {
+  const handleBeforeUnload = (e) => {
+    if (bookingId && currentStep === 4) {
+      // User is leaving with incomplete booking (at document upload stage)
+      // You might want to set a cleanup timer or mark for cleanup
+      console.log("User leaving with incomplete booking:", bookingId);
+      // Optionally, you can store this in localStorage for cleanup later
+      localStorage.setItem('incompleteBooking', JSON.stringify({
+        bookingId,
+        timestamp: Date.now()
+      }));
+    }
+  };
+
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  return () => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  };
+}, [bookingId, currentStep]);
+
+// 8. ADDED: Optional cleanup on component mount
+useEffect(() => {
+  // Check for and cleanup old incomplete bookings
+  const incompleteBooking = localStorage.getItem('incompleteBooking');
+  if (incompleteBooking) {
     try {
-      const formData = new FormData()
-      formData.append("customer", customerId)
-      formData.append("payment", "1")
-      formData.append("booking", bookingId.toString())
-      formData.append("customer_email", billingData.email)
+      const { bookingId, timestamp } = JSON.parse(incompleteBooking);
+      const hoursSince = (Date.now() - timestamp) / (1000 * 60 * 60);
       
-      Array.from(uploadedDocs).forEach((file) => {
-        formData.append("licence_images", file)
-      })
-
-      const response = await axios.post(
-        ` ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/licence/licence/`, 
-        formData,
-        { 
-          headers: { 
-            "Content-Type": "multipart/form-data",
-          } 
-        }
-      )
-
-      console.log("Full API response:", response.data)
-      
-      if (response.data.email_sent) {
-        console.log("Email notification was sent successfully")
-      } else {
-        console.warn("API didn't send email despite successful upload")
+      // If more than 1 hour old, cleanup
+      if (hoursSince > 1) {
+        cleanupTemporaryBooking(bookingId);
+        localStorage.removeItem('incompleteBooking');
       }
-
-      setIsDocUploadOpen(false)
-      setIsThankYouOpen(true)
-      
     } catch (error) {
-      console.error("Upload error details:", {
-        error: error,
-        response: error.response?.data,
-        status: error.response?.status,
-        headers: error.response?.headers
-      })
-
-      let errorMessage = "Document upload failed"
-      if (error.response?.data?.message) {
-        errorMessage += `: ${error.response.data.message}`
-      } else if (error.response?.data) {
-        errorMessage += `: ${JSON.stringify(error.response.data)}`
-      } else {
-        errorMessage += `: ${error.message}`
-      }
-
-      setSubmitMessage(errorMessage)
-    } finally {
-      setIsSubmitting(false)
+      localStorage.removeItem('incompleteBooking');
     }
   }
+}, []);
+
+// Alternative function if you need to create a payment record first
+const createPaymentRecord = async () => {
+  try {
+    const paymentData = {
+      customer: customerId,
+      booking: bookingId,
+      amount: calculateTotalPrice(),
+      payment_method: paymentData.method,
+      status: 'completed' // or 'pending' based on your flow
+    };
+
+  // Add this mock response instead:
+const result = { 
+  success: true, 
+  paymentId: 1 
+};
+
+    return response.data.data?.id || response.data.id;
+  } catch (error) {
+    console.error("Error creating payment record:", error);
+    throw error;
+  }
+};
+
+// Modified handleDocUpload that creates payment record if needed
+const handleDocUploadWithPayment = async () => {
+  if (!uploadedDocs || uploadedDocs.length === 0) {
+    setSubmitMessage("Please upload at least one document");
+    return;
+  }
+
+  setIsSubmitting(true);
+  
+  try {
+    // Step 1: Create payment record if it doesn't exist
+    let paymentId = paymentData.paymentId;
+    if (!paymentId) {
+      console.log("Creating payment record...");
+      paymentId = await createPaymentRecord();
+      setPaymentData(prev => ({ ...prev, paymentId }));
+    }
+
+    // Step 2: Upload documents with payment ID
+    const formData = new FormData();
+    formData.append("customer", customerId.toString());
+    formData.append("payment", paymentId.toString());
+    formData.append("booking", bookingId.toString());
+    formData.append("customer_email", billingData.email);
+    
+    Array.from(uploadedDocs).forEach((file) => {
+      formData.append("licence_images", file);
+    });
+
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/licence/licence/`, 
+      formData,
+      { 
+        headers: { 
+          "Content-Type": "multipart/form-data",
+        } 
+      }
+    );
+
+    console.log("Upload successful:", response.data);
+    
+    setIsDocUploadOpen(false);
+    setIsThankYouOpen(true);
+    setSubmitMessage("Documents uploaded successfully!");
+    
+  } catch (error) {
+    console.error("Upload process failed:", error);
+    setSubmitMessage(`Upload failed: ${error.response?.data?.message || error.message}`);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Close thank you modal and redirect
   const closeThankYouModal = () => {
@@ -1106,7 +1360,7 @@ const fetchVehicleReviews = async (vehicleId) => {
       }
     }}
     minDate={new Date().toISOString().split('T')[0]}
-    bookedDates={bookedDates}
+    vehicleId={vehicle?.id}
   />
   {rentalData.pickupDate && !isFutureDate(rentalData.pickupDate) && (
     <p className="text-xs text-red-500 mt-1">Please select a future date</p>
@@ -1197,7 +1451,7 @@ const fetchVehicleReviews = async (vehicleId) => {
       }
     }}
     minDate={rentalData.pickupDate || new Date().toISOString().split('T')[0]}
-    bookedDates={bookedDates}
+    vehicleId={vehicle?.id}
   />
   {rentalData.dropoffDate && new Date(rentalData.dropoffDate) < new Date(rentalData.pickupDate) && (
     <p className="text-xs text-red-500 mt-1">
@@ -1329,7 +1583,7 @@ const fetchVehicleReviews = async (vehicleId) => {
                           placeholder="1234 5678 9012 3456"
                           value={paymentData.cardNumber}
                           onChange={(e) => handlePaymentChange("cardNumber", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 text-black bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -1339,7 +1593,7 @@ const fetchVehicleReviews = async (vehicleId) => {
                           placeholder="MM/YY"
                           value={paymentData.expiryDate}
                           onChange={(e) => handlePaymentChange("expiryDate", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 text-black bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -1349,7 +1603,7 @@ const fetchVehicleReviews = async (vehicleId) => {
                           placeholder="Name on card"
                           value={paymentData.cardHolder}
                           onChange={(e) => handlePaymentChange("cardHolder", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 text-black bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -1359,7 +1613,7 @@ const fetchVehicleReviews = async (vehicleId) => {
                           placeholder="CVC"
                           value={paymentData.cvc}
                           onChange={(e) => handlePaymentChange("cvc", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 text-black bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
@@ -1453,23 +1707,23 @@ const fetchVehicleReviews = async (vehicleId) => {
                   </button>
                 )}
 
-                <button
-                  onClick={currentStep === 4 ? completeRental : handleSubmit}
-                  disabled={
-                    (currentStep === 1 && !validateStep1()) ||
-                    (currentStep === 2 && !validateStep2()) ||
-                    (currentStep === 3 && !validateStep3()) ||
-                    (currentStep === 4 && (!agreements.terms)) ||
-                    isSubmitting
-                  }
-                  className={`px-6 py-3 rounded-lg text-white ${
-                    currentStep === 4 ? "bg-green-500 hover:bg-green-600" : "bg-blue-600 hover:bg-blue-700"
-                  } transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto`}
-                >
-                  {isSubmitting ? "Processing..." : 
-                   currentStep === 4 ? "Confirm Booking" : 
-                   currentStep === 3 ? "Make Payment" : "Next"}
-                </button>
+            <button
+  onClick={currentStep === 4 ? completeRental : handleSubmit}
+  disabled={
+    (currentStep === 1 && !validateStep1()) ||
+    (currentStep === 2 && !validateStep2()) ||
+    (currentStep === 3 && !validateStep3()) ||
+    (currentStep === 4 && (!agreements.terms)) ||
+    isSubmitting
+  }
+  className={`px-6 py-3 rounded-lg text-white ${
+    currentStep === 4 ? "bg-green-500 hover:bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+  } transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto`}
+>
+  {isSubmitting ? "Processing..." : 
+   currentStep === 4 ? "Confirm Booking" : 
+   currentStep === 3 ? "Make Payment" : "Next"}
+</button>
               </div>
             </div>
           </div>
@@ -1609,6 +1863,33 @@ const fetchVehicleReviews = async (vehicleId) => {
           </button>
         </div>
       </Modal> 
+
+      {/* Payment Error Modal */}
+<Modal
+  isOpen={showPaymentErrorModal}
+  onRequestClose={() => setShowPaymentErrorModal(false)}
+  style={customStyles}
+  contentLabel="Payment Error Modal"
+>
+  <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
+    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+      <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>
+    <h2 className="text-xl text-black font-semibold mb-2">Payment Unavailable</h2>
+    <p className="text-gray-600 mb-6">
+      We are currently unable to process payments. Our team is working on this feature.
+      Please check back later or contact support for assistance.
+    </p>
+    <button
+      onClick={() => setShowPaymentErrorModal(false)}
+      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mx-auto"
+    >
+      Close
+    </button>
+  </div>
+</Modal>
     </div>
   )
 }
