@@ -33,10 +33,21 @@ function AvailableVehiclesContent() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?status=approved`);
+        // Check for brand name in URL params first
+        const brandFromUrl = searchParams.get('name');
+        const typeFromUrl = searchParams.get('type');
+        
+        let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/vehicle/vehicle/?status=approved`;
+        
+        // If brand name is in URL, add it to the API request
+        if (brandFromUrl) {
+          url += `&name=${encodeURIComponent(brandFromUrl)}`;
+          setSelectedBrand(brandFromUrl);
+        }
+
+        const response = await fetch(url);
         const json = await response.json();
         const data = json.data || [];
-
         setVehicles(data);
 
         const types = [...new Set(data.map(v => v.vehicle_type?.name).filter(Boolean))];
@@ -56,11 +67,9 @@ function AvailableVehiclesContent() {
         setTypeFilters(initialTypeFilters);
         setCapacityFilters(initialCapacityFilters);
 
-        // Check for URL parameter on initial load
-        const typeFromUrl = searchParams.get('type');
+        // Check for vehicle type from URL
         if (typeFromUrl && types.includes(typeFromUrl)) {
           setSelectedVehicleType(typeFromUrl);
-          // Set only this type to be selected in filters
           const updatedTypeFilters = {...initialTypeFilters};
           Object.keys(updatedTypeFilters).forEach(key => {
             updatedTypeFilters[key] = key === typeFromUrl;
@@ -76,7 +85,6 @@ function AvailableVehiclesContent() {
   }, [searchParams]); 
 
   const handleViewDetails = (id) => {
-    console.log(id)
     router.push(`/cardetails?id=${id}`);
   };
 
@@ -96,24 +104,27 @@ function AvailableVehiclesContent() {
     setCapacityFilters(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
-  const getBrands = () => ["All", ...new Set(vehicles.map(v => v.vehicle_model).filter(Boolean))];
+  const getBrands = () => ["All", ...new Set(vehicles.map(v => v.name.split(' ')[0]).filter(Boolean))];
 
   const filteredVehicles = vehicles.filter(vehicle => {
     const isApproved = vehicle.status === "approved";
     const type = vehicle.vehicle_type?.name;
-    const model = vehicle.vehicle_model;
+    const brand = vehicle.name.split(' ')[0]; // Extract brand from name (first word)
     const price = parseInt(vehicle.price);
     const capacity = vehicle.vehicle_seat?.capacity;
 
-    // Get type from URL if it exists
     const urlType = searchParams.get('type');
+    const urlBrand = searchParams.get('name');
     
-    // If URL has a type parameter, only match that type
+    // If URL has a brand parameter, only match that brand
+    const brandMatch = urlBrand 
+      ? vehicle.name.toLowerCase().includes(urlBrand.toLowerCase())
+      : selectedBrand === "All" || brand === selectedBrand;
+
     const typeMatch = urlType 
       ? type === urlType
       : selectedVehicleType === "All vehicles" || selectedVehicleType === type;
 
-    const brandMatch = selectedBrand === "All" || selectedBrand === model;
     const priceMatch = price <= priceRange;
     const capacityMatch = capacityFilters[`${capacity} Person`] === true;
     const typeFilterMatch = typeFilters[type] === true;
