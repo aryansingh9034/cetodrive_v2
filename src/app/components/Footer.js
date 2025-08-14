@@ -185,37 +185,38 @@ export default function Footer() {
                 </ul>
               </div>
 
-              {/* Our Brands */}
-              <div>
-                <h3 className="font-bold mb-4">Our Brands</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <p className="hover:text-gray-300">
-                      Toyota
-                    </p>
-                  </li>
-                  <li>
-                    <p className="hover:text-gray-300">
-                      Porsche
-                    </p>
-                  </li>
-                  <li>
-                    <p className="hover:text-gray-300">
-                      BMW
-                    </p>
-                  </li>
-                  <li>
-                    <p className="hover:text-gray-300">
-                      Ford
-                    </p>
-                  </li>
-                  <li>
-                    <p className="hover:text-gray-300">
-                      Nissan
-                    </p>
-                  </li>
-                </ul>
-              </div>
+{/* Our Brands */}
+
+<div>
+  <h3 className="font-bold mb-4">Our Brands</h3>
+  <ul className="space-y-2 text-sm">
+    <li>
+      <Link 
+        href="/availablevehicle?name=Volkswagen" 
+        className="hover:text-gray-300"
+      >
+        Volkswagen
+      </Link>
+    </li>
+    <li>
+      <Link 
+        href="/availablevehicle?name=Toyota" 
+        className="hover:text-gray-300"
+      >
+        Toyota
+      </Link>
+    </li>
+    <li>
+      <Link 
+        href="/availablevehicle?name=BMW" 
+        className="hover:text-gray-300"
+      >
+        BMW
+      </Link>
+    </li>
+    {/* Add other brands following the same pattern */}
+  </ul>
+</div>
 
               {/* Vehicles Type */}
            
