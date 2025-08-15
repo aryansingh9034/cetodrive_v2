@@ -175,7 +175,7 @@ export default function LoginPage() {
       console.log('Development mode: Google will redirect to production domain (catodrive.com)');
     }
 
-    // Build Google OAuth URL - always use production redirect URI
+    // Build Google OAuth URL - use login page as redirect
     const redirectUri = 'https://catodrive.com/';
       
     const params = new URLSearchParams({
