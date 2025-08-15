@@ -17,87 +17,183 @@ export default function LoginPage() {
   
   const router = useRouter();
 
-  const handleSignup = () => {
-    router.push('/signup');
-  };
-
+  // Check if user is already logged in
   useEffect(() => {
-    // Check if user is already logged in
     const token = localStorage.getItem('token');
     const customerId = localStorage.getItem('customerId');
     
     if (token && customerId) {
       router.push('/profile');
     }
+  }, [router]);
 
-    // Handle Google OAuth callback
+  // Handle OAuth callback when component loads
+  useEffect(() => {
+    // If we're not on the login page but have OAuth params, redirect to login
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    if (code && state === 'google_login' && !window.location.pathname.includes('/login')) {
+      console.log('Redirecting to login page with OAuth params');
+      window.location.href = '/login' + window.location.search;
+      return;
+    }
+    
+    handleOAuthCallback();
+  }, []);
+
+  const handleOAuthCallback = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const error = urlParams.get('error');
+    const state = urlParams.get('state');
 
-    if (code) {
-      handleGoogleLogin(code);
-    } else if (error) {
-      setError("Google login failed: " + error);
+    console.log('OAuth Callback - URL params:', { code, error, state });
+    console.log('Current pathname:', window.location.pathname);
+
+    // Clean the URL immediately
+    if (code || error) {
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [router]);
 
-  const handleGoogleLogin = async (code) => {
-    setGoogleLoading(true);
-    setError("");
+    if (error) {
+      setError('Google login was cancelled or failed');
+      setGoogleLoading(false);
+      return;
+    }
 
+    if (code && state === 'google_login') {
+      console.log('Processing Google callback...');
+      setGoogleLoading(true);
+      await processGoogleCallback(code);
+    } else if (code) {
+      console.log('Code found but state mismatch:', state);
+    }
+  };
+
+  const processGoogleCallback = async (code) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/google/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || errorData.message || "Google login failed");
+      console.log('Processing Google callback with code:', code);
+      
+      // Try multiple possible endpoints
+      const endpoints = [
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/dj-rest-auth/google/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/dj-rest-auth/google/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/dj-rest-auth/registration/google/`
+      ];
+      
+      let response;
+      let lastError;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log('Trying endpoint:', endpoint);
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              code: code,
+            }),
+          });
+          
+          if (response.ok) {
+            console.log('Success with endpoint:', endpoint);
+            break;
+          } else {
+            console.log(`Failed with endpoint ${endpoint}:`, response.status);
+            lastError = `HTTP ${response.status}`;
+          }
+        } catch (error) {
+          console.log(`Error with endpoint ${endpoint}:`, error);
+          lastError = error.message;
+        }
+      }
+      
+      if (!response || !response.ok) {
+        throw new Error(lastError || 'All endpoints failed');
       }
 
-      const data = await response.json();
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      const data = JSON.parse(responseText);
+      console.log('Parsed data:', data);
       
-      // Store tokens and user data
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      localStorage.setItem('userData', JSON.stringify(data.user));
-      localStorage.setItem('customerId', data.user.id);
+      // Store authentication data - handle multiple possible response formats
+      const accessToken = data.access_token || data.access || data.key;
+      const refreshToken = data.refresh_token || data.refresh;
       
-      // Redirect to profile
-      window.location.href = '/profile';
+      if (accessToken) {
+        localStorage.setItem('token', accessToken);
+        if (refreshToken) {
+          localStorage.setItem('refresh_token', refreshToken);
+        }
+        
+        // Handle user data - dj-rest-auth might return it differently
+        const userData = data.user || data.data || data;
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        const userId = userData.id || userData.pk || userData.user_id;
+        if (userId) {
+          localStorage.setItem('customerId', userId);
+        }
+        
+        // Redirect to profile
+        router.push('/profile');
+      } else {
+        throw new Error('No access token received in response');
+      }
     } catch (error) {
-      console.error("Google login error:", error);
-      setError(error.message || "Failed to login with Google");
+      console.error('Google callback error:', error);
+      setError(`Failed to complete Google login: ${error.message}`);
     } finally {
       setGoogleLoading(false);
     }
   };
 
   const initiateGoogleLogin = () => {
-    try {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "489409603071-1173d9hsk8h8o2in6gh7uuo80rni5imu.apps.googleusercontent.com";
-      const redirectUri = encodeURIComponent(
-        process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || "https://www.catodrive.com/"
-      );
-      
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${clientId}` +
-        `&redirect_uri=${redirectUri}` +
-        `&response_type=code` +
-        `&scope=openid%20email%20profile` +
-        `&access_type=offline` +
-        `&prompt=consent`;
-      
-      window.location.href = authUrl;
-    } catch (error) {
-      console.error("Google OAuth failed:", error);
-      setError("Couldn't connect to Google. Please try again later.");
+    setGoogleLoading(true);
+    setError("");
+
+    console.log('Initiating Google login...');
+
+    // Your Google Client ID
+    const GOOGLE_CLIENT_ID = "489409603071-1173d9hsk8h8o2in6gh7uuo80rni5imu.apps.googleusercontent.com";
+    
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google Client ID not configured. Please add your Google Client ID.');
+      setGoogleLoading(false);
+      return;
     }
+
+    // Show development notice
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Development mode: Google will redirect to production domain (catodrive.com)');
+    }
+
+    // Build Google OAuth URL - always use production redirect URI
+    const redirectUri = 'https://catodrive.com/';
+      
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      state: 'google_login',
+      access_type: 'offline',
+      prompt: 'select_account',
+    });
+
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    
+    console.log('Redirecting to:', googleAuthUrl);
+    
+    // Redirect to Google
+    window.location.href = googleAuthUrl;
   };
 
   const handleSubmit = async (e) => {
@@ -126,7 +222,7 @@ export default function LoginPage() {
       localStorage.setItem('userData', JSON.stringify(responseData.data));
       localStorage.setItem('customerId', responseData.data.id);
       
-      window.location.href = '/profile';
+      router.push('/profile');
       
     } catch (error) {
       console.error("Login error:", error);
@@ -135,6 +231,22 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  const handleSignup = () => {
+    router.push('/signup');
+  };
+
+  // Show loading state if processing Google callback
+  if (googleLoading && !error) {
+    return (
+      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF7A30] mx-auto mb-4"></div>
+          <p className="text-gray-600">Completing Google login...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white py-16">
@@ -163,16 +275,26 @@ export default function LoginPage() {
               <button
                 onClick={initiateGoogleLogin}
                 disabled={googleLoading}
-                className={`flex items-center justify-center w-full max-w-[350px] bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF7A30] ${googleLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`flex items-center justify-center w-full max-w-[350px] bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF7A30] transition-all duration-200 ${
+                  googleLoading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md'
+                }`}
               >
                 {googleLoading ? (
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
+                    Processing...
+                  </>
                 ) : (
-                  <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12.545 10.239v3.821h5.445c-0.712 2.315-2.647 3.972-5.445 3.972-3.332 0-6.033-2.701-6.033-6.032s2.701-6.032 6.033-6.032c1.498 0 2.866 0.549 3.921 1.453l2.814-2.814c-1.784-1.667-4.166-2.685-6.735-2.685-5.522 0-10 4.477-10 10s4.478 10 10 10c8.396 0 10-7.524 10-10 0-0.67-0.069-1.325-0.189-1.961h-9.811z"/>
-                  </svg>
+                  <>
+                    <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                  </>
                 )}
-                Continue with Google
               </button>
             </div>
 
