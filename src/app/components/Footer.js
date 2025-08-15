@@ -214,7 +214,23 @@ export default function Footer() {
         BMW
       </Link>
     </li>
-    {/* Add other brands following the same pattern */}
+     <li>
+      <Link 
+        href="/availablevehicle?name=Jeep" 
+        className="hover:text-gray-300"
+      >
+        Jeep
+      </Link>
+    </li>
+     <li>
+      <Link 
+        href="/availablevehicle?name=Chevrolet" 
+        className="hover:text-gray-300"
+      >
+        Chevrolet
+      </Link>
+    </li>
+    
   </ul>
 </div>
 
