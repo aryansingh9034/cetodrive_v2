@@ -7,13 +7,18 @@ import { useRouter } from 'next/navigation';
 import ForgotPasswordModal from "../components/forgotpassword";
 import { Loader2 } from "lucide-react";
 
+// Helper function to dispatch auth change event
+const dispatchAuthChange = () => {
+  window.dispatchEvent(new Event('authChange'));
+};
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [googleAuthStatus, setGoogleAuthStatus] = useState(null); // null, 'success', 'error'
+  const [googleAuthStatus, setGoogleAuthStatus] = useState(null);
   
   const router = useRouter();
 
@@ -21,157 +26,80 @@ export default function LoginPage() {
     router.push('/signup');
   };
 
-  // Function to show debug info (matching HTML example)
-  const show = (o, id) => {
-    console.log(`📺 show() called for element '${id}' with data:`, o);
-    const element = document.getElementById(id);
-    if (element) {
-      const text = typeof o === 'string' ? o : JSON.stringify(o, null, 2);
-      element.textContent = text;
-      console.log(`✅ Content set for '${id}':`, text.substring(0, 100) + '...');
-    } else {
-      console.log(`❌ Element '${id}' not found in DOM`);
-    }
-  };
-
-  // Call /me endpoint (matching HTML example)
-  const callMe = async () => {
-    console.log('📞 callMe function called');
-    const token = localStorage.getItem('access');
-    console.log('🎟️ Token from localStorage:', token ? 'Present (length: ' + token.length + ')' : 'Not found');
+  // Handle Google credential response
+  const handleCredentialResponse = async (response) => {
+    console.log('🔐 Google credential response received');
+    console.log('🎟️ ID Token length:', response.credential?.length || 0);
     
-    if (!token) {
-      const msg = 'No access token stored.';
-      console.log('❌', msg);
-      return show(msg, 'meOut');
-    }
-    
-    console.log('🌐 Making request to /gmail/me/ endpoint...');
     try {
-      const res = await fetch('https://backend.catodrive.com/gmail/me/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log('📡 Response status:', res.status);
-      console.log('📡 Response headers:', Object.fromEntries(res.headers.entries()));
-      
-      const data = await res.json();
-      console.log('📦 Response data:', data);
-      show(data, 'meOut');
-    } catch (error) {
-      console.error('❌ callMe error:', error);
-      show(`Error: ${error.message}`, 'meOut');
-    }
-  };
-
-  // Refresh token (matching HTML example)
-  const refreshToken = async () => {
-    console.log('🔄 refreshToken function called');
-    const refresh = localStorage.getItem('refresh');
-    console.log('🔄 Refresh token from localStorage:', refresh ? 'Present (length: ' + refresh.length + ')' : 'Not found');
-    
-    if (!refresh) {
-      const msg = 'No refresh token stored.';
-      console.log('❌', msg);
-      return show(msg, 'refreshOut');
-    }
-    
-    console.log('🌐 Making request to /auth/token/refresh/ endpoint...');
-    try {
-      const res = await fetch('https://backend.catodrive.com/auth/token/refresh/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh })
-      });
-      console.log('📡 Refresh response status:', res.status);
-      console.log('📡 Refresh response headers:', Object.fromEntries(res.headers.entries()));
-      
-      const data = await res.json();
-      console.log('📦 Refresh response data:', data);
-      
-      if (data.access) {
-        localStorage.setItem('access', data.access);
-        console.log('✅ New access token stored');
-      }
-      show(data, 'refreshOut');
-    } catch (error) {
-      console.error('❌ refreshToken error:', error);
-      show(`Error: ${error.message}`, 'refreshOut');
-    }
-  };
-
-  // Handle redirect (exact copy from HTML example with profile redirect)
-  const handleRedirect = () => {
-    console.log('🔍 handleRedirect called');
-    console.log('📍 Current URL:', window.location.href);
-    console.log('🔗 Search params:', window.location.search);
-    
-    const params = new URLSearchParams(window.location.search);
-    const access = params.get('access');
-    const refresh = params.get('refresh');
-    const error = params.get('error');
-    
-    console.log('🎟️ Access token from URL:', access ? 'Present (length: ' + access.length + ')' : 'Not found');
-    console.log('🔄 Refresh token from URL:', refresh ? 'Present (length: ' + refresh.length + ')' : 'Not found');
-    console.log('❌ Error from URL:', error || 'None');
-
-    if (error) {
-      console.log('❌ ERROR CASE: Setting error status');
-      setGoogleAuthStatus('error');
-      setError(`Google Auth Error: ${error}`);
-      // Clear URL params
-      window.history.replaceState({}, document.title, window.location.pathname);
-      console.log('🧹 URL params cleared after error');
-      return;
-    }
-
-    if (access && refresh) {
-      console.log('✅ SUCCESS CASE: Both tokens found, storing...');
-      
-      // Store Google OAuth tokens (for Gmail API access)
-      localStorage.setItem('access', access);
-      localStorage.setItem('refresh', refresh);
-      
-      // For profile redirect, we need to store the same keys as manual login
-      // Assuming the access token from Google OAuth can be used as the main auth token
-      localStorage.setItem('token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      // You might need to fetch user data with the Google token and store it
-      // For now, setting a minimal structure
-      localStorage.setItem('customerId', 'google-user'); // You'll need to get actual user ID
-      
-      console.log('💾 Tokens stored in localStorage');
-      console.log('📦 localStorage access:', localStorage.getItem('access') ? 'Stored successfully' : 'Storage failed');
-      console.log('📦 localStorage refresh:', localStorage.getItem('refresh') ? 'Stored successfully' : 'Storage failed');
-      console.log('📦 localStorage token:', localStorage.getItem('token') ? 'Stored successfully' : 'Storage failed');
-      
-      setGoogleAuthStatus('success');
+      setIsLoading(true);
       setError("");
       
-      // Clear URL params for cleaner look
-      window.history.replaceState({}, document.title, window.location.pathname);
-      console.log('🧹 URL params cleared after success');
-      console.log('📍 New URL after cleanup:', window.location.href);
+      // Send the id_token to your backend for verification
+      console.log('🌐 Sending token to backend verification endpoint...');
+      const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/google_auth/google/verify-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: response.credential
+        }),
+      });
+
+      console.log('📡 Verification response status:', verifyResponse.status);
       
-      // Redirect to profile immediately (like manual login)
-      console.log('🚀 Redirecting to /profile immediately');
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json().catch(() => ({}));
+        console.log('❌ Google login verification failed:', errorData);
+        throw new Error(errorData.msg || `Google login failed (HTTP ${verifyResponse.status})`);
+      }
+
+      const responseData = await verifyResponse.json();
+      console.log('✅ Google login successful:', responseData);
+      
+      // Store tokens - FIXED: Use actual response structure
+      localStorage.setItem('token', responseData.access);           // Changed from access_token
+      localStorage.setItem('refresh_token', responseData.refresh);  // Changed from refresh_token
+      
+      // Create user data object from the flat response structure
+      const userData = {
+        email: responseData.email,
+        name: responseData.name,
+        username: responseData.username
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // Use username as identifier since there's no id field
+      localStorage.setItem('customerId', responseData.username); // or responseData.email
+      
+      console.log('💾 Google login tokens stored');
+      setGoogleAuthStatus('success');
+      
+      // IMPORTANT: Dispatch auth change event to update header
+      dispatchAuthChange();
+      
+      // Redirect to profile
+      console.log('🚀 Redirecting to /profile...');
       router.push('/profile');
-    } else {
-      console.log('🤷‍♂️ NO ACTION: No tokens or error found in URL params');
+      
+    } catch (error) {
+      console.error("❌ Google login error:", error);
+      setGoogleAuthStatus('error');
+      setError(error.message || "Google login failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Initialize Google Sign-In
   useEffect(() => {
     console.log('🔄 useEffect triggered');
-    console.log('📍 Current URL:', window.location.href);
-    console.log('🔍 Checking existing authentication...');
     
-    // Check if user is already logged in with existing tokens (either manual or Google)
+    // Check if user is already logged in
     const token = localStorage.getItem('token');
     const customerId = localStorage.getItem('customerId');
-    
-    console.log('🎟️ Existing token:', token ? 'Present' : 'None');
-    console.log('👤 Existing customerId:', customerId ? 'Present' : 'None');
     
     if (token && customerId) {
       console.log('✅ User already authenticated, redirecting to profile...');
@@ -179,25 +107,50 @@ export default function LoginPage() {
       return;
     }
 
-    console.log('🔍 No existing auth found, checking for OAuth callback...');
-    // Handle Google OAuth redirect (exact same logic as HTML)
-    handleRedirect();
-  }, [router]);
-
-  const initiateGoogleLogin = () => {
-    console.log('🚀 initiateGoogleLogin called');
-    console.log('📍 Current URL before redirect:', window.location.href);
-    console.log('🎯 Target OAuth URL: https://backend.catodrive.com/gmail/auth/google/');
-    console.log('🧳 Current localStorage contents:');
-    console.log('  - access:', localStorage.getItem('access') ? 'Present' : 'None');
-    console.log('  - refresh:', localStorage.getItem('refresh') ? 'Present' : 'None');
-    console.log('  - token:', localStorage.getItem('token') ? 'Present' : 'None');
-    console.log('  - customerId:', localStorage.getItem('customerId') ? 'Present' : 'None');
+    // Load Google Identity Services script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
     
-    // Direct redirect to backend OAuth endpoint (exact same as HTML)
-    console.log('🔄 Initiating redirect...');
-    window.location.href = 'https://backend.catodrive.com/gmail/auth/google/';
-  };
+    script.onload = () => {
+      console.log('📜 Google Identity Services script loaded');
+      
+      // Initialize Google Sign-In
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: "489409603071-1173d9hsk8h8o2in6gh7uuo80rni5imu.apps.googleusercontent.com",
+          callback: handleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        // Render the sign-in button
+        window.google.accounts.id.renderButton(
+          document.getElementById("google-signin-button"),
+          {
+            theme: "outline",
+            size: "large",
+            width: 350,
+            text: "continue_with",
+            shape: "rectangular",
+          }
+        );
+
+        console.log('✅ Google Sign-In initialized and button rendered');
+      }
+    };
+
+    document.head.appendChild(script);
+
+    // Cleanup function
+    return () => {
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -219,7 +172,6 @@ export default function LoginPage() {
       });
 
       console.log('📡 Login response status:', response.status);
-      console.log('📡 Login response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -236,8 +188,12 @@ export default function LoginPage() {
       localStorage.setItem('customerId', responseData.data.id);
       
       console.log('💾 Regular login tokens stored');
+      
+      // IMPORTANT: Dispatch auth change event to update header
+      dispatchAuthChange();
+      
       console.log('🚀 Redirecting to /profile...');
-      router.push('/profile'); // Changed from window.location.href to router.push for consistency
+      router.push('/profile');
       
     } catch (error) {
       console.error("❌ Login error:", error);
@@ -269,45 +225,24 @@ export default function LoginPage() {
               Welcome back
             </h1>
             
-            {/* Google Auth Status - Show if OAuth completed (Debug only - remove in production) */}
+            {/* Google Auth Status */}
             {googleAuthStatus === 'success' && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="text-green-800 font-medium">✓ Google login successful!</div>
                 <div className="text-sm text-green-600 mt-1">Redirecting to your profile...</div>
-                
-                {/* Debug section (matching HTML example - remove in production) */}
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={callMe}
-                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                  >
-                    Test /me Endpoint
-                  </button>
-                  <pre id="meOut" className="bg-gray-100 p-2 rounded text-xs max-h-20 overflow-auto"></pre>
-                  
-                  <button
-                    onClick={refreshToken}
-                    className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                  >
-                    Test Refresh Token
-                  </button>
-                  <pre id="refreshOut" className="bg-gray-100 p-2 rounded text-xs max-h-20 overflow-auto"></pre>
-                </div>
               </div>
             )}
 
-            {/* Google Login Button */}
+            {googleAuthStatus === 'error' && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="text-red-800 font-medium">❌ Google login failed</div>
+                <div className="text-sm text-red-600 mt-1">Please try again or use email/password</div>
+              </div>
+            )}
+
+            {/* Google Sign-In Button Container */}
             <div className="w-full flex justify-center mb-6">
-              <button
-                onClick={initiateGoogleLogin}
-                disabled={isLoading}
-                className="flex items-center justify-center w-full max-w-[350px] bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF7A30] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12.545 10.239v3.821h5.445c-0.712 2.315-2.647 3.972-5.445 3.972-3.332 0-6.033-2.701-6.033-6.032s2.701-6.032 6.033-6.032c1.498 0 2.866 0.549 3.921 1.453l2.814-2.814c-1.784-1.667-4.166-2.685-6.735-2.685-5.522 0-10 4.477-10 10s4.478 10 10 10c8.396 0 10-7.524 10-10 0-0.67-0.069-1.325-0.189-1.961h-9.811z"/>
-                </svg>
-                Continue with Google
-              </button>
+              <div id="google-signin-button" className="w-full max-w-[350px]"></div>
             </div>
 
             <div className="flex items-center justify-center mb-4">
